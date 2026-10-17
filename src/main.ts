@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import './style.css';
 import { GAME_HEIGHT, GAME_WIDTH } from './config/tuning';
 import { integerZoom } from './logic/scaling';
 import { AssetPreviewScene } from './scenes/AssetPreviewScene';
