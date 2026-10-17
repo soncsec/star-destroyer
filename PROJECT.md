@@ -154,4 +154,4 @@ Source: `legacy/` (Ansimuz Legacy Collection). **License: CC0**, so commercial u
 
 1. **SSH access** for the release script: a deploy user on the server and an SSH key from the dev machine.
 2. **Public DNS:** an `A` record for `games.soncrant.com` pointing at the public IP, and port 80 forwarded to the server (check whether this already exists for `soncrant.com`).
-3. **Folder move** (approved, scheduled after M1): game repos under `~/games/<slug>/`, and `legacy/` to the shared `~/games/_assets/legacy/`.
+3. **Folder move:** done 2026-10-17, when development moved to a new machine. Game repos live in `~/dev/games/<slug>/` (owner's choice of path) and the portal in `~/dev/games/games-portal/`. The art pack is shared at `~/dev/games/_assets/legacy/`, and each game links it in as `legacy` (git-ignored).

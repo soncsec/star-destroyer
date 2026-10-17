@@ -12,7 +12,7 @@ Read `PROJECT.md` (scope), `ARCHITECTURE.md` (decisions), and `ROADMAP.md` (curr
 ## Scope boundary (other Claude sessions may be building other games)
 
 - Change files only inside this repo. Never edit another game's folder, the portal repo, or shared assets.
-- `legacy/` (the art pack) is read-only. Copy what you need into `public/assets/`.
+- `legacy/` (the art pack) is read-only. It is a link to the shared `~/dev/games/_assets/legacy/`. Copy what you need into `public/assets/`.
 - Changes another repo needs (for example, this game's portal card) go through a PR or issue on that repo.
 - On the production server, this game may only write to `/var/www/html/soncrant.com/pub/games/star-destroyer/`.
 - Local dev server port: **5173**. Playwright's test server uses **4174**.

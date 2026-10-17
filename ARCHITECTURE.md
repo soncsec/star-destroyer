@@ -112,13 +112,13 @@ The `games/` folder sits inside `soncrant.com`'s `pub/` folder, so the same file
 
 | Shared thing | How collisions are prevented |
 |---|---|
-| Code | One repo per game (`soncsec/<slug>`), one local folder per game (`~/games/<slug>/`), one Claude session per folder |
+| Code | One repo per game (`soncsec/<slug>`), one local folder per game (`~/dev/games/<slug>/`), one Claude session per folder |
 | Starting point | A GitHub **template repo**, `soncsec/game-template`, extracted from Star Destroyer after M1 and P1 prove the setup. It contains the Vite + TypeScript + Phaser scaffold, CI and security checks, test setup, release script, CLAUDE.md and doc skeletons. A new game is `gh repo create soncsec/<slug> --template soncsec/game-template`. |
 | Game name and URL | Claimed by a PR to the portal that adds `games/<slug>.json` with status `in-development`. The portal reads one file per game, so two instances never edit the same file. The first merged PR owns the slug. |
 | Portal code and Apache config | Owned only by the portal repo. Game instances never change the Apache config, the portal, or another game. |
 | Production server | Each game's release script writes only to `/var/www/html/soncrant.com/pub/games/<slug>/`. The script refuses any other target. |
 | Local dev ports | Each game's entry records its own Vite dev port (Star Destroyer 5173, then 5174, 5175, …) so dev servers can run side by side. |
-| Art source | `legacy/` is shared and read-only. Each game copies the assets it uses into its own repo. |
+| Art source | `legacy/` is shared and read-only, at `~/dev/games/_assets/legacy/`, linked into each game folder as `legacy`. Each game copies the assets it uses into its own repo. |
 | Rules and conventions | Each repo's CLAUDE.md comes from the template and includes a scope rule: change only this repo. Cross-repo changes are proposed as issues on the owning repo. |
 
 - **Alternatives:**
