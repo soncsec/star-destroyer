@@ -23,3 +23,6 @@ __MACOSX/
 
 # Local deployment settings (server address, SSH user)
 deploy/server.env
+
+# Built docs page (published as an artifact, not committed)
+tools/docs-page/out/
