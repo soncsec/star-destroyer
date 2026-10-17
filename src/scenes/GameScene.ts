@@ -2,12 +2,14 @@ import Phaser from 'phaser';
 import {
   BACKGROUND,
   DEFAULT_SEED,
-  ENEMY_BASIC,
   ENEMY_FIRE,
+  ENEMY_TYPES,
   GAME_HEIGHT,
   GAME_WIDTH,
   PLAYER_HEALTH,
+  SPAWNER,
   WEAPON,
+  type EnemyKind,
 } from '../config/tuning';
 import { Bullets } from '../entities/Bullets';
 import { EnemyBullets } from '../entities/EnemyBullets';
@@ -15,7 +17,8 @@ import { Enemies } from '../entities/Enemies';
 import { Explosions } from '../entities/Explosions';
 import { Player } from '../entities/Player';
 import { firstHit } from '../logic/collision';
-import { stepSpawner } from '../logic/enemy';
+import { pickWeighted, stepSpawner } from '../logic/enemy';
+import { spawnMargin } from '../logic/enemyMoves';
 import { aimDown, firstShotDelay, nextShotDelay, stepEnemyFire } from '../logic/enemyFire';
 import {
   isGameOver,
@@ -34,7 +37,8 @@ import { stepFire, type FireState } from '../logic/weapon';
 export interface GameSnapshot {
   score: number;
   player: { x: number; y: number };
-  enemies: { x: number; y: number; hp: number }[];
+  /** spawnX is where it appeared (weavers sway away from it). */
+  enemies: { kind: EnemyKind; x: number; y: number; hp: number; spawnX: number }[];
   shots: number;
   explosions: number;
   /** Enemy shots in flight. */
@@ -119,13 +123,15 @@ export class GameScene extends Phaser.Scene {
     }
     this.bullets.update(dt);
 
-    const spawn = stepSpawner(this.spawnTimer, dt, ENEMY_BASIC.spawnInterval);
+    const spawn = stepSpawner(this.spawnTimer, dt, SPAWNER.interval);
     this.spawnTimer = spawn.timeLeft;
     if (spawn.spawn && this.spawning) {
-      const margin = ENEMY_BASIC.hitbox.w / 2 + 4;
-      this.spawnEnemy(this.rng.range(margin, GAME_WIDTH - margin));
+      const kind = pickWeighted(SPAWNER.weights, this.rng.next());
+      const type = ENEMY_TYPES[kind];
+      const margin = spawnMargin(type.move, type.hitbox.w / 2);
+      this.spawnEnemy(this.rng.range(margin, GAME_WIDTH - margin), undefined, undefined, kind);
     }
-    this.enemies.update(dt);
+    this.enemies.update(dt, this.player.position);
     this.enemiesFire(dt);
     this.enemyBullets.update(dt);
     this.resolveShotHits();
@@ -142,6 +148,7 @@ export class GameScene extends Phaser.Scene {
     const next = (): number => nextShotDelay(this.rng, ENEMY_FIRE);
     const target = this.player.position;
     for (const e of this.enemies.active()) {
+      if (!ENEMY_TYPES[e.kind].fires) continue;
       const step = stepEnemyFire(e.fireIn, dt, this.enemies.onScreen(e), next);
       e.fireIn = step.timeLeft;
       if (!step.fire) continue;
@@ -199,7 +206,9 @@ export class GameScene extends Phaser.Scene {
     return {
       score: this.score,
       player: { x, y },
-      enemies: this.enemies.active().map((e) => ({ x: e.sprite.x, y: e.sprite.y, hp: e.hp })),
+      enemies: this.enemies
+        .active()
+        .map((e) => ({ kind: e.kind, x: e.sprite.x, y: e.sprite.y, hp: e.hp, spawnX: e.move.x0 })),
       shots: this.bullets.active().length,
       explosions: this.explosions.activeCount(),
       enemyShots: this.enemyBullets.active().map((sh) => ({ x: sh.sprite.x, y: sh.sprite.y })),
@@ -220,12 +229,12 @@ export class GameScene extends Phaser.Scene {
   }
 
   /**
-   * Spawns one basic enemy at `x`: at the top of the screen, or at `y` if
-   * given. Its first shot comes after a random delay, or `firstShot` seconds
-   * on screen (tests).
+   * Spawns one enemy of `kind` (default grunt) at `x`: at the top of the
+   * screen, or at `y` if given. Its first shot comes after a random delay, or
+   * `firstShot` seconds on screen (tests).
    */
-  spawnEnemy(x: number, y?: number, firstShot?: number): boolean {
-    return this.enemies.spawn(x, firstShot ?? firstShotDelay(this.rng, ENEMY_FIRE), y);
+  spawnEnemy(x: number, y?: number, firstShot?: number, kind: EnemyKind = 'grunt'): boolean {
+    return this.enemies.spawn(kind, x, firstShot ?? firstShotDelay(this.rng, ENEMY_FIRE), y);
   }
 
   /** Each shot hits at most one enemy and is used up. */
@@ -241,7 +250,7 @@ export class GameScene extends Phaser.Scene {
       const { x, y } = target.sprite;
       if (this.enemies.hit(target, 1)) {
         this.explosions.play(x, y);
-        this.score += ENEMY_BASIC.points;
+        this.score += ENEMY_TYPES[target.kind].points;
         enemies.splice(i, 1);
         if (enemies.length === 0) return;
       }

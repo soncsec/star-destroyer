@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import type { EnemyKind } from '../config/tuning';
 import type { GameScene, GameSnapshot } from '../scenes/GameScene';
 
 /**
@@ -12,8 +13,8 @@ export interface TestHook {
   setSpawning(on: boolean): void;
   /** Removes all enemies and, unless `keepShots`, their shots. */
   clearEnemies(keepShots?: boolean): void;
-  /** Spawns an enemy at x (top of the screen), or at (x, y); optionally set its first shot. */
-  spawnEnemy(x: number, y?: number, firstShot?: number): boolean;
+  /** Spawns an enemy (default grunt) at x (top of the screen) or (x, y); optionally set its first shot. */
+  spawnEnemy(x: number, y?: number, firstShot?: number, kind?: EnemyKind): boolean;
 }
 
 declare global {
@@ -38,6 +39,6 @@ export function installTestHook(game: Phaser.Game): void {
     snapshot: () => gameScene()?.snapshot() ?? null,
     setSpawning: (on) => required().setSpawning(on),
     clearEnemies: (keepShots) => required().clearEnemies(keepShots),
-    spawnEnemy: (x, y, firstShot) => required().spawnEnemy(x, y, firstShot),
+    spawnEnemy: (x, y, firstShot, kind) => required().spawnEnemy(x, y, firstShot, kind),
   };
 }

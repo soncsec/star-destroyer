@@ -1,3 +1,5 @@
+import type { MovePattern } from '../logic/enemyMoves';
+
 /** All gameplay numbers live here so they can be tuned in one place. */
 export const GAME_WIDTH = 256;
 export const GAME_HEIGHT = 320;
@@ -92,20 +94,65 @@ export const ENEMY_FIRE = {
   poolSize: 48,
 } as const;
 
-export const ENEMY_BASIC = {
-  sprite: 'enemy-01',
+/** The three enemy types (M2.3). Hitboxes are about 80% of each sprite's visible body. */
+export type EnemyKind = 'grunt' | 'weaver' | 'diver';
+
+export interface EnemyType {
+  /** Texture key (see the asset manifest). */
+  sprite: string;
   /** Hits from the basic weapon needed to destroy it. */
-  hp: 3,
-  /** Pixels per second, downward. */
-  speed: 45,
-  /** Seconds between spawns. */
-  spawnInterval: 1.4,
-  /** Collision box: the visible body, slightly smaller than the 48×48 frame. */
-  hitbox: { w: 24, h: 28, offsetY: -3 },
-  /** How long the enemy flashes after being hit, in seconds. */
+  hp: number;
+  points: number;
+  /** Whether it shoots (divers ram instead). */
+  fires: boolean;
+  /** Collision box relative to the sprite centre. */
+  hitbox: { w: number; h: number; offsetY: number };
+  move: MovePattern;
+}
+
+export const ENEMY_TYPES: Readonly<Record<EnemyKind, EnemyType>> = {
+  /** enemy-01: flies straight down. Visible body 30×32. */
+  grunt: {
+    sprite: 'enemy-01',
+    hp: 3,
+    points: 100,
+    fires: true,
+    hitbox: { w: 24, h: 28, offsetY: -3 },
+    move: { kind: 'straight', speed: 45 },
+  },
+  /** enemy-02: sways side to side while descending. Visible body 34×28. */
+  weaver: {
+    sprite: 'enemy-02',
+    hp: 2,
+    points: 150,
+    fires: true,
+    hitbox: { w: 28, h: 22, offsetY: -2 },
+    move: { kind: 'weave', speed: 35, amplitude: 36, period: 2.4 },
+  },
+  /** enemy-03: flies in, hovers, then dives at where the ship was. Visible body 42×35. */
+  diver: {
+    sprite: 'enemy-03',
+    hp: 4,
+    points: 200,
+    fires: false,
+    hitbox: { w: 34, h: 28, offsetY: 0 },
+    move: { kind: 'dive', enterSpeed: 70, hoverY: 70, hoverTime: 0.9, diveSpeed: 170 },
+  },
+};
+
+/** Shared by every enemy type. */
+export const ENEMY_COMMON = {
+  /** How long an enemy flashes after being hit, in seconds. */
   hitFlash: 0.08,
-  poolSize: 12,
-  points: 100,
+  poolSize: 16,
+} as const;
+
+/** Random spawning until scripted waves arrive (M2.4). */
+export const SPAWNER = {
+  /** Seconds between spawns. */
+  interval: 1.4,
+  /** Relative chance of each type per spawn. */
+  weights: { grunt: 6, weaver: 3, diver: 2 } satisfies Record<EnemyKind, number>,
 } as const;
 
 export const EXPLOSION = {
