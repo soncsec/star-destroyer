@@ -53,7 +53,7 @@
 - [x] M1.1 Vite 8.3.2 + TypeScript 6.0.3 + Phaser 4.2.1 scaffold (relative `base: './'`); Prettier and ESLint; seeded RNG with unit tests
 - [x] M1.2 CI workflow: format, lint, type check, Vitest with coverage, build, `npm audit`, CodeQL (security-extended), gitleaks; Dependabot with a 14-day cooldown
 - [x] M1.3 Asset manifest and preview scene showing every sheet animating correctly (open the game with `?scene=preview`)
-- [ ] M1.4 Scrolling background with pixel-perfect scaling
+- [x] M1.4 Scrolling background (nebula plus a faster star layer) with whole-number pixel scaling
 - [ ] M1.5 Player movement with banking animation and screen bounds
 - [ ] M1.6 Shooting with pooled bullets (the weapon effect sprites point right, so they're rotated −90° to fire upward)
 - [ ] M1.7 One enemy type, collision, explosion
