@@ -3,17 +3,20 @@ import {
   BACKGROUND,
   DEFAULT_SEED,
   ENEMY_BASIC,
+  ENEMY_FIRE,
   GAME_HEIGHT,
   GAME_WIDTH,
   PLAYER_HEALTH,
   WEAPON,
 } from '../config/tuning';
 import { Bullets } from '../entities/Bullets';
+import { EnemyBullets } from '../entities/EnemyBullets';
 import { Enemies } from '../entities/Enemies';
 import { Explosions } from '../entities/Explosions';
 import { Player } from '../entities/Player';
 import { firstHit } from '../logic/collision';
 import { stepSpawner } from '../logic/enemy';
+import { aimDown, firstShotDelay, nextShotDelay, stepEnemyFire } from '../logic/enemyFire';
 import {
   isGameOver,
   newHealth,
@@ -34,6 +37,8 @@ export interface GameSnapshot {
   enemies: { x: number; y: number; hp: number }[];
   shots: number;
   explosions: number;
+  /** Enemy shots in flight. */
+  enemyShots: { x: number; y: number }[];
   health: Health & { gameOver: boolean };
   /** The result of the most recent hit, for tests and (later) the HUD. */
   lastHit: HitResult | null;
@@ -51,6 +56,7 @@ export class GameScene extends Phaser.Scene {
   private bullets!: Bullets;
   private fireState: FireState = { cooldown: 0 };
   private enemies!: Enemies;
+  private enemyBullets!: EnemyBullets;
   private explosions!: Explosions;
   private rng!: Rng;
   private spawnTimer = 0;
@@ -77,6 +83,7 @@ export class GameScene extends Phaser.Scene {
     this.health = newHealth(PLAYER_HEALTH);
     this.lastHit = null;
     this.enemies = new Enemies(this);
+    this.enemyBullets = new EnemyBullets(this);
     this.bullets = new Bullets(this);
     this.player = new Player(this);
     this.explosions = new Explosions(this);
@@ -116,9 +123,11 @@ export class GameScene extends Phaser.Scene {
     this.spawnTimer = spawn.timeLeft;
     if (spawn.spawn && this.spawning) {
       const margin = ENEMY_BASIC.hitbox.w / 2 + 4;
-      this.enemies.spawn(this.rng.range(margin, GAME_WIDTH - margin));
+      this.spawnEnemy(this.rng.range(margin, GAME_WIDTH - margin));
     }
     this.enemies.update(dt);
+    this.enemiesFire(dt);
+    this.enemyBullets.update(dt);
     this.resolveShotHits();
 
     this.health = tickHealth(this.health, dt);
@@ -128,24 +137,56 @@ export class GameScene extends Phaser.Scene {
     );
   }
 
-  /** An enemy touching the ship costs one hit and is destroyed (no points). */
+  /** Each enemy on screen shoots on its own timer, aimed (within limits) at the ship. */
+  private enemiesFire(dt: number): void {
+    const next = (): number => nextShotDelay(this.rng, ENEMY_FIRE);
+    const target = this.player.position;
+    for (const e of this.enemies.active()) {
+      const step = stepEnemyFire(e.fireIn, dt, this.enemies.onScreen(e), next);
+      e.fireIn = step.timeLeft;
+      if (!step.fire) continue;
+      const from = { x: e.sprite.x, y: e.sprite.y + ENEMY_FIRE.muzzleOffsetY };
+      this.enemyBullets.fire(
+        from.x,
+        from.y,
+        aimDown(from, target, ENEMY_FIRE.speed, ENEMY_FIRE.maxAimAngleDeg),
+      );
+    }
+  }
+
+  /**
+   * An enemy shot or an enemy touching the ship costs one hit. The shot is
+   * used up; a crashing enemy is destroyed (no points).
+   */
   private resolvePlayerHits(): void {
     if (isGameOver(this.health) || this.health.invulnerable > 0) return;
+    const ship = this.player.hitbox();
+    const shots = this.enemyBullets.active();
+    const shot =
+      shots[
+        firstHit(
+          ship,
+          shots.map((s) => this.enemyBullets.hitbox(s)),
+        )
+      ];
     const enemies = this.enemies.active();
-    const target =
+    const enemy =
       enemies[
         firstHit(
-          this.player.hitbox(),
+          ship,
           enemies.map((e) => this.enemies.hitbox(e)),
         )
       ];
-    if (!target) return;
+    if (!shot && !enemy) return;
 
     const { health, result } = takeHit(this.health, PLAYER_HEALTH);
     this.health = health;
     this.lastHit = result;
-    this.explosions.play(target.sprite.x, target.sprite.y);
-    this.enemies.destroy(target);
+    if (shot) this.enemyBullets.release(shot);
+    if (enemy) {
+      this.explosions.play(enemy.sprite.x, enemy.sprite.y);
+      this.enemies.destroy(enemy);
+    }
     if (result === 'lifeLost' || result === 'gameOver') {
       const { x, y } = this.player.position;
       this.explosions.play(x, y);
@@ -161,6 +202,7 @@ export class GameScene extends Phaser.Scene {
       enemies: this.enemies.active().map((e) => ({ x: e.sprite.x, y: e.sprite.y, hp: e.hp })),
       shots: this.bullets.active().length,
       explosions: this.explosions.activeCount(),
+      enemyShots: this.enemyBullets.active().map((sh) => ({ x: sh.sprite.x, y: sh.sprite.y })),
       health: { ...this.health, gameOver: isGameOver(this.health) },
       lastHit: this.lastHit,
     };
@@ -171,14 +213,19 @@ export class GameScene extends Phaser.Scene {
     this.spawning = on;
   }
 
-  /** Removes all enemies without scoring (tests use this for a clean screen). */
-  clearEnemies(): void {
+  /** Removes all enemies and, unless `keepShots`, their shots (tests use this for a clean screen). */
+  clearEnemies(keepShots = false): void {
     this.enemies.clear();
+    if (!keepShots) this.enemyBullets.clear();
   }
 
-  /** Spawns one basic enemy at `x`: at the top of the screen, or at `y` if given. */
-  spawnEnemy(x: number, y?: number): boolean {
-    return this.enemies.spawn(x, y);
+  /**
+   * Spawns one basic enemy at `x`: at the top of the screen, or at `y` if
+   * given. Its first shot comes after a random delay, or `firstShot` seconds
+   * on screen (tests).
+   */
+  spawnEnemy(x: number, y?: number, firstShot?: number): boolean {
+    return this.enemies.spawn(x, firstShot ?? firstShotDelay(this.rng, ENEMY_FIRE), y);
   }
 
   /** Each shot hits at most one enemy and is used up. */

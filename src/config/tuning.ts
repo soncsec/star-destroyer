@@ -7,6 +7,7 @@ export const DEPTH = {
   background: 0,
   enemies: 10,
   playerShots: 15,
+  enemyShots: 25,
   player: 20,
   explosions: 30,
 } as const;
@@ -67,6 +68,28 @@ export const PLAYER_HEALTH = {
   flashHz: 10,
   /** Collision box: smaller than the 48×48 ship so near misses feel fair. */
   hitbox: { w: 16, h: 20 },
+} as const;
+
+/**
+ * Enemy shots, level 1 values. Later levels scale fire rate up to 2.5× and
+ * shot speed up to 1.3× (PROJECT.md 4a, M4.2).
+ */
+export const ENEMY_FIRE = {
+  sprite: 'boss-bolt',
+  /** Average seconds between one enemy's shots, and the random spread around it. */
+  interval: 2.2,
+  jitter: 0.5,
+  /** An enemy's first shot comes at least this long after it appears. */
+  firstShotMin: 0.6,
+  /** Pixels per second. */
+  speed: 110,
+  /** Shots aim at the ship but turn at most this far from straight down. */
+  maxAimAngleDeg: 30,
+  /** Shots leave from just below the enemy's centre. */
+  muzzleOffsetY: 14,
+  /** Collision box: a little smaller than the 8×8 bolt. */
+  hitbox: { w: 6, h: 6 },
+  poolSize: 48,
 } as const;
 
 export const ENEMY_BASIC = {

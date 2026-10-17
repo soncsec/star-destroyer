@@ -101,7 +101,7 @@
 **Demonstrable result:** a full survival loop on level 1: fighting, taking damage, dying, restarting and scoring.
 
 - [x] M2.1 Health (5 hits per life), 3 lives, invulnerability flashes after losing a life (logic unit tested). Enemies crashing into the ship cost a hit until enemy shots arrive (M2.2)
-- [ ] M2.2 Enemy bullets (boss bolt sprite)
+- [x] M2.2 Enemy bullets (boss bolt sprite). Each enemy fires on its own seeded timer once fully on screen; shots aim at the ship within 30° of straight down
 - [ ] M2.3 Enemy types 2 and 3 with distinct movement patterns
 - [ ] M2.4 Scripted wave schedule driven by data (unit tested)
 - [ ] M2.5 Destructible asteroids; large ones split into small ones
