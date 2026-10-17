@@ -69,39 +69,38 @@ count() { find "$T/server/releases/star-destroyer" -mindepth 1 -maxdepth 1 -type
 
 # --- the tests -------------------------------------------------------------------
 out="$(FAKE_CI=failure release deploy)"
-[[ $? -ne 0 && "$out" == *"has not passed"* && "$(count)" == 0 ]] && ok "refuses to release when CI failed" || bad "CI gate: $out"
+if [[ $? -ne 0 && "$out" == *"has not passed"* && "$(count)" == 0 ]]; then ok "refuses to release when CI failed"; else bad "CI gate: $out"; fi
 
 echo dirty >untracked.txt
 out="$(release deploy)"
-[[ $? -ne 0 && "$out" == *"working tree has changes"* ]] && ok "refuses uncommitted changes" || bad "dirty tree: $out"
+if [[ $? -ne 0 && "$out" == *"working tree has changes"* ]]; then ok "refuses uncommitted changes"; else bad "dirty tree: $out"; fi
 rm untracked.txt
 
 out="$(release deploy --dry-run)"
-[[ $? -eq 0 && "$out" == *"Dry run"* && "$(count)" == 0 ]] && ok "dry run uploads nothing" || bad "dry run: $out"
+if [[ $? -eq 0 && "$out" == *"Dry run"* && "$(count)" == 0 ]]; then ok "dry run uploads nothing"; else bad "dry run: $out"; fi
 
 out="$(release deploy)"; first="$(live)"
-[[ $? -eq 0 && -n "$first" && "$out" == *"smoke test: passed"* ]] && ok "first release goes live and passes the smoke test" || bad "first release: $out"
+if [[ $? -eq 0 && -n "$first" && "$out" == *"smoke test: passed"* ]]; then ok "first release goes live and passes the smoke test"; else bad "first release: $out"; fi
 
 sleep 1 # release ids have one-second resolution
 out="$(release deploy)"; second="$(live)"
-[[ $? -eq 0 && "$second" != "$first" && "$(count)" == 2 ]] && ok "second release replaces the first" || bad "second release: $out"
+if [[ $? -eq 0 && "$second" != "$first" && "$(count)" == 2 ]]; then ok "second release replaces the first"; else bad "second release: $out"; fi
 a="$T/server/releases/star-destroyer/$first/assets/index-AbCd1234.js"
 b="$T/server/releases/star-destroyer/$second/assets/index-AbCd1234.js"
-[[ -f "$a" && -f "$b" ]] && ok "both releases keep their files" || bad "release files missing"
+if [[ -f "$a" && -f "$b" ]]; then ok "both releases keep their files"; else bad "release files missing"; fi
 
 sleep 1
 out="$(FAKE_BROKEN=1 release deploy)"
-[[ $? -ne 0 && "$out" == *"rolling back"* && "$(live)" == "$second" ]] &&
-  ok "a broken release fails the smoke test and is rolled back automatically" || bad "broken release: $out (live=$(live))"
+if [[ $? -ne 0 && "$out" == *"rolling back"* && "$(live)" == "$second" ]]; then ok "a broken release fails the smoke test and is rolled back automatically"; else bad "broken release: $out (live=$(live))"; fi
 
 out="$(release rollback)"
-[[ $? -eq 0 && "$(live)" == "$first" ]] && ok "rollback command returns to the earlier release" || bad "rollback: $out"
+if [[ $? -eq 0 && "$(live)" == "$first" ]]; then ok "rollback command returns to the earlier release"; else bad "rollback: $out"; fi
 
 out="$(release status)"
-[[ "$out" == *"* $first (live)"* ]] && ok "status shows the live release" || bad "status: $out"
+if [[ "$out" == *"* $first (live)"* ]]; then ok "status shows the live release"; else bad "status: $out"; fi
 
 for _ in 1 2 3 4 5; do sleep 1; release deploy >/dev/null; done
-[[ "$(count)" -eq 5 && -d "$T/server/releases/star-destroyer/$(live)" ]] && ok "old releases are pruned to the newest 5, including the live one" || bad "count is $(count)"
+if [[ "$(count)" -eq 5 && -d "$T/server/releases/star-destroyer/$(live)" ]]; then ok "old releases are pruned to the newest 5, including the live one"; else bad "count is $(count)"; fi
 
 echo
 echo "$PASS passed, $FAIL failed"

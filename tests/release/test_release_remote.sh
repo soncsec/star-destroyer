@@ -56,13 +56,12 @@ teardown
 setup
 expect_ok "status with no releases" run status star-destroyer
 out="$(run prepare star-destroyer "$A")"
-[[ "$out" == *"upload_to=$T/releases/star-destroyer/$A"* && "$out" == *"live_dir="* ]] &&
-  ok "prepare returns the upload folder and no live folder" || bad "prepare output: $out"
+if [[ "$out" == *"upload_to=$T/releases/star-destroyer/$A"* && "$out" == *"live_dir="* ]]; then ok "prepare returns the upload folder and no live folder"; else bad "prepare output: $out"; fi
 expect_fail "prepare refuses an existing id" "already exists" run prepare star-destroyer "$A"
 expect_fail "activate refuses a release without index.html" "no index.html" run activate star-destroyer "$A"
 echo "<title>A</title>" >"$T/releases/star-destroyer/$A/index.html"
 expect_ok "activate the first release" run activate star-destroyer "$A"
-[[ "$(live)" == "$A" && -f "$T/web/star-destroyer/index.html" ]] && ok "the live link serves release A" || bad "live is $(live)"
+if [[ "$(live)" == "$A" && -f "$T/web/star-destroyer/index.html" ]]; then ok "the live link serves release A"; else bad "live is $(live)"; fi
 expect_fail "activate refuses an unknown id" "no such release" run activate star-destroyer "$B"
 expect_fail "rollback with only one release" "no release older" run rollback star-destroyer
 teardown
@@ -71,14 +70,14 @@ teardown
 setup
 make_release "$A" && run activate star-destroyer "$A" >/dev/null
 out="$(run prepare star-destroyer "$B")"
-[[ "$out" == *"live_dir=$T/releases/star-destroyer/$A"* ]] && ok "prepare reports the live folder for --link-dest" || bad "$out"
+if [[ "$out" == *"live_dir=$T/releases/star-destroyer/$A"* ]]; then ok "prepare reports the live folder for --link-dest"; else bad "$out"; fi
 echo "<title>B</title>" >"$T/releases/star-destroyer/$B/index.html"
 run activate star-destroyer "$B" >/dev/null
-[[ "$(live)" == "$B" ]] && ok "switch to release B" || bad "live is $(live)"
+if [[ "$(live)" == "$B" ]]; then ok "switch to release B"; else bad "live is $(live)"; fi
 expect_ok "rollback" run rollback star-destroyer
-[[ "$(live)" == "$A" ]] && ok "rollback returns to release A" || bad "live is $(live)"
-run status star-destroyer | grep -q "^\* $A (live)" && ok "status marks the live release" || bad "status: $(run status star-destroyer)"
-ls -A "$T/web" | grep -q switch && bad "leftover temporary link" || ok "no temporary links left behind"
+if [[ "$(live)" == "$A" ]]; then ok "rollback returns to release A"; else bad "live is $(live)"; fi
+if run status star-destroyer | grep -q "^\* $A (live)"; then ok "status marks the live release"; else bad "status: $(run status star-destroyer)"; fi
+if compgen -G "$T/web/.*switch*" >/dev/null; then bad "leftover temporary link"; else ok "no temporary links left behind"; fi
 teardown
 
 # --- refusals that protect the server ---------------------------------------------
@@ -86,7 +85,7 @@ setup
 make_release "$A"
 mkdir -p "$T/web/star-destroyer" && echo keep >"$T/web/star-destroyer/precious.txt"
 expect_fail "refuses to replace a real folder" "not a symlink" run activate star-destroyer "$A"
-[[ -f "$T/web/star-destroyer/precious.txt" ]] && ok "the real folder is untouched" || bad "real folder was changed"
+if [[ -f "$T/web/star-destroyer/precious.txt" ]]; then ok "the real folder is untouched"; else bad "real folder was changed"; fi
 rm -rf "$T/web/star-destroyer" && ln -s /etc "$T/web/star-destroyer"
 expect_fail "refuses a link pointing outside the releases folder" "points outside" run activate star-destroyer "$A"
 teardown
@@ -96,8 +95,8 @@ setup
 for id in "$A" "$B" "$C" "$D"; do make_release "$id"; done
 run activate star-destroyer "$A" >/dev/null # the oldest is live
 expect_ok "prune keeps 2" run prune star-destroyer 2
-left="$(ls "$T/releases/star-destroyer" | tr '\n' ' ')"
-[[ "$left" == "$A $C $D " ]] && ok "prune kept the 2 newest plus the live one" || bad "left: $left"
+left="$(find "$T/releases/star-destroyer" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort | tr '\n' ' ')"
+if [[ "$left" == "$A $C $D " ]]; then ok "prune kept the 2 newest plus the live one"; else bad "left: $left"; fi
 expect_fail "prune needs a positive number" "positive number" run prune star-destroyer 0
 teardown
 
@@ -110,7 +109,7 @@ missing="$T/missing"
 reader=$!
 for i in $(seq 1 100); do run activate star-destroyer "$([[ $((i % 2)) == 0 ]] && echo "$A" || echo "$B")" >/dev/null; done
 wait "$reader"
-[[ ! -s "$missing" ]] && ok "index.html stayed reachable through 100 switches" || bad "missing $(wc -l <"$missing") times"
+if [[ ! -s "$missing" ]]; then ok "index.html stayed reachable through 100 switches"; else bad "missing $(wc -l <"$missing") times"; fi
 teardown
 
 echo
