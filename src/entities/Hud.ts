@@ -38,7 +38,7 @@ export class Hud {
   update(score: number, hits: number, lives: number): void {
     this.score.setText(`SCORE ${formatScore(score)}`);
     this.lives.setText(`LIVES ${lives}`);
-    healthPips(hits, this.pips.length).forEach((on, i) =>
+    healthPips(hits, this.pips.length, lives).forEach((on, i) =>
       this.pips[i]?.setFillStyle(on ? HUD.pip.on : HUD.pip.off),
     );
   }

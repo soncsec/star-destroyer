@@ -7,9 +7,12 @@ export function formatScore(score: number, digits = 6): string {
   return String(Math.min(Math.floor(score), max)).padStart(digits, '0');
 }
 
-/** One pip per hit the ship can still take this life: true = still there. */
-export function healthPips(hits: number, hitsPerLife: number): boolean[] {
+/**
+ * One pip per hit the ship can still take this life: true = still there.
+ * With no lives left (game over) every pip is out.
+ */
+export function healthPips(hits: number, hitsPerLife: number, lives = 1): boolean[] {
   if (hitsPerLife < 1) throw new RangeError('hitsPerLife must be at least 1');
-  const left = Math.max(0, Math.min(hitsPerLife, hitsPerLife - hits));
+  const left = lives <= 0 ? 0 : Math.max(0, Math.min(hitsPerLife, hitsPerLife - hits));
   return Array.from({ length: hitsPerLife }, (_, i) => i < left);
 }
