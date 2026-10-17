@@ -55,11 +55,13 @@ chmod +x "$T/bin/"*
 mkdir -p "$T/remote/soncsec" && git init -q --bare "$T/remote/soncsec/star-destroyer.git"
 mkdir "$T/repo" && cd "$T/repo" || exit 1
 git init -q -b main
+# CI runners have no git identity; give this throwaway repo its own.
+git config user.name test && git config user.email test@example.invalid
 mkdir -p scripts deploy
 cp "$SRC/scripts/release.sh" "$SRC/scripts/release-remote.sh" "$SRC/scripts/smoke_test.py" scripts/
 printf 'dist/\ndeploy/server.env\n' >.gitignore
 printf '{"name": "star-destroyer"}\n' >package.json
-git add -A && git -c user.name=t -c user.email=t@t commit -q -m init
+git add -A && git commit -q -m init
 git remote add origin "$T/remote/soncsec/star-destroyer.git" && git push -q origin main
 touch "$T/fake_key"
 printf 'SERVER=127.0.0.1:%s\nSSH_USER=deploy\nSSH_KEY=%s\n' "$PORT" "$T/fake_key" >deploy/server.env
@@ -74,7 +76,7 @@ with_change() { # file, sed expression, command... : run with a temporary edit, 
   local file="$1" expr="$2"; shift 2
   sed -i "$expr" "$file"
   git diff --quiet && { echo "with_change: '$expr' changed nothing in $file"; return 99; }
-  git commit -qam tmp
+  if ! git commit -qam tmp; then git checkout -q -- "$file"; echo "with_change: commit failed"; return 98; fi
   "$@"; local rc=$?
   git reset -q --hard HEAD~1
   return $rc
