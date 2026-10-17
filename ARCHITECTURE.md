@@ -50,6 +50,7 @@ The `games/` folder sits inside `soncrant.com`'s `pub/` folder, so the same file
 
 ### ADR-003: Language — TypeScript — *Accepted*
 
+- **Version:** TypeScript **6.0.3**. TypeScript 7 is out, but typescript-eslint 8.71 only supports TypeScript below 6.1, so we stay on 6.0 until the linter supports 7.
 - **Alternatives:** plain JavaScript.
 - **Tradeoffs:** a small setup cost (handled by Vite) buys compile-time error checking, safer refactoring, and easier PR review.
 
