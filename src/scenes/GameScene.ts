@@ -3,6 +3,7 @@ import {
   BACKGROUND,
   ASTEROIDS,
   DEFAULT_SEED,
+  GAME_OVER,
   ENEMY_FIRE,
   ENEMY_TYPES,
   GAME_HEIGHT,
@@ -16,9 +17,11 @@ import { Bullets } from '../entities/Bullets';
 import { EnemyBullets } from '../entities/EnemyBullets';
 import { Enemies } from '../entities/Enemies';
 import { Explosions } from '../entities/Explosions';
+import { GameOverPanel } from '../entities/GameOverPanel';
 import { Hud } from '../entities/Hud';
 import { Player } from '../entities/Player';
 import { firstHit, type Box } from '../logic/collision';
+import { panelShown, startGameOver, stepGameOver, type GameOverState } from '../logic/gameOver';
 import { LEVEL_1 } from '../levels/level1';
 import { aimDown, firstShotDelay, nextShotDelay, stepEnemyFire } from '../logic/enemyFire';
 import {
@@ -54,6 +57,8 @@ export interface GameSnapshot {
   asteroids: { size: RockSize; x: number; y: number; hp: number }[];
   /** What the HUD shows. */
   hud: { score: string; lives: string; pips: boolean[] };
+  /** The game-over panel, and whether a fresh key press will now restart. */
+  gameOver: { visible: boolean; title: string; score: string; prompt: string; armed: boolean };
   shots: number;
   explosions: number;
   /** Enemy shots in flight. */
@@ -64,7 +69,7 @@ export interface GameSnapshot {
 }
 
 type Keys = Record<
-  'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'fire',
+  'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'fire' | 'enter',
   Phaser.Input.Keyboard.Key
 >;
 
@@ -79,6 +84,11 @@ export class GameScene extends Phaser.Scene {
   private asteroids!: Asteroids;
   private explosions!: Explosions;
   private hud!: Hud;
+  private gameOverPanel!: GameOverPanel;
+  /** Set when the last life is lost; null while playing. */
+  private gameOver: GameOverState | null = null;
+  /** A new Space or Enter press since the last frame (catches taps shorter than a frame). */
+  private restartPressed = false;
   private rng!: Rng;
   private waves: WaveRunner = startWaves();
   private score = 0;
@@ -110,6 +120,8 @@ export class GameScene extends Phaser.Scene {
     this.player = new Player(this);
     this.explosions = new Explosions(this);
     this.hud = new Hud(this, PLAYER_HEALTH.hitsPerLife);
+    this.gameOverPanel = new GameOverPanel(this);
+    this.gameOver = null;
 
     const kb = this.input.keyboard;
     if (!kb) throw new Error('keyboard input is not available');
@@ -123,7 +135,16 @@ export class GameScene extends Phaser.Scene {
       s: 'S',
       d: 'D',
       fire: 'SPACE',
+      enter: 'ENTER',
     }) as Keys;
+    // The 'down' event fires once per real press (not for key-repeat), even if
+    // the key is released again before the next frame.
+    this.restartPressed = false;
+    const onPress = (): void => {
+      this.restartPressed = true;
+    };
+    this.keys.fire.on('down', onPress);
+    this.keys.enter.on('down', onPress);
   }
 
   override update(_time: number, deltaMs: number): void {
@@ -142,7 +163,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.bullets.update(dt);
 
-    if (this.spawning) {
+    if (this.spawning && !this.gameOver) {
       const step = stepWaves(this.waves, LEVEL_1.waves, dt, LEVEL_1.loopGap);
       this.waves = step.runner;
       for (const sp of step.spawns) {
@@ -162,6 +183,23 @@ export class GameScene extends Phaser.Scene {
       !isGameOver(this.health) && shipVisible(this.health, PLAYER_HEALTH.flashHz),
     );
     this.hud.update(this.score, this.health.hits, this.health.lives);
+    this.updateGameOver(dt);
+  }
+
+  /** After the last life: show the panel, then restart on a fresh Space or Enter press. */
+  private updateGameOver(dt: number): void {
+    const pressed = this.restartPressed;
+    this.restartPressed = false;
+    if (!this.gameOver) {
+      if (isGameOver(this.health)) this.gameOver = startGameOver();
+      return;
+    }
+    const held = this.keys.fire.isDown || this.keys.enter.isDown;
+    const step = stepGameOver(this.gameOver, dt, { held, pressed }, GAME_OVER);
+    this.gameOver = step.state;
+    const shown = panelShown(this.gameOver, GAME_OVER);
+    this.gameOverPanel.show(shown, this.score, this.gameOver.t - GAME_OVER.showAfter);
+    if (step.restart) this.scene.restart();
   }
 
   /** Each enemy on screen shoots on its own timer, aimed (within limits) at the ship. */
@@ -229,6 +267,7 @@ export class GameScene extends Phaser.Scene {
       })),
       waves: { ...this.waves },
       hud: this.hud.read(),
+      gameOver: { ...this.gameOverPanel.read(), armed: this.gameOver?.armed ?? false },
       asteroids: this.asteroids
         .active()
         .map((r) => ({ size: r.size, x: r.rock.x, y: r.rock.y, hp: r.hp })),
@@ -243,6 +282,17 @@ export class GameScene extends Phaser.Scene {
   /** Spawns a large asteroid at `x`: at the top of the screen, or at `y` if given (tests). */
   spawnAsteroid(x: number, y?: number): boolean {
     return this.asteroids.spawnLarge(x, this.rng, y);
+  }
+
+  /** Fires exactly one player shot from the ship (tests; no keyboard timing involved). */
+  fireShot(): boolean {
+    const { x, y } = this.player.position;
+    return this.bullets.fire(x, y + WEAPON.muzzleOffsetY);
+  }
+
+  /** Puts the ship on its last life with one hit left (tests reach game over quickly). */
+  oneHitLeft(): void {
+    this.health = { hits: PLAYER_HEALTH.hitsPerLife - 1, lives: 1, invulnerable: 0 };
   }
 
   /** Turns the wave script on or off (tests use this to control the screen). */

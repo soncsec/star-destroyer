@@ -16,6 +16,7 @@ Read `PROJECT.md` (scope), `ARCHITECTURE.md` (decisions), and `ROADMAP.md` (curr
 - Changes another repo needs (for example, this game's portal card) go through a PR or issue on that repo.
 - On the production server, this game may only write to `/var/www/html/soncrant.com/pub/games/star-destroyer/`.
 - Local dev server port: **5173**. Playwright's test server uses **4174**.
+- Other games' sessions share this machine. Stop only processes you started, by PID or by your own port (e.g. the pid listening on 4174). Never stop processes by name (`pkill -f vite`, `pkill -f "vite preview"`, `killall node`): that kills other sessions' servers mid-run.
 
 ## Always ask the owner before
 

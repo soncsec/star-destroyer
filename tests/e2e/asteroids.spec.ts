@@ -19,13 +19,11 @@ async function openQuietGame(page: Page): Promise<GameSnapshot> {
   return snapshot(page);
 }
 
-/** Taps Space for exactly one shot and waits until it has hit something or left. */
+/** Fires exactly one shot and waits until it has hit something or left. */
 async function fireOneShot(page: Page): Promise<GameSnapshot> {
-  await page.keyboard.down('Space');
-  await page.waitForFunction(() => (window.__starDestroyer?.snapshot()?.shots ?? 0) > 0, null, {
-    polling: 'raf',
-  });
-  await page.keyboard.up('Space');
+  // Exactly one shot via the test hook: holding Space for "one shot" depends on
+  // timing, and under load a slow round trip lets the 0.2 s cooldown fire extra shots.
+  expect(await page.evaluate(() => window.__starDestroyer?.fireShot())).toBe(true);
   const handle = await page.waitForFunction(
     () => {
       const s = window.__starDestroyer?.snapshot();

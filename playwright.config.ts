@@ -1,6 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 4174;
+// An explicit address, so the test server and the browsers always agree on
+// where to connect, however "localhost" resolves on the machine.
+const HOST = '127.0.0.1';
 const isCI = Boolean(process.env['CI']);
 
 export default defineConfig({
@@ -11,7 +14,7 @@ export default defineConfig({
   reporter: isCI ? [['list'], ['html', { open: 'never' }]] : 'list',
   timeout: 30_000,
   use: {
-    baseURL: `http://localhost:${PORT}/`,
+    baseURL: `http://${HOST}:${PORT}/`,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
@@ -21,11 +24,12 @@ export default defineConfig({
   ],
   webServer: {
     // The e2e build is the normal build plus the test hook (src/debug/testHook.ts).
-    command: `npm run build:e2e && vite preview --outDir dist-e2e --port ${PORT} --strictPort`,
-    url: `http://localhost:${PORT}/`,
-    // Never reuse a server already on the port: a left-over one (e.g. from an
-    // interrupted run) can vanish mid-run and fail every remaining test with
-    // "connection refused". Better to stop at once with "port already in use".
+    command: `npm run build:e2e && vite preview --outDir dist-e2e --host ${HOST} --port ${PORT} --strictPort`,
+    url: `http://${HOST}:${PORT}/`,
+    // Never reuse a server already on the port: one that isn't ours can vanish
+    // mid-run and fail every remaining test with "connection refused". Better
+    // to stop at once with "port already in use". (Other Claude sessions on this
+    // machine must also never stop processes by name, e.g. `pkill -f vite`.)
     reuseExistingServer: false,
     // Show the server's own output, so a crash explains itself in the test log.
     stdout: 'pipe',

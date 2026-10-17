@@ -16,6 +16,17 @@ export const DEPTH = {
   hud: 100,
 } as const;
 
+/** Game-over panel (M2.7). */
+export const GAME_OVER = {
+  /** Seconds from the last hit to the panel appearing (lets the explosion play). */
+  showAfter: 1.2,
+  /** The "press to play again" prompt blinks this many times a second. */
+  blinkHz: 2,
+  /** Dark backing behind the panel text. */
+  backdrop: { color: 0x05070f, alpha: 0.75 },
+  titleColor: '#ff3ea5',
+} as const;
+
 /** Score, health pips and lives across the top of the screen (M2.6). */
 export const HUD = {
   /** CSS font family; Press Start 2P is drawn at 8 px, its native size. */

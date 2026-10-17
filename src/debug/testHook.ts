@@ -13,6 +13,10 @@ export interface TestHook {
   setSpawning(on: boolean): void;
   /** Removes all enemies and asteroids and, unless `keepShots`, enemy shots. */
   clearEnemies(keepShots?: boolean): void;
+  /** Fires exactly one player shot from the ship. */
+  fireShot(): boolean;
+  /** Puts the ship on its last life with one hit left. */
+  oneHitLeft(): void;
   /** Spawns a large asteroid at x (top of the screen) or (x, y). */
   spawnAsteroid(x: number, y?: number): boolean;
   /** Spawns an enemy (default grunt) at x (top of the screen) or (x, y); optionally set its first shot. */
@@ -42,6 +46,8 @@ export function installTestHook(game: Phaser.Game): void {
     setSpawning: (on) => required().setSpawning(on),
     clearEnemies: (keepShots) => required().clearEnemies(keepShots),
     spawnAsteroid: (x, y) => required().spawnAsteroid(x, y),
+    oneHitLeft: () => required().oneHitLeft(),
+    fireShot: () => required().fireShot(),
     spawnEnemy: (x, y, firstShot, kind) => required().spawnEnemy(x, y, firstShot, kind),
   };
 }
