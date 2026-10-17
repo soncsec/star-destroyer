@@ -105,7 +105,7 @@
 - [x] M2.3 Enemy types 2 and 3 with distinct movement patterns: weaver (sways, 2 HP, 150 pts) and diver (hovers, then dives at where the ship was; 4 HP, 200 pts; doesn't shoot)
 - [x] M2.4 Scripted wave schedule driven by data (unit tested). `src/levels/level1.ts` (grunts and weavers, ~45 s, loops until M4 adds the boss) built from line/column/V helpers; data checks for order, on-screen positions and crowd size
 - [x] M2.5 Destructible asteroids; large ones split into small ones: grey large rock (6 HP, 50 pts) splits into 3 small rocks (1 HP, 25 pts); crashing costs a hit and still splits it; 3 in level 1
-- [ ] M2.6 Score and HUD
+- [x] M2.6 Score and HUD: `SCORE 000000` top left, 5 health pips under it, `LIVES 3` top right, in Press Start 2P (owner approved for the game)
 - [ ] M2.7 Game over screen and restart
 - [ ] M2.8 Playwright: player death leads to game over, and restart works
 

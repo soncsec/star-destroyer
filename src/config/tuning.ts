@@ -13,6 +13,19 @@ export const DEPTH = {
   enemyShots: 25,
   player: 20,
   explosions: 30,
+  hud: 100,
+} as const;
+
+/** Score, health pips and lives across the top of the screen (M2.6). */
+export const HUD = {
+  /** CSS font family; Press Start 2P is drawn at 8 px, its native size. */
+  font: '"Press Start 2P"',
+  fontSize: 8,
+  color: '#ffffff',
+  shadow: '#000000',
+  /** Margin from the screen edges, pixels. */
+  margin: 4,
+  pip: { w: 6, h: 4, gap: 2, on: 0x2de2e6, off: 0x2b2160 },
 } as const;
 
 /** Background scroll speeds in pixels per second. The star layer moves faster for depth. */

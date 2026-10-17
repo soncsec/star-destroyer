@@ -69,3 +69,7 @@ Files are copied unchanged from the pack and renamed for consistency. Sizes are 
 ## Audio
 
 None yet. CC0 sound effects are added in milestone M5.3, with their sources listed here.
+
+## Font
+
+- **Press Start 2P** by CodeMan38 (Copyright 2012 The Press Start 2P Project Authors), SIL Open Font License 1.1, used for the HUD. Source: `google/fonts` repo, `ofl/pressstart2p/`, commit `e06fe11c39051bddaef73ec338a9d1c8175723f1`; file SHA-256 `034c77f1f05ec89421e4a63f0e3a4ca1ecf852cc6d2bf611f126f275728e017d` (same file as the games portal). License text: `src/assets/fonts/PressStart2P-OFL.txt`. Approved by the owner for the game 2026-10-17.
