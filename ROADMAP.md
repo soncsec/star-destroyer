@@ -58,7 +58,7 @@
 - [x] M1.4 Scrolling background (nebula plus a faster star layer) with whole-number pixel scaling
 - [x] M1.5 Player movement (arrows or WASD) with banking animation, engine flame and screen bounds
 - [x] M1.6 Shooting with pooled bullets (Space; 5 shots per second; effect sprites rotated −90° to fire upward)
-- [ ] M1.7 One enemy type, collision, explosion
+- [x] M1.7 One enemy type (3 hits to destroy), shot collision, pooled explosions, seeded spawns (`?seed=` in the URL)
 - [ ] M1.8 Playwright: game boots with no console errors; an enemy can be destroyed through the test hook
 - [ ] M1.9 Auto-deploy to GitHub Pages on merge; ZAP baseline scan of staging
 

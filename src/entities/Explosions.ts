@@ -1,0 +1,29 @@
+import Phaser from 'phaser';
+import { animKey } from '../assets/manifest';
+import { DEPTH, EXPLOSION } from '../config/tuning';
+
+/** Pool of one-shot explosion animations. */
+export class Explosions {
+  private readonly pool: Phaser.GameObjects.Sprite[] = [];
+
+  constructor(scene: Phaser.Scene) {
+    for (let i = 0; i < EXPLOSION.poolSize; i++) {
+      const s = scene.add
+        .sprite(0, 0, EXPLOSION.sprite)
+        .setDepth(DEPTH.explosions)
+        .setActive(false)
+        .setVisible(false);
+      s.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => s.setActive(false).setVisible(false));
+      this.pool.push(s);
+    }
+  }
+
+  /** Plays an explosion at (x, y). If all are busy, the oldest-started is reused. */
+  play(x: number, y: number): void {
+    const s = this.pool.find((e) => !e.active) ?? this.pool[0];
+    if (!s) return;
+    s.setPosition(x, y).setActive(true).setVisible(true).play(animKey(EXPLOSION.sprite), false);
+    // Move it to the back of the list so reuse picks the oldest one first.
+    this.pool.push(...this.pool.splice(this.pool.indexOf(s), 1));
+  }
+}

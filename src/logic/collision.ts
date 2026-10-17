@@ -22,3 +22,8 @@ export function offScreen(box: Box, screenW: number, screenH: number): boolean {
     box.y - box.h / 2 > screenH
   );
 }
+
+/** Index of the first box in `candidates` that overlaps `target`, or -1 if none does. */
+export function firstHit(target: Box, candidates: readonly Box[]): number {
+  return candidates.findIndex((c) => overlaps(target, c));
+}
