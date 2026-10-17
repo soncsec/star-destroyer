@@ -62,7 +62,7 @@ The `games/` folder sits inside `soncrant.com`'s `pub/` folder, so the same file
 
 ### ADR-005: Hosting — *Accepted*
 
-- **Staging:** every merge to `main` auto-deploys to GitHub Pages for play-testing.
+- **Staging:** every merge to `main` auto-deploys to GitHub Pages for play-testing. URL: https://soncsec.github.io/star-destroyer/. The CI workflow deploys only pushes to `main`, after all its checks pass, and then runs a ZAP baseline scan (2.17.0) that fails on any high-risk alert. GitHub Pages can't set custom headers, so header warnings (CSP and others) are expected there; Apache sets them in production (P1.6).
 - **Production:** the existing **Apache** on Debian 13, public on the internet, serving HTTP on TCP port 80. Files go under `/var/www/html/soncrant.com/pub/games/`, with one subfolder per game. Existing sites stay untouched. The owner maps `games.soncrant.com` to this folder in Apache; Claude does not change the Apache configuration.
 - **Alternatives:** installing nginx alongside Apache (rejected because two web servers would conflict over port 80); itch.io or Netlify (rejected because the owner wants their own server).
 
