@@ -51,7 +51,7 @@
 **Demonstrable result:** on the staging URL, the ship flies and shoots over a scrolling background, and one enemy type appears, can be destroyed, and explodes.
 
 - [x] M1.1 Vite 8.3.2 + TypeScript 6.0.3 + Phaser 4.2.1 scaffold (relative `base: './'`); Prettier and ESLint; seeded RNG with unit tests
-- [ ] M1.2 CI workflow: format, lint, type check, Vitest, build, `npm audit`, CodeQL, Gitleaks
+- [x] M1.2 CI workflow: format, lint, type check, Vitest with coverage, build, `npm audit`, CodeQL (security-extended), gitleaks; Dependabot with a 14-day cooldown
 - [ ] M1.3 Asset manifest and preview scene showing every sheet animating correctly
 - [ ] M1.4 Scrolling background with pixel-perfect scaling
 - [ ] M1.5 Player movement with banking animation and screen bounds
