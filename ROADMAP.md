@@ -11,11 +11,13 @@
 | M1 Walking skeleton | In progress |
 | P1 Portal and production server | Not started |
 | T1 Game template for parallel instances | Not started |
-| M2 Core loop | Not started |
-| M3 Weapons | Not started |
-| M4 Boss | Not started |
-| M5 Polish | Not started |
-| M6 v1.0 release | Not started |
+| M2 Core loop (level 1) | Not started |
+| M3 Power-ups | Not started |
+| M4 Level system and first boss | Not started |
+| M5 Levels 2–4 | Not started |
+| M6 Levels 5–8 | Not started |
+| M7 Polish and balance | Not started |
+| M8 v1.0 release | Not started |
 
 ## Risks driving this order
 
@@ -53,9 +55,9 @@
 - [x] M1.1 Vite 8.3.2 + TypeScript 6.0.3 + Phaser 4.2.1 scaffold (relative `base: './'`); Prettier and ESLint; seeded RNG with unit tests
 - [x] M1.2 CI workflow: format, lint, type check, Vitest with coverage, build, `npm audit`, CodeQL (security-extended), gitleaks; Dependabot with a 14-day cooldown
 - [x] M1.3 Asset manifest and preview scene showing every sheet animating correctly (open the game with `?scene=preview`)
-- [ ] M1.4 Scrolling background with pixel-perfect scaling
-- [ ] M1.5 Player movement with banking animation and screen bounds
-- [ ] M1.6 Shooting with pooled bullets (the weapon effect sprites point right, so they're rotated −90° to fire upward)
+- [x] M1.4 Scrolling background (nebula plus a faster star layer) with whole-number pixel scaling
+- [x] M1.5 Player movement (arrows or WASD) with banking animation, engine flame and screen bounds
+- [x] M1.6 Shooting with pooled bullets (Space; 5 shots per second; effect sprites rotated −90° to fire upward)
 - [ ] M1.7 One enemy type, collision, explosion
 - [ ] M1.8 Playwright: game boots with no console errors; an enemy can be destroyed through the test hook
 - [ ] M1.9 Auto-deploy to GitHub Pages on merge; ZAP baseline scan of staging
@@ -90,65 +92,92 @@
 
 **Acceptance criteria:** the dry-run game passes CI and deploys to staging with no edits outside its own repo except its portal entry; two dev servers run side by side.
 
-## M2 — Core loop
+## M2 — Core loop (level 1)
 
-**Demonstrable result:** a full survival loop of fighting, taking damage, dying, restarting and scoring.
+**Demonstrable result:** a full survival loop on level 1: fighting, taking damage, dying, restarting and scoring.
 
-- [ ] M2.1 Health, lives and invulnerability flashes after a hit (logic unit tested)
-- [ ] M2.2 Enemy bullets
+- [ ] M2.1 Health (5 hits per life), 3 lives, invulnerability flashes after losing a life (logic unit tested)
+- [ ] M2.2 Enemy bullets (boss bolt sprite)
 - [ ] M2.3 Enemy types 2 and 3 with distinct movement patterns
 - [ ] M2.4 Scripted wave schedule driven by data (unit tested)
-- [ ] M2.5 Destructible asteroids
+- [ ] M2.5 Destructible asteroids; large ones split into small ones
 - [ ] M2.6 Score and HUD
 - [ ] M2.7 Game over screen and restart
 - [ ] M2.8 Playwright: player death leads to game over, and restart works
 
 **Acceptance criteria:** the owner can die, restart and score; waves follow the schedule; logic test coverage is at least 80%.
 
-## M3 — Weapons
+## M3 — Power-ups
 
-**Demonstrable result:** collecting power-ups visibly upgrades the ship's weapon.
+**Demonstrable result:** all three power-ups drop and work as specified in PROJECT.md section 4a.
 
-- [ ] M3.1 Power-up drops (drop rate set in the tuning config)
-- [ ] M3.2 Weapon levels 1–3 using the pulse, bolt and charged effects
-- [ ] M3.3 Hit-spark effects on impact
-- [ ] M3.4 Unit tests for weapon progression and losing a level on death
+- [ ] M3.1 Drop system with per-type rarity (data-driven, seeded, unit tested); pickup icons from the gems pack
+- [ ] M3.2 Weapon levels 1–3 (bolt, double, charged or spread); reset to level 1 on death; no time-out
+- [ ] M3.3 Shield: energy-shield effect, blocks all damage for 30 s, timer shown in the HUD
+- [ ] M3.4 Screen clear: destroys all on-screen enemies with a large explosion; rare; never dropped during boss fights
+- [ ] M3.5 Hit-spark effects on impact
+- [ ] M3.6 Unit tests for every power-up rule, including "lost on death" and "no screen clear during bosses"
 
-**Acceptance criteria:** each weapon level is visually distinct and tested; frame rate holds with the maximum weapon level and a full wave on screen.
+**Acceptance criteria:** each power-up is visibly distinct and behaves as specified; rules are unit tested; frame rate holds with max weapon and a full wave.
 
-## M4 — Boss
+## M4 — Level system and first boss
 
-**Demonstrable result:** the full stage can be beaten from start to finish.
+**Demonstrable result:** level 1 ends with a boss, and beating it moves on to level 2.
 
-- [ ] M4.1 Multi-part boss assembly (body, cannons, helmet, thrust)
-- [ ] M4.2 Attacks: bolt volleys and ray beam with a warning before it fires
-- [ ] M4.3 Destructible cannons and phase changes (logic unit tested)
-- [ ] M4.4 Boss health bar, victory screen
-- [ ] M4.5 Playwright: an automated run through every boss phase to victory
-- [ ] M4.6 Automated frame-rate check during the boss fight
+- [ ] M4.1 Data-driven level format: background layers, enemy roster, wave script, boss, difficulty numbers (ADR-012)
+- [ ] M4.2 Difficulty curve function with the limits in PROJECT.md section 4a (unit tested)
+- [ ] M4.3 Boss framework: entry, health bar, phases, attack patterns, defeat
+- [ ] M4.4 Level 1 boss; level-complete screen; transition to the next level
+- [ ] M4.5 Playwright: complete level 1 via the test hook and reach level 2
 
-**Acceptance criteria:** the owner beats the boss; the phase test passes; 60 fps holds during the fight.
+**Acceptance criteria:** the owner beats the level 1 boss and reaches level 2; difficulty limits are enforced by tests.
 
-## M5 — Polish
+## M5 — Levels 2–4
+
+**Demonstrable result:** levels 1–4 are playable start to finish, each with its own look and boss.
+
+- [ ] M5.1 Import and slice the extra art for levels 2–4 (manifest and credits updated)
+- [ ] M5.2 Level 2 (Asteroid Belt) and its boss
+- [ ] M5.3 Level 3 (Blue Expanse) and its boss
+- [ ] M5.4 Level 4 (Red Giant) and its boss
+- [ ] M5.5 Automated check that every level's data is valid and within the difficulty limits
+
+**Acceptance criteria:** the owner plays through levels 1–4; each level looks distinct; all checks pass.
+
+## M6 — Levels 5–8
+
+**Demonstrable result:** all 8 levels are playable, ending with the multi-part final boss.
+
+- [ ] M6.1 Import and slice the extra art for levels 5–8
+- [ ] M6.2 Level 5 (Station Run) and its boss
+- [ ] M6.3 Level 6 (Demon Rift) and its boss
+- [ ] M6.4 Level 7 (Deep Dark) and its twin boss
+- [ ] M6.5 Level 8 (The Core) and the final multi-part boss (cannons, helmet, beam with warning, phases)
+- [ ] M6.6 Victory screen after level 8
+- [ ] M6.7 Automated frame-rate check during the final boss fight
+
+**Acceptance criteria:** the owner beats level 8 (hard but beatable); 60 fps holds during the final boss fight.
+
+## M7 — Polish and balance
 
 **Demonstrable result:** a release-candidate game.
 
-- [ ] M5.1 Title screen with a link back to the portal, and pause
-- [ ] M5.2 High score saved in localStorage, safe if storage is unavailable
-- [ ] M5.3 CC0 sound effects (sources recorded in the credits file) — *new assets need approval*
-- [ ] M5.4 Parallax background layers, asteroid and planet props
-- [ ] M5.5 Difficulty tuning from the owner's play-test feedback
-- [ ] M5.6 Cross-browser check: Chrome, Firefox, Safari, Edge
-- [ ] M5.7 Final card screenshot for the portal
+- [ ] M7.1 Title screen with a link back to the portal, and pause
+- [ ] M7.2 High score saved in localStorage, safe if storage is unavailable
+- [ ] M7.3 CC0 sound effects (sources recorded in the credits file) — *new assets need approval*
+- [ ] M7.4 Parallax props (asteroids, planets) per level
+- [ ] M7.5 Difficulty balance pass across all 8 levels from the owner's play-tests
+- [ ] M7.6 Cross-browser check: Chrome, Firefox, Safari, Edge
+- [ ] M7.7 Final card screenshot for the portal
 
-**Acceptance criteria:** the owner signs off on game feel; no console errors in a full playthrough on all four browsers.
+**Acceptance criteria:** the owner signs off on game feel and difficulty; no console errors in a full playthrough on all four browsers.
 
-## M6 — v1.0 release
+## M8 — v1.0 release
 
 **Demonstrable result:** Star Destroyer v1.0 is live on `games.soncrant.com`.
 
-- [ ] M6.1 Final security review: dependencies, CodeQL, secret scan, ZAP scan of staging
-- [ ] M6.2 Release through the release script — *needs approval*
-- [ ] M6.3 ZAP scan of production; smoke test from outside the network; tag `v1.0`
+- [ ] M8.1 Final security review: dependencies, CodeQL, secret scan, ZAP scan of staging
+- [ ] M8.2 Release through the release script — *needs approval*
+- [ ] M8.3 ZAP scan of production; smoke test from outside the network; tag `v1.0`
 
 **Acceptance criteria:** the production URL serves v1.0 with the security headers in place; the post-deploy scan is clean; the owner approves.
