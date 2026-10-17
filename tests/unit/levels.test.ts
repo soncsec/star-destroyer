@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ENEMY_TYPES } from '../../src/config/tuning';
-import { WAVE_LIMITS, screenTime } from '../../src/levels/limits';
+import { ASTEROID_LIMITS, WAVE_LIMITS, screenTime } from '../../src/levels/limits';
 import { LEVEL_1 } from '../../src/levels/level1';
 import { checkWaves, mostAtOnce } from '../../src/logic/waves';
 
@@ -9,8 +9,14 @@ describe('level 1 waves', () => {
     expect(checkWaves(LEVEL_1.waves, WAVE_LIMITS)).toEqual([]);
   });
 
-  it('use only grunts and weavers (the approved level-1 roster)', () => {
-    expect(new Set(LEVEL_1.waves.map((s) => s.kind))).toEqual(new Set(['grunt', 'weaver']));
+  it('use only grunts and weavers (the approved level-1 roster), plus asteroids', () => {
+    expect(new Set(LEVEL_1.waves.map((s) => s.kind))).toEqual(
+      new Set(['grunt', 'weaver', 'asteroid']),
+    );
+  });
+
+  it('never have more large asteroids at once than their pool holds', () => {
+    expect(checkWaves(LEVEL_1.waves, ASTEROID_LIMITS)).toEqual([]);
   });
 
   it('keep the screen busy but within the pool, even looping', () => {

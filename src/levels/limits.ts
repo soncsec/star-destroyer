@@ -3,6 +3,7 @@
  * (no Phaser, so level data can be checked in unit tests).
  */
 import {
+  ASTEROIDS,
   ENEMY_COMMON,
   ENEMY_TYPES,
   GAME_HEIGHT,
@@ -29,14 +30,34 @@ export function screenTime(move: MovePattern): number {
 
 const kinds = Object.keys(ENEMY_TYPES) as EnemyKind[];
 
+const asteroidMargin = (ASTEROIDS.large.hitbox.w / 2 + 4) / GAME_WIDTH;
+/** A large rock's time on screen at its drift speed (it spawns with its full height above). */
+export const ASTEROID_SCREEN_TIME = (GAME_HEIGHT + 63) / ASTEROIDS.large.speed;
+
+/** Limits for enemies; asteroids are allowed in the script but counted separately. */
 export const WAVE_LIMITS: WaveLimits = {
-  xRange: Object.fromEntries(
-    kinds.map((k) => {
-      const t = ENEMY_TYPES[k];
-      const margin = spawnMargin(t.move, t.hitbox.w / 2) / GAME_WIDTH;
-      return [k, { min: margin, max: 1 - margin }];
-    }),
-  ),
-  screenTime: Object.fromEntries(kinds.map((k) => [k, screenTime(ENEMY_TYPES[k].move)])),
+  xRange: {
+    ...Object.fromEntries(
+      kinds.map((k) => {
+        const t = ENEMY_TYPES[k];
+        const margin = spawnMargin(t.move, t.hitbox.w / 2) / GAME_WIDTH;
+        return [k, { min: margin, max: 1 - margin }];
+      }),
+    ),
+    asteroid: { min: asteroidMargin, max: 1 - asteroidMargin },
+  },
+  screenTime: {
+    ...Object.fromEntries(kinds.map((k) => [k, screenTime(ENEMY_TYPES[k].move)])),
+    asteroid: ASTEROID_SCREEN_TIME,
+  },
   maxAtOnce: ENEMY_COMMON.poolSize,
+  crowdKinds: kinds,
+};
+
+/** Large asteroids on screen at once must fit their own pool. */
+export const ASTEROID_LIMITS: WaveLimits = {
+  xRange: WAVE_LIMITS.xRange,
+  screenTime: WAVE_LIMITS.screenTime,
+  maxAtOnce: ASTEROIDS.poolLarge,
+  crowdKinds: ['asteroid'],
 };

@@ -23,7 +23,13 @@ export default defineConfig({
     // The e2e build is the normal build plus the test hook (src/debug/testHook.ts).
     command: `npm run build:e2e && vite preview --outDir dist-e2e --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}/`,
-    reuseExistingServer: !isCI,
+    // Never reuse a server already on the port: a left-over one (e.g. from an
+    // interrupted run) can vanish mid-run and fail every remaining test with
+    // "connection refused". Better to stop at once with "port already in use".
+    reuseExistingServer: false,
+    // Show the server's own output, so a crash explains itself in the test log.
+    stdout: 'pipe',
+    stderr: 'pipe',
     timeout: 120_000,
   },
 });

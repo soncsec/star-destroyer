@@ -107,6 +107,8 @@ export interface WaveLimits {
   screenTime: Record<string, number>;
   /** Most enemies allowed at once (the enemy pool size). */
   maxAtOnce: number;
+  /** Kinds that count toward maxAtOnce (default: all). Others have their own pools. */
+  crowdKinds?: readonly string[];
 }
 
 /** Lists every problem in a wave script; empty means it's valid. */
@@ -122,7 +124,10 @@ export function checkWaves(spawns: readonly WaveSpawn[], limits: WaveLimits): st
       problems.push(`${at}: x ${s.x} outside ${range.min.toFixed(3)}–${range.max.toFixed(3)}`);
     }
   });
-  const crowd = mostAtOnce(spawns, limits.screenTime);
+  const counted = limits.crowdKinds
+    ? spawns.filter((s) => limits.crowdKinds?.includes(s.kind))
+    : spawns;
+  const crowd = mostAtOnce(counted, limits.screenTime);
   if (crowd > limits.maxAtOnce) {
     problems.push(`up to ${crowd} enemies at once, more than the ${limits.maxAtOnce} allowed`);
   }
