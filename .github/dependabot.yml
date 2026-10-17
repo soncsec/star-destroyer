@@ -11,6 +11,11 @@ updates:
     groups:
       dev-tooling:
         dependency-type: development
+    ignore:
+      # typescript-eslint 8.x supports TypeScript < 6.1 only (ARCHITECTURE.md ADR-003).
+      # Remove this once typescript-eslint supports newer TypeScript.
+      - dependency-name: typescript
+        versions: ['>=6.1.0']
 
   - package-ecosystem: github-actions
     directory: /
