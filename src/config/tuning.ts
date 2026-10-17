@@ -147,14 +147,6 @@ export const ENEMY_COMMON = {
   poolSize: 16,
 } as const;
 
-/** Random spawning until scripted waves arrive (M2.4). */
-export const SPAWNER = {
-  /** Seconds between spawns. */
-  interval: 1.4,
-  /** Relative chance of each type per spawn. */
-  weights: { grunt: 6, weaver: 3, diver: 2 } satisfies Record<EnemyKind, number>,
-} as const;
-
 export const EXPLOSION = {
   sprite: 'enemy-explosion',
   poolSize: 8,

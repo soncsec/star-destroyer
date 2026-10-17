@@ -16,7 +16,7 @@ export default defineConfig({
     environment: 'node',
     coverage: {
       provider: 'v8',
-      include: ['src/logic/**'],
+      include: ['src/logic/**', 'src/levels/**'],
       thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
     },
   },

@@ -119,19 +119,19 @@ test('an enemy takes 3 hits, explodes and scores 100', async ({ page }) => {
   expect(watched.errors).toEqual([]);
 });
 
-test('the same ?seed= gives the same enemy spawns', async ({ page }) => {
-  // Compare where and what the first enemy spawned as, not where it is now:
-  // weavers sway, so their current x depends on exactly when we look.
-  const firstSpawn = async (seed: number): Promise<{ kind: string; spawnX: number }> => {
+test('the same ?seed= gives the same enemy fire timing', async ({ page }) => {
+  // Spawns are scripted (level waves), so the seed now decides when enemies
+  // fire. The first enemy's first-shot timer is the first number it draws.
+  const firstShot = async (seed: number): Promise<number> => {
     await openGame(page, `?seed=${seed}`);
     await expect.poll(async () => (await snapshot(page)).enemies.length).toBeGreaterThan(0);
     const e = (await snapshot(page)).enemies[0];
     if (!e) throw new Error('no enemy spawned');
-    return { kind: e.kind, spawnX: e.spawnX };
+    return e.fireIn; // still unchanged: enemies start above the screen
   };
-  const a = await firstSpawn(123);
-  const b = await firstSpawn(123);
-  const c = await firstSpawn(456);
-  expect(b).toEqual(a);
-  expect(c.spawnX).not.toBe(a.spawnX);
+  const a = await firstShot(123);
+  const b = await firstShot(123);
+  const c = await firstShot(456);
+  expect(b).toBe(a);
+  expect(c).not.toBe(a);
 });
