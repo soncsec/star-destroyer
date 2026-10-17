@@ -116,7 +116,7 @@
 **Demonstrable result:** all three power-ups drop and work as specified in PROJECT.md section 4a.
 
 - [ ] M3.1 Drop system with per-type rarity (data-driven, seeded, unit tested); pickup icons from the gems pack
-- [ ] M3.2 Weapon levels 1–3 (bolt, double, charged or spread); reset to level 1 on death; no time-out
+- [ ] M3.2 Weapon levels 1–3 (bolt, double, spread); reset to level 1 on death; no time-out
 - [ ] M3.3 Shield: energy-shield effect, blocks all damage for 30 s, timer shown in the HUD
 - [ ] M3.4 Screen clear: destroys all on-screen enemies with a large explosion; rare; never dropped during boss fights
 - [ ] M3.5 Hit-spark effects on impact
