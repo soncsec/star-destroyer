@@ -7,7 +7,6 @@ import {
   GAME_HEIGHT,
   GAME_WIDTH,
   PLAYER_HEALTH,
-  SPAWNER,
   WEAPON,
   type EnemyKind,
 } from '../config/tuning';
@@ -17,8 +16,7 @@ import { Enemies } from '../entities/Enemies';
 import { Explosions } from '../entities/Explosions';
 import { Player } from '../entities/Player';
 import { firstHit } from '../logic/collision';
-import { pickWeighted, stepSpawner } from '../logic/enemy';
-import { spawnMargin } from '../logic/enemyMoves';
+import { LEVEL_1 } from '../levels/level1';
 import { aimDown, firstShotDelay, nextShotDelay, stepEnemyFire } from '../logic/enemyFire';
 import {
   isGameOver,
@@ -31,6 +29,7 @@ import {
 } from '../logic/health';
 import type { Axis } from '../logic/player';
 import { createRng, type Rng } from '../logic/rng';
+import { startWaves, stepWaves, type WaveRunner } from '../logic/waves';
 import { stepFire, type FireState } from '../logic/weapon';
 
 /** Read-only view of the game state, used by the e2e test hook. */
@@ -38,7 +37,17 @@ export interface GameSnapshot {
   score: number;
   player: { x: number; y: number };
   /** spawnX is where it appeared (weavers sway away from it). */
-  enemies: { kind: EnemyKind; x: number; y: number; hp: number; spawnX: number }[];
+  /** fireIn: seconds until its next shot (the seeded RNG sets the first one). */
+  enemies: {
+    kind: EnemyKind;
+    x: number;
+    y: number;
+    hp: number;
+    spawnX: number;
+    fireIn: number;
+  }[];
+  /** Progress through the level's wave script. */
+  waves: WaveRunner;
   shots: number;
   explosions: number;
   /** Enemy shots in flight. */
@@ -63,7 +72,7 @@ export class GameScene extends Phaser.Scene {
   private enemyBullets!: EnemyBullets;
   private explosions!: Explosions;
   private rng!: Rng;
-  private spawnTimer = 0;
+  private waves: WaveRunner = startWaves();
   private score = 0;
   private spawning = true;
   private health: Health = newHealth(PLAYER_HEALTH);
@@ -81,7 +90,7 @@ export class GameScene extends Phaser.Scene {
       .setOrigin(0)
       .setAlpha(0.8);
     this.rng = createRng(seedFromUrl());
-    this.spawnTimer = 0;
+    this.waves = startWaves();
     this.score = 0;
     this.spawning = true;
     this.health = newHealth(PLAYER_HEALTH);
@@ -123,13 +132,12 @@ export class GameScene extends Phaser.Scene {
     }
     this.bullets.update(dt);
 
-    const spawn = stepSpawner(this.spawnTimer, dt, SPAWNER.interval);
-    this.spawnTimer = spawn.timeLeft;
-    if (spawn.spawn && this.spawning) {
-      const kind = pickWeighted(SPAWNER.weights, this.rng.next());
-      const type = ENEMY_TYPES[kind];
-      const margin = spawnMargin(type.move, type.hitbox.w / 2);
-      this.spawnEnemy(this.rng.range(margin, GAME_WIDTH - margin), undefined, undefined, kind);
+    if (this.spawning) {
+      const step = stepWaves(this.waves, LEVEL_1.waves, dt, LEVEL_1.loopGap);
+      this.waves = step.runner;
+      for (const sp of step.spawns) {
+        this.spawnEnemy(sp.x * GAME_WIDTH, undefined, undefined, sp.kind);
+      }
     }
     this.enemies.update(dt, this.player.position);
     this.enemiesFire(dt);
@@ -206,9 +214,15 @@ export class GameScene extends Phaser.Scene {
     return {
       score: this.score,
       player: { x, y },
-      enemies: this.enemies
-        .active()
-        .map((e) => ({ kind: e.kind, x: e.sprite.x, y: e.sprite.y, hp: e.hp, spawnX: e.move.x0 })),
+      enemies: this.enemies.active().map((e) => ({
+        kind: e.kind,
+        x: e.sprite.x,
+        y: e.sprite.y,
+        hp: e.hp,
+        spawnX: e.move.x0,
+        fireIn: e.fireIn,
+      })),
+      waves: { ...this.waves },
       shots: this.bullets.active().length,
       explosions: this.explosions.activeCount(),
       enemyShots: this.enemyBullets.active().map((sh) => ({ x: sh.sprite.x, y: sh.sprite.y })),
@@ -217,7 +231,7 @@ export class GameScene extends Phaser.Scene {
     };
   }
 
-  /** Turns random spawning on or off (tests use this to control the screen). */
+  /** Turns the wave script on or off (tests use this to control the screen). */
   setSpawning(on: boolean): void {
     this.spawning = on;
   }
