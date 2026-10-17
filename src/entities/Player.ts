@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { animKey } from '../assets/manifest';
-import { DEPTH, GAME_HEIGHT, GAME_WIDTH, PLAYER } from '../config/tuning';
+import { DEPTH, GAME_HEIGHT, GAME_WIDTH, PLAYER, PLAYER_HEALTH } from '../config/tuning';
+import type { Box } from '../logic/collision';
 import {
   bankFrame,
   screenBounds,
@@ -36,6 +37,23 @@ export class Player {
     };
     this.state = { x: GAME_WIDTH / 2, y: GAME_HEIGHT * PLAYER.startY, bank: 0 };
     this.render();
+  }
+
+  /** Back to the start position, level, after losing a life. */
+  reset(): void {
+    this.state = { x: GAME_WIDTH / 2, y: GAME_HEIGHT * PLAYER.startY, bank: 0 };
+    this.render();
+  }
+
+  /** Shows or hides the ship and its flame (blinking, or gone after game over). */
+  setVisible(visible: boolean): void {
+    this.sprite.setVisible(visible);
+    this.thrust.setVisible(visible);
+  }
+
+  hitbox(): Box {
+    const { w, h } = PLAYER_HEALTH.hitbox;
+    return { x: this.state.x, y: this.state.y, w, h };
   }
 
   get position(): Readonly<PlayerState> {

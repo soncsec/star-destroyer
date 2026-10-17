@@ -5,6 +5,7 @@ import {
   ENEMY_BASIC,
   GAME_HEIGHT,
   GAME_WIDTH,
+  PLAYER_HEALTH,
   WEAPON,
 } from '../config/tuning';
 import { Bullets } from '../entities/Bullets';
@@ -13,6 +14,15 @@ import { Explosions } from '../entities/Explosions';
 import { Player } from '../entities/Player';
 import { firstHit } from '../logic/collision';
 import { stepSpawner } from '../logic/enemy';
+import {
+  isGameOver,
+  newHealth,
+  shipVisible,
+  takeHit,
+  tickHealth,
+  type Health,
+  type HitResult,
+} from '../logic/health';
 import type { Axis } from '../logic/player';
 import { createRng, type Rng } from '../logic/rng';
 import { stepFire, type FireState } from '../logic/weapon';
@@ -24,6 +34,9 @@ export interface GameSnapshot {
   enemies: { x: number; y: number; hp: number }[];
   shots: number;
   explosions: number;
+  health: Health & { gameOver: boolean };
+  /** The result of the most recent hit, for tests and (later) the HUD. */
+  lastHit: HitResult | null;
 }
 
 type Keys = Record<
@@ -43,6 +56,8 @@ export class GameScene extends Phaser.Scene {
   private spawnTimer = 0;
   private score = 0;
   private spawning = true;
+  private health: Health = newHealth(PLAYER_HEALTH);
+  private lastHit: HitResult | null = null;
   private keys!: Keys;
 
   constructor() {
@@ -59,6 +74,8 @@ export class GameScene extends Phaser.Scene {
     this.spawnTimer = 0;
     this.score = 0;
     this.spawning = true;
+    this.health = newHealth(PLAYER_HEALTH);
+    this.lastHit = null;
     this.enemies = new Enemies(this);
     this.bullets = new Bullets(this);
     this.player = new Player(this);
@@ -84,9 +101,10 @@ export class GameScene extends Phaser.Scene {
     // Moving the texture down makes the ship appear to fly up.
     this.nebula.tilePositionY -= BACKGROUND.nebulaSpeed * dt;
     this.stars.tilePositionY -= BACKGROUND.starsSpeed * dt;
-    this.player.update(this.readAxis(), dt);
+    const alive = !isGameOver(this.health);
+    if (alive) this.player.update(this.readAxis(), dt);
 
-    const shot = stepFire(this.fireState, this.keys.fire.isDown, dt, WEAPON.fireInterval);
+    const shot = stepFire(this.fireState, alive && this.keys.fire.isDown, dt, WEAPON.fireInterval);
     this.fireState = shot.state;
     if (shot.fire) {
       const { x, y } = this.player.position;
@@ -102,6 +120,37 @@ export class GameScene extends Phaser.Scene {
     }
     this.enemies.update(dt);
     this.resolveShotHits();
+
+    this.health = tickHealth(this.health, dt);
+    this.resolvePlayerHits();
+    this.player.setVisible(
+      !isGameOver(this.health) && shipVisible(this.health, PLAYER_HEALTH.flashHz),
+    );
+  }
+
+  /** An enemy touching the ship costs one hit and is destroyed (no points). */
+  private resolvePlayerHits(): void {
+    if (isGameOver(this.health) || this.health.invulnerable > 0) return;
+    const enemies = this.enemies.active();
+    const target =
+      enemies[
+        firstHit(
+          this.player.hitbox(),
+          enemies.map((e) => this.enemies.hitbox(e)),
+        )
+      ];
+    if (!target) return;
+
+    const { health, result } = takeHit(this.health, PLAYER_HEALTH);
+    this.health = health;
+    this.lastHit = result;
+    this.explosions.play(target.sprite.x, target.sprite.y);
+    this.enemies.destroy(target);
+    if (result === 'lifeLost' || result === 'gameOver') {
+      const { x, y } = this.player.position;
+      this.explosions.play(x, y);
+      if (result === 'lifeLost') this.player.reset();
+    }
   }
 
   snapshot(): GameSnapshot {
@@ -112,6 +161,8 @@ export class GameScene extends Phaser.Scene {
       enemies: this.enemies.active().map((e) => ({ x: e.sprite.x, y: e.sprite.y, hp: e.hp })),
       shots: this.bullets.active().length,
       explosions: this.explosions.activeCount(),
+      health: { ...this.health, gameOver: isGameOver(this.health) },
+      lastHit: this.lastHit,
     };
   }
 
@@ -125,9 +176,9 @@ export class GameScene extends Phaser.Scene {
     this.enemies.clear();
   }
 
-  /** Spawns one basic enemy at the top of the screen at `x`. */
-  spawnEnemy(x: number): boolean {
-    return this.enemies.spawn(x);
+  /** Spawns one basic enemy at `x`: at the top of the screen, or at `y` if given. */
+  spawnEnemy(x: number, y?: number): boolean {
+    return this.enemies.spawn(x, y);
   }
 
   /** Each shot hits at most one enemy and is used up. */

@@ -11,7 +11,8 @@ export interface TestHook {
   snapshot(): GameSnapshot | null;
   setSpawning(on: boolean): void;
   clearEnemies(): void;
-  spawnEnemy(x: number): boolean;
+  /** Spawns an enemy at x (top of the screen), or at (x, y). */
+  spawnEnemy(x: number, y?: number): boolean;
 }
 
 declare global {
@@ -36,6 +37,6 @@ export function installTestHook(game: Phaser.Game): void {
     snapshot: () => gameScene()?.snapshot() ?? null,
     setSpawning: (on) => required().setSpawning(on),
     clearEnemies: () => required().clearEnemies(),
-    spawnEnemy: (x) => required().spawnEnemy(x),
+    spawnEnemy: (x, y) => required().spawnEnemy(x, y),
   };
 }

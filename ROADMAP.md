@@ -11,7 +11,7 @@
 | M1 Walking skeleton | Done (owner play-tested and approved 2026-10-17) |
 | P1 Portal and production server | Done (2026-10-17) |
 | T1 Game template for parallel instances | Done (2026-10-17) |
-| M2 Core loop (level 1) | Not started |
+| M2 Core loop (level 1) | In progress |
 | M3 Power-ups | Not started |
 | M4 Level system and first boss | Not started |
 | M5 Levels 2–4 | Not started |
@@ -100,7 +100,7 @@
 
 **Demonstrable result:** a full survival loop on level 1: fighting, taking damage, dying, restarting and scoring.
 
-- [ ] M2.1 Health (5 hits per life), 3 lives, invulnerability flashes after losing a life (logic unit tested)
+- [x] M2.1 Health (5 hits per life), 3 lives, invulnerability flashes after losing a life (logic unit tested). Enemies crashing into the ship cost a hit until enemy shots arrive (M2.2)
 - [ ] M2.2 Enemy bullets (boss bolt sprite)
 - [ ] M2.3 Enemy types 2 and 3 with distinct movement patterns
 - [ ] M2.4 Scripted wave schedule driven by data (unit tested)

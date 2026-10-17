@@ -25,14 +25,17 @@ export class Enemies {
     }
   }
 
-  /** Spawns an enemy just above the screen at `x`. Returns false if the pool is full. */
-  spawn(x: number): boolean {
+  /**
+   * Spawns an enemy at `x`, just above the screen unless `y` is given (tests
+   * use `y`). Returns false if the pool is full.
+   */
+  spawn(x: number, y?: number): boolean {
     const slot = this.slots.find((s) => !s.sprite.active);
     if (!slot) return false;
     slot.hp = ENEMY_BASIC.hp;
     slot.flash = 0;
     slot.sprite
-      .setPosition(x, -slot.sprite.height / 2)
+      .setPosition(x, y ?? -slot.sprite.height / 2)
       .setAlpha(1)
       .setActive(true)
       .setVisible(true)
@@ -68,6 +71,11 @@ export class Enemies {
     slot.flash = ENEMY_BASIC.hitFlash;
     if (r.destroyed) this.release(slot);
     return r.destroyed;
+  }
+
+  /** Removes one enemy at once (e.g. it crashed into the player). */
+  destroy(slot: EnemySlot): void {
+    this.release(slot);
   }
 
   /** Removes every enemy without an explosion. */
