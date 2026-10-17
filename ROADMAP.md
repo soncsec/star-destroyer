@@ -10,7 +10,7 @@
 | M0 Setup | Done |
 | M1 Walking skeleton | Done (owner play-tested and approved 2026-10-17) |
 | P1 Portal and production server | Done (2026-10-17) |
-| T1 Game template for parallel instances | Not started |
+| T1 Game template for parallel instances | Done (2026-10-17) |
 | M2 Core loop (level 1) | Not started |
 | M3 Power-ups | Not started |
 | M4 Level system and first boss | Not started |
@@ -86,13 +86,15 @@
 
 **Demonstrable result:** a second Claude session creates a new game from the template and gets it onto staging and into the portal, while Star Destroyer work continues, with no conflicts.
 
-- [ ] T1.1 Portal reads one file per game (`games/<slug>.json`) instead of a single list
-- [ ] T1.2 Extract `soncsec/game-template` from Star Destroyer: scaffold, CI, security checks, tests, release script, CLAUDE.md and doc skeletons
-- [ ] T1.3 Release script locks the target to `/var/www/html/soncrant.com/pub/games/<slug>/` and refuses anything else (tested)
-- [ ] T1.4 `NEW-GAME.md` runbook: create the repo from the template, claim the slug in the portal, pick a dev port, start a Claude session in `~/dev/games/<slug>/`
-- [ ] T1.5 Dry run: create a throwaway game from the template, then delete it — *deletion needs approval*
+- [x] T1.1 Portal reads one file per game (`games/<slug>.json`) instead of a single list. games-portal #11; plus `in-development` status, reserved slugs, unique `devPort` (#13)
+- [x] T1.2 Extract `soncsec/game-template` from Star Destroyer: scaffold, CI, security checks, tests, release script, CLAUDE.md and doc skeletons. `soncsec/game-template` (#1, #4): placeholder game, all CI and security checks, staging + ZAP, release scripts with `activate`, one-time `init-game.sh`
+- [x] T1.3 Release script locks the target to `/var/www/html/soncrant.com/pub/games/<slug>/` and refuses anything else (tested). Every release command checks that SLUG matches package.json and the repo, and refuses the portal's names (game-template #2/#3, star-destroyer #20)
+- [x] T1.4 `NEW-GAME.md` runbook: create the repo from the template, claim the slug in the portal, pick a dev port, start a Claude session in `~/dev/games/<slug>/`. games-portal #13
+- [x] T1.5 Dry run: create a throwaway game from the template, then delete it. Done 2026-10-17 with `dry-run-game` (owner approved staging and deletion); found and fixed a template bug (game-template #4); repo deleted by the owner; portal entry removed (games-portal #15)
 
 **Acceptance criteria:** the dry-run game passes CI and deploys to staging with no edits outside its own repo except its portal entry; two dev servers run side by side.
+
+**Verified 2026-10-17:** `dry-run-game`, made by following NEW-GAME.md: Repo checks, Build and test, CodeQL, staging deploy and ZAP all passed on its `main`, and staging served "Dry Run". Its only change outside its own repo was the portal claim. Star Destroyer (5173) and Dry Run (5175) dev servers ran side by side.
 
 ## M2 — Core loop (level 1)
 
