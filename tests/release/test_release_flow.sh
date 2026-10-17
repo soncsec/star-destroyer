@@ -52,14 +52,15 @@ SH
 chmod +x "$T/bin/"*
 
 # --- a throwaway repo whose HEAD is origin/main ---------------------------------------
-git init -q --bare "$T/origin.git"
+mkdir -p "$T/remote/soncsec" && git init -q --bare "$T/remote/soncsec/star-destroyer.git"
 mkdir "$T/repo" && cd "$T/repo" || exit 1
 git init -q -b main
 mkdir -p scripts deploy
 cp "$SRC/scripts/release.sh" "$SRC/scripts/release-remote.sh" "$SRC/scripts/smoke_test.py" scripts/
 printf 'dist/\ndeploy/server.env\n' >.gitignore
+printf '{"name": "star-destroyer"}\n' >package.json
 git add -A && git -c user.name=t -c user.email=t@t commit -q -m init
-git remote add origin "$T/origin.git" && git push -q origin main
+git remote add origin "$T/remote/soncsec/star-destroyer.git" && git push -q origin main
 touch "$T/fake_key"
 printf 'SERVER=127.0.0.1:%s\nSSH_USER=deploy\nSSH_KEY=%s\n' "$PORT" "$T/fake_key" >deploy/server.env
 
@@ -68,6 +69,29 @@ live() { basename "$(readlink "$T/server/web/star-destroyer" 2>/dev/null)" 2>/de
 count() { find "$T/server/releases/star-destroyer" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l; }
 
 # --- the tests -------------------------------------------------------------------
+# T1.3: a game can only release into its own slot.
+with_change() { # file, sed expression, command... : run with a temporary edit, then undo it
+  local file="$1" expr="$2"; shift 2
+  sed -i "$expr" "$file"
+  git diff --quiet && { echo "with_change: '$expr' changed nothing in $file"; return 99; }
+  git commit -qam tmp
+  "$@"; local rc=$?
+  git reset -q --hard HEAD~1
+  return $rc
+}
+out="$(with_change scripts/release.sh 's/^SLUG=.*/SLUG=other-game/' release deploy)"
+if [[ "$out" == *"refusing to release into another game's slot"* && "$(count)" == 0 && ! -e "$T/server/web/other-game" ]]; then
+  ok "refuses another game's slug (package.json mismatch) and touches nothing"
+else bad "other slug: $out"; fi
+out="$(with_change scripts/release.sh 's/^SLUG=.*/SLUG=_portal/' release rollback)"
+if [[ "$out" == *"reserved for the portal"* ]]; then ok "refuses the portal's slot"; else bad "_portal slug: $out"; fi
+out="$(with_change package.json 's/star-destroyer/other-game/' release status)"
+if [[ "$out" == *"package.json says 'other-game'"* ]]; then ok "refuses when package.json names another game"; else bad "pkg mismatch: $out"; fi
+git remote set-url origin "$T/remote/soncsec/other-game.git"
+out="$(release activate 20990101T000000Z-deadbeef)"
+if [[ "$out" == *"this repo's origin is"* ]]; then ok "refuses when the repo is another game's"; else bad "origin mismatch: $out"; fi
+git remote set-url origin "$T/remote/soncsec/star-destroyer.git"
+
 out="$(FAKE_CI=failure release deploy)"
 if [[ $? -ne 0 && "$out" == *"has not passed"* && "$(count)" == 0 ]]; then ok "refuses to release when CI failed"; else bad "CI gate: $out"; fi
 
@@ -95,6 +119,12 @@ if [[ $? -ne 0 && "$out" == *"rolling back"* && "$(live)" == "$second" ]]; then 
 
 out="$(release rollback)"
 if [[ $? -eq 0 && "$(live)" == "$first" ]]; then ok "rollback command returns to the earlier release"; else bad "rollback: $out"; fi
+
+out="$(release activate "$second")"
+if [[ $? -eq 0 && "$(live)" == "$second" && "$out" == *"smoke test: passed"* ]]; then ok "activate switches forward to a chosen release"; else bad "activate: $out"; fi
+out="$(release activate 20990101T000000Z-deadbeef)"
+if [[ $? -ne 0 && "$out" == *"no such release"* && "$(live)" == "$second" ]]; then ok "activate refuses an unknown release and changes nothing"; else bad "activate unknown: $out"; fi
+release rollback >/dev/null
 
 out="$(release status)"
 if [[ "$out" == *"* $first (live)"* ]]; then ok "status shows the live release"; else bad "status: $out"; fi
