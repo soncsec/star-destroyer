@@ -157,6 +157,7 @@ The four planning docs live in `star-destroyer` and cover both repos. The portal
 - **Pixel-perfect rendering:** Phaser `pixelArt: true`, integer scaling, and the CSS `image-rendering: pixelated` property.
 - **Object pooling:** bullets, enemies and explosions are reused, not created and destroyed each time, to keep frame rate steady.
 - **Asset pipeline:** each sprite sheet's frame size is recorded in one manifest file and checked in an asset-preview scene.
+- **End-to-end test hook:** `src/debug/testHook.ts` exposes `window.__starDestroyer` (scene, state snapshot, spawn controls). It is loaded only in the test build (`npm run build:e2e`, `vite build --mode e2e`), which Playwright serves on port 4174. The normal build does not contain it. Tests still drive the ship with real keyboard input.
 - **Dependencies:** exact versions with a committed lockfile; adding a new dependency needs owner approval. New tool versions must be at least two weeks old.
 
 ## 5. Delivery pipeline

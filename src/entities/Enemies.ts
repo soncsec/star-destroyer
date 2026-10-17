@@ -70,6 +70,11 @@ export class Enemies {
     return r.destroyed;
   }
 
+  /** Removes every enemy without an explosion. */
+  clear(): void {
+    for (const slot of this.active()) this.release(slot);
+  }
+
   private release(slot: EnemySlot): void {
     slot.sprite.stop();
     slot.sprite.setActive(false).setVisible(false);

@@ -17,6 +17,15 @@ import type { Axis } from '../logic/player';
 import { createRng, type Rng } from '../logic/rng';
 import { stepFire, type FireState } from '../logic/weapon';
 
+/** Read-only view of the game state, used by the e2e test hook. */
+export interface GameSnapshot {
+  score: number;
+  player: { x: number; y: number };
+  enemies: { x: number; y: number; hp: number }[];
+  shots: number;
+  explosions: number;
+}
+
 type Keys = Record<
   'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'fire',
   Phaser.Input.Keyboard.Key
@@ -33,6 +42,7 @@ export class GameScene extends Phaser.Scene {
   private rng!: Rng;
   private spawnTimer = 0;
   private score = 0;
+  private spawning = true;
   private keys!: Keys;
 
   constructor() {
@@ -48,6 +58,7 @@ export class GameScene extends Phaser.Scene {
     this.rng = createRng(seedFromUrl());
     this.spawnTimer = 0;
     this.score = 0;
+    this.spawning = true;
     this.enemies = new Enemies(this);
     this.bullets = new Bullets(this);
     this.player = new Player(this);
@@ -85,12 +96,38 @@ export class GameScene extends Phaser.Scene {
 
     const spawn = stepSpawner(this.spawnTimer, dt, ENEMY_BASIC.spawnInterval);
     this.spawnTimer = spawn.timeLeft;
-    if (spawn.spawn) {
+    if (spawn.spawn && this.spawning) {
       const margin = ENEMY_BASIC.hitbox.w / 2 + 4;
       this.enemies.spawn(this.rng.range(margin, GAME_WIDTH - margin));
     }
     this.enemies.update(dt);
     this.resolveShotHits();
+  }
+
+  snapshot(): GameSnapshot {
+    const { x, y } = this.player.position;
+    return {
+      score: this.score,
+      player: { x, y },
+      enemies: this.enemies.active().map((e) => ({ x: e.sprite.x, y: e.sprite.y, hp: e.hp })),
+      shots: this.bullets.active().length,
+      explosions: this.explosions.activeCount(),
+    };
+  }
+
+  /** Turns random spawning on or off (tests use this to control the screen). */
+  setSpawning(on: boolean): void {
+    this.spawning = on;
+  }
+
+  /** Removes all enemies without scoring (tests use this for a clean screen). */
+  clearEnemies(): void {
+    this.enemies.clear();
+  }
+
+  /** Spawns one basic enemy at the top of the screen at `x`. */
+  spawnEnemy(x: number): boolean {
+    return this.enemies.spawn(x);
   }
 
   /** Each shot hits at most one enemy and is used up. */

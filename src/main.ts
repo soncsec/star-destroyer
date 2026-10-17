@@ -32,3 +32,9 @@ window.addEventListener('resize', () => {
   const zoom = zoomForWindow();
   if (game.scale.zoom !== zoom) game.scale.setZoom(zoom);
 });
+
+// The e2e build adds a test hook. Vite replaces MODE at build time, so this
+// branch and the hook module are left out of the normal build entirely.
+if (import.meta.env.MODE === 'e2e') {
+  void import('./debug/testHook').then(({ installTestHook }) => installTestHook(game));
+}
