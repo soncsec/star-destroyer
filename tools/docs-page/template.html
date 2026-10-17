@@ -210,12 +210,30 @@ footer.foot { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--l
 <script type="text/markdown" id="md-roadmap">__ROADMAP__</script>
 <script type="text/markdown" id="md-claude">__CLAUDE__</script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<!-- Pinned versions with Subresource Integrity: the browser refuses a file whose hash differs. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js" integrity="sha384-/TQbtLCAerC3jgaim+N78RZSDYV7ryeoBCVqTuzRrFec2akfBkHS7ACQ3PQhvMVi" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js" integrity="sha384-WmdflGW9aGfoBdHc4rRyWzYuAjEmDwMdGdiPNacbwfGKxBW/SO6guzuQ76qjnSlr" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" integrity="sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
 document.documentElement.style.setProperty('--ship', 'url(__SHIP__)');
 
 const docEl = document.getElementById('doc');
+
+// Never insert generated HTML without sanitizing it. If DOMPurify didn't load,
+// fall back to showing the escaped source text instead.
+const escapeText = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const plainText = (t) => '<pre>' + escapeText(t) + '</pre>';
+function cleanHtml(html) {
+  return window.DOMPurify ? DOMPurify.sanitize(html) : plainText(html);
+}
+function cleanSvg(svg) {
+  if (!window.DOMPurify) return '';
+  // Mermaid draws labels as HTML inside <foreignObject>, and styles with <style>.
+  return DOMPurify.sanitize(svg, {
+    USE_PROFILES: { svg: true, svgFilters: true, html: true },
+    ADD_TAGS: ['foreignObject', 'style'],
+  });
+}
 const tabs = [...document.querySelectorAll('nav.tabs button')];
 const md = id => document.getElementById('md-' + id).textContent.replace(/<\\\/script/gi, '</script');
 
@@ -236,7 +254,7 @@ async function renderDiagrams() {
     box.className = 'diagram';
     try {
       const { svg } = await mermaid.render('diagram-' + (++diagramCount), src);
-      box.innerHTML = svg;
+      box.innerHTML = cleanSvg(svg);
       code.parentElement.replaceWith(box);
     } catch (e) { /* leave the source block visible if rendering fails */ }
   }
@@ -245,7 +263,7 @@ async function renderDiagrams() {
 function show(id, push) {
   tabs.forEach(b => b.setAttribute('aria-selected', String(b.dataset.doc === id)));
   docEl.setAttribute('aria-labelledby', 'tab-' + id);
-  docEl.innerHTML = window.marked ? marked.parse(md(id), { gfm: true }) : '<pre>' + md(id).replace(/[&<]/g, c => c === '&' ? '&amp;' : '&lt;') + '</pre>';
+  docEl.innerHTML = window.marked ? cleanHtml(marked.parse(md(id), { gfm: true })) : plainText(md(id));
   docEl.querySelectorAll('table').forEach(t => {
     const w = document.createElement('div'); w.className = 'table-scroll';
     t.replaceWith(w); w.appendChild(t);
