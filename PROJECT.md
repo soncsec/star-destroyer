@@ -56,15 +56,15 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 
 ## 4a. Levels, power-ups and difficulty
 
-### Power-up rules (owner decisions 2026-10-17)
+### Power-up rules (owner decisions 2026-10-17; shield reset, screen clear removing shots and the level-3 spread shot confirmed later the same day)
 
 | Power-up | Effect | How often | Notes |
 |---|---|---|---|
-| Weapon | Raises the weapon one level (max 3) | Common | Never times out; lost on death (back to level 1) |
-| Shield | Blocks all damage for 30 seconds | Uncommon | Picking up another resets the timer to 30 s *(proposed)* |
-| Screen clear | Destroys every enemy on screen, plus enemy shots *(proposed)* | Rare | Never dropped during a boss fight |
+| Weapon | Raises the weapon one level (max 3): 1 single bolt, 2 double bolt, 3 spread shot | Common | Never times out; lost on death (back to level 1) |
+| Shield | Blocks all damage for 30 seconds | Uncommon | Picking up another resets the timer to 30 s |
+| Screen clear | Destroys every enemy on screen, plus enemy shots | Rare | Never dropped during a boss fight |
 
-### Proposed level plan (needs owner approval)
+### Level plan (approved by owner 2026-10-17)
 
 The pack has about 5 distinct top-down space backgrounds and 6 distinct boss designs, so some art is reused with different layer combinations. Side-view ships are rotated to face down.
 
