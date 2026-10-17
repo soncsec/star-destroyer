@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import './style.css';
-import { GAME_HEIGHT, GAME_WIDTH } from './config/tuning';
+import { GAME_HEIGHT, GAME_WIDTH, HUD } from './config/tuning';
 import { integerZoom } from './logic/scaling';
 import { AssetPreviewScene } from './scenes/AssetPreviewScene';
 import { GameScene } from './scenes/GameScene';
@@ -8,6 +8,10 @@ import { PreloadScene } from './scenes/PreloadScene';
 
 const zoomForWindow = (): number =>
   integerZoom(window.innerWidth, window.innerHeight, GAME_WIDTH, GAME_HEIGHT);
+
+// Canvas text can't wait for a web font, so load the HUD font before the game
+// starts. If it fails, the game still runs with a fallback font.
+await document.fonts.load(`8px ${HUD.font}`).catch(() => undefined);
 
 export const game = new Phaser.Game({
   type: Phaser.AUTO,

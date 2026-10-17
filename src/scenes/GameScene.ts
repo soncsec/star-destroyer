@@ -16,6 +16,7 @@ import { Bullets } from '../entities/Bullets';
 import { EnemyBullets } from '../entities/EnemyBullets';
 import { Enemies } from '../entities/Enemies';
 import { Explosions } from '../entities/Explosions';
+import { Hud } from '../entities/Hud';
 import { Player } from '../entities/Player';
 import { firstHit, type Box } from '../logic/collision';
 import { LEVEL_1 } from '../levels/level1';
@@ -51,6 +52,8 @@ export interface GameSnapshot {
   /** Progress through the level's wave script. */
   waves: WaveRunner;
   asteroids: { size: RockSize; x: number; y: number; hp: number }[];
+  /** What the HUD shows. */
+  hud: { score: string; lives: string; pips: boolean[] };
   shots: number;
   explosions: number;
   /** Enemy shots in flight. */
@@ -75,6 +78,7 @@ export class GameScene extends Phaser.Scene {
   private enemyBullets!: EnemyBullets;
   private asteroids!: Asteroids;
   private explosions!: Explosions;
+  private hud!: Hud;
   private rng!: Rng;
   private waves: WaveRunner = startWaves();
   private score = 0;
@@ -105,6 +109,7 @@ export class GameScene extends Phaser.Scene {
     this.bullets = new Bullets(this);
     this.player = new Player(this);
     this.explosions = new Explosions(this);
+    this.hud = new Hud(this, PLAYER_HEALTH.hitsPerLife);
 
     const kb = this.input.keyboard;
     if (!kb) throw new Error('keyboard input is not available');
@@ -156,6 +161,7 @@ export class GameScene extends Phaser.Scene {
     this.player.setVisible(
       !isGameOver(this.health) && shipVisible(this.health, PLAYER_HEALTH.flashHz),
     );
+    this.hud.update(this.score, this.health.hits, this.health.lives);
   }
 
   /** Each enemy on screen shoots on its own timer, aimed (within limits) at the ship. */
@@ -222,6 +228,7 @@ export class GameScene extends Phaser.Scene {
         fireIn: e.fireIn,
       })),
       waves: { ...this.waves },
+      hud: this.hud.read(),
       asteroids: this.asteroids
         .active()
         .map((r) => ({ size: r.size, x: r.rock.x, y: r.rock.y, hp: r.hp })),
