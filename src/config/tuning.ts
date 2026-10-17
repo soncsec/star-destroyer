@@ -5,6 +5,7 @@ export const GAME_HEIGHT = 320;
 /** Drawing order: higher numbers are drawn on top. */
 export const DEPTH = {
   background: 0,
+  playerShots: 15,
   player: 20,
 } as const;
 
@@ -34,4 +35,19 @@ export const PLAYER = {
   edgeMargin: 2,
   /** Where the ship starts, as a fraction of the screen height from the top. */
   startY: 0.85,
+} as const;
+
+export const WEAPON = {
+  /** Effect sprite for the basic shot. The art points right, so it's rotated to fire upward. */
+  sprite: 'shot-bolt',
+  /** Seconds between shots while the fire key is held. */
+  fireInterval: 0.2,
+  /** Pixels per second, upward. */
+  bulletSpeed: 320,
+  /** Where shots appear, relative to the ship's center (negative = above). */
+  muzzleOffsetY: -24,
+  /** Collision box in screen pixels after rotation (narrower than the art's glow). */
+  hitbox: { w: 10, h: 26 },
+  /** Most shots on screen at once; extra shots wait for a free slot. */
+  poolSize: 16,
 } as const;
