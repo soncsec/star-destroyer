@@ -11,7 +11,7 @@ function watchPage(page: Page): { errors: string[]; foreignRequests: string[] } 
   page.on('pageerror', (err) => errors.push(err.message));
   page.on('request', (req) => {
     const url = new URL(req.url());
-    if (url.protocol.startsWith('http') && url.hostname !== 'localhost') {
+    if (url.protocol.startsWith('http') && url.hostname !== '127.0.0.1') {
       foreignRequests.push(req.url());
     }
   });
@@ -91,12 +91,9 @@ test('an enemy takes 3 hits, explodes and scores 100', async ({ page }) => {
 
   /** Taps Space for exactly one shot, then waits until that shot has hit something. */
   const fireOneShot = async (): Promise<GameSnapshot> => {
-    await page.keyboard.down('Space');
-    // Checked every frame, so Space is released before the 0.2 s cooldown allows a second shot.
-    await page.waitForFunction(() => (window.__starDestroyer?.snapshot()?.shots ?? 0) > 0, null, {
-      polling: 'raf',
-    });
-    await page.keyboard.up('Space');
+    // Exactly one shot via the test hook: holding Space for "one shot" depends on
+    // timing, and under load a slow round trip lets the 0.2 s cooldown fire extra shots.
+    expect(await page.evaluate(() => window.__starDestroyer?.fireShot())).toBe(true);
     const handle = await page.waitForFunction(
       () => {
         const s = window.__starDestroyer?.snapshot();

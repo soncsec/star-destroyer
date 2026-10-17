@@ -107,8 +107,8 @@
 - [x] M2.4 Scripted wave schedule driven by data (unit tested). `src/levels/level1.ts` (grunts and weavers, ~45 s, loops until M4 adds the boss) built from line/column/V helpers; data checks for order, on-screen positions and crowd size
 - [x] M2.5 Destructible asteroids; large ones split into small ones: grey large rock (6 HP, 50 pts) splits into 3 small rocks (1 HP, 25 pts); crashing costs a hit and still splits it; 3 in level 1
 - [x] M2.6 Score and HUD: `SCORE 000000` top left, 5 health pips under it, `LIVES 3` top right, in Press Start 2P (owner approved for the game)
-- [ ] M2.7 Game over screen and restart
-- [ ] M2.8 Playwright: player death leads to game over, and restart works
+- [x] M2.7 Game over screen and restart: GAME OVER panel with the final score after the explosion; a fresh Space or Enter press (even a tap shorter than a frame) starts a new game; holding fire through the death never restarts
+- [x] M2.8 Playwright: player death leads to game over, and restart works (`tests/e2e/game-over.spec.ts`, with M2.7)
 
 **Acceptance criteria:** the owner can die, restart and score; waves follow the schedule; logic test coverage is at least 80%.
 

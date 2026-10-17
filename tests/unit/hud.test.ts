@@ -22,6 +22,11 @@ describe('healthPips', () => {
     expect(healthPips(2, 5)).toEqual([true, true, true, false, false]);
     expect(healthPips(5, 5)).toEqual([false, false, false, false, false]);
   });
+  it('shows every pip out once there are no lives left', () => {
+    expect(healthPips(0, 5, 0)).toEqual([false, false, false, false, false]);
+    expect(healthPips(0, 5, 1)).toEqual([true, true, true, true, true]);
+  });
+
   it('never shows more or fewer pips than the life has', () => {
     expect(healthPips(-1, 5)).toHaveLength(5);
     expect(healthPips(-1, 5).every(Boolean)).toBe(true);
