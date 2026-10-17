@@ -59,7 +59,7 @@
 - [x] M1.5 Player movement (arrows or WASD) with banking animation, engine flame and screen bounds
 - [x] M1.6 Shooting with pooled bullets (Space; 5 shots per second; effect sprites rotated −90° to fire upward)
 - [x] M1.7 One enemy type (3 hits to destroy), shot collision, pooled explosions, seeded spawns (`?seed=` in the URL)
-- [ ] M1.8 Playwright: game boots with no console errors; an enemy can be destroyed through the test hook
+- [x] M1.8 Playwright (1.63.0) in Chromium and Firefox, run in CI: game boots with no console errors or third-party requests; preview scene loads; keyboard movement; an enemy takes 3 hits and explodes; `?seed=` repeats spawns
 - [ ] M1.9 Auto-deploy to GitHub Pages on merge; ZAP baseline scan of staging
 
 **Acceptance criteria:** the owner plays it on staging; CI is green; Playwright tests pass in Chromium and Firefox; the ZAP scan has no high-severity findings.

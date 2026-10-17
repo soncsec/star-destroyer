@@ -4,4 +4,4 @@ declare module 'node:fs' {
   export function readFileSync(path: string): Uint8Array;
   export function readdirSync(path: string, options: { recursive: true }): string[];
 }
-declare const process: { cwd(): string };
+declare const process: { cwd(): string; env: Record<string, string | undefined> };

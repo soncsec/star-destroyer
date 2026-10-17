@@ -26,4 +26,9 @@ export class Explosions {
     // Move it to the back of the list so reuse picks the oldest one first.
     this.pool.push(...this.pool.splice(this.pool.indexOf(s), 1));
   }
+
+  /** How many explosions are playing right now. */
+  activeCount(): number {
+    return this.pool.filter((e) => e.active).length;
+  }
 }
