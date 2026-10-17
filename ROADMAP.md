@@ -38,10 +38,10 @@
 - [x] M0.1 Install Node.js 24.21.0 LTS via nvm (no sudo)
 - [x] M0.2 Install GitHub CLI 2.102.0 (checksum verified)
 - [x] M0.3 Owner logs in to GitHub; set the Git identity to the GitHub no-reply address
-- [ ] M0.4 `git init` for `star-destroyer` with a `.gitignore` that excludes `legacy/`; create `soncsec/star-destroyer` (public)
-- [ ] M0.5 Create `soncsec/games-portal` (public)
-- [ ] M0.6 Branch protection on `main` in both repos: PR required, CI must pass, no direct pushes
-- [ ] M0.7 Copy the needed assets from `legacy/` to `public/assets/`, with `CREDITS.md`
+- [x] M0.4 `git init` for `star-destroyer` with a `.gitignore` that excludes `legacy/`; create `soncsec/star-destroyer` (public)
+- [x] M0.5 Create `soncsec/games-portal` (public)
+- [x] M0.6 Branch protection on `main` in both repos: PR required, admins included, no force pushes or deletions; secret scanning with push protection and Dependabot alerts on. Direct push to `main` verified rejected. The CI check becomes required once it has run on this PR.
+- [x] M0.7 Copy the needed assets (56 files, 356 KB) from `legacy/` to `public/assets/`, with `CREDITS.md`; first CI workflow (asset hygiene check plus gitleaks secret scan)
 - [x] M0.8 Confirm the Phaser version: 4.2.1 (recorded in ADR-002)
 
 **Acceptance criteria:** a direct push to `main` is rejected; a test PR shows a green CI check; `legacy/` is not in the repo.
