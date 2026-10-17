@@ -1,6 +1,6 @@
 # Star Destroyer and Games Portal — Architecture
 
-> **Status:** All ADRs accepted or decided by owner 2026-10-17.
+> **Status:** ADR-001 to ADR-011 accepted or decided by owner 2026-10-17. ADR-012 is **Proposed**.
 
 ## 1. Overview
 
@@ -125,6 +125,13 @@ The `games/` folder sits inside `soncrant.com`'s `pub/` folder, so the same file
   - A monorepo with git worktrees per instance (rejected: shared CI, shared lockfile and a shared `main` give many more chances to collide).
   - A shared npm package for common game code (rejected for now: versioning and publishing overhead before we know what is common; revisit when a third game needs the same code).
 - **Tradeoffs:** a template copies the setup once rather than sharing it live, so later improvements to the template have to be applied to each game by hand. That's acceptable for a handful of games.
+
+### ADR-012: Data-driven levels — *Proposed 2026-10-17*
+
+- **Context:** the owner expanded scope to 8 levels, each with a boss and its own art, with difficulty rising gradually.
+- **Decision:** each level is a plain TypeScript data object in `src/levels/` (background layers, enemy roster, wave script, boss, drop rates, difficulty numbers). One shared game scene plays any level. A pure `difficulty(level)` function produces fire rates and speeds within the limits in PROJECT.md section 4a, and unit tests enforce those limits.
+- **Alternatives:** one hand-coded scene per level (8× the code, and difficulty limits can't be checked centrally); an external level editor such as Tiled (extra tooling for wave scripts that are mostly timing data).
+- **Tradeoffs:** a level format has to be designed up front (M4.1). In return, levels 2–8 are mostly data and art work, and adding levels later is cheap.
 
 ## 3. Proposed code structure
 
