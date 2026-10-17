@@ -8,7 +8,7 @@
 | Milestone | Status |
 |---|---|
 | M0 Setup | Done |
-| M1 Walking skeleton | In progress |
+| M1 Walking skeleton | Built; waiting for the owner's play-test on staging |
 | P1 Portal and production server | Not started |
 | T1 Game template for parallel instances | Not started |
 | M2 Core loop (level 1) | Not started |
@@ -60,7 +60,7 @@
 - [x] M1.6 Shooting with pooled bullets (Space; 5 shots per second; effect sprites rotated −90° to fire upward)
 - [x] M1.7 One enemy type (3 hits to destroy), shot collision, pooled explosions, seeded spawns (`?seed=` in the URL)
 - [x] M1.8 Playwright (1.63.0) in Chromium and Firefox, run in CI: game boots with no console errors or third-party requests; preview scene loads; keyboard movement; an enemy takes 3 hits and explodes; `?seed=` repeats spawns
-- [ ] M1.9 Auto-deploy to GitHub Pages on merge; ZAP baseline scan of staging
+- [x] M1.9 Auto-deploy to GitHub Pages on merge (https://soncsec.github.io/star-destroyer/); ZAP baseline scan of staging. First run 2026-10-17: 0 high, 5 medium, 6 low — all are response headers GitHub Pages can't set; production Apache sets them in P1.6
 
 **Acceptance criteria:** the owner plays it on staging; CI is green; Playwright tests pass in Chromium and Firefox; the ZAP scan has no high-severity findings.
 
