@@ -27,3 +27,6 @@ deploy/server.env
 
 # Built docs page (published as an artifact, not committed)
 tools/docs-page/out/
+
+# Python bytecode
+__pycache__/
