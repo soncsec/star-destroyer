@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import {
   BACKGROUND,
+  ASTEROIDS,
   DEFAULT_SEED,
   ENEMY_FIRE,
   ENEMY_TYPES,
@@ -10,12 +11,13 @@ import {
   WEAPON,
   type EnemyKind,
 } from '../config/tuning';
+import { Asteroids, type RockSize, type RockSlot } from '../entities/Asteroids';
 import { Bullets } from '../entities/Bullets';
 import { EnemyBullets } from '../entities/EnemyBullets';
 import { Enemies } from '../entities/Enemies';
 import { Explosions } from '../entities/Explosions';
 import { Player } from '../entities/Player';
-import { firstHit } from '../logic/collision';
+import { firstHit, type Box } from '../logic/collision';
 import { LEVEL_1 } from '../levels/level1';
 import { aimDown, firstShotDelay, nextShotDelay, stepEnemyFire } from '../logic/enemyFire';
 import {
@@ -48,6 +50,7 @@ export interface GameSnapshot {
   }[];
   /** Progress through the level's wave script. */
   waves: WaveRunner;
+  asteroids: { size: RockSize; x: number; y: number; hp: number }[];
   shots: number;
   explosions: number;
   /** Enemy shots in flight. */
@@ -70,6 +73,7 @@ export class GameScene extends Phaser.Scene {
   private fireState: FireState = { cooldown: 0 };
   private enemies!: Enemies;
   private enemyBullets!: EnemyBullets;
+  private asteroids!: Asteroids;
   private explosions!: Explosions;
   private rng!: Rng;
   private waves: WaveRunner = startWaves();
@@ -95,6 +99,7 @@ export class GameScene extends Phaser.Scene {
     this.spawning = true;
     this.health = newHealth(PLAYER_HEALTH);
     this.lastHit = null;
+    this.asteroids = new Asteroids(this);
     this.enemies = new Enemies(this);
     this.enemyBullets = new EnemyBullets(this);
     this.bullets = new Bullets(this);
@@ -136,10 +141,12 @@ export class GameScene extends Phaser.Scene {
       const step = stepWaves(this.waves, LEVEL_1.waves, dt, LEVEL_1.loopGap);
       this.waves = step.runner;
       for (const sp of step.spawns) {
-        this.spawnEnemy(sp.x * GAME_WIDTH, undefined, undefined, sp.kind);
+        if (sp.kind === 'asteroid') this.asteroids.spawnLarge(sp.x * GAME_WIDTH, this.rng);
+        else this.spawnEnemy(sp.x * GAME_WIDTH, undefined, undefined, sp.kind);
       }
     }
     this.enemies.update(dt, this.player.position);
+    this.asteroids.update(dt);
     this.enemiesFire(dt);
     this.enemyBullets.update(dt);
     this.resolveShotHits();
@@ -170,29 +177,17 @@ export class GameScene extends Phaser.Scene {
   }
 
   /**
-   * An enemy shot or an enemy touching the ship costs one hit. The shot is
-   * used up; a crashing enemy is destroyed (no points).
+   * An enemy shot, an enemy or an asteroid touching the ship costs one hit.
+   * The shot is used up; a crashing enemy is destroyed and a crashing rock
+   * shatters (no points either way).
    */
   private resolvePlayerHits(): void {
     if (isGameOver(this.health) || this.health.invulnerable > 0) return;
     const ship = this.player.hitbox();
-    const shots = this.enemyBullets.active();
-    const shot =
-      shots[
-        firstHit(
-          ship,
-          shots.map((s) => this.enemyBullets.hitbox(s)),
-        )
-      ];
-    const enemies = this.enemies.active();
-    const enemy =
-      enemies[
-        firstHit(
-          ship,
-          enemies.map((e) => this.enemies.hitbox(e)),
-        )
-      ];
-    if (!shot && !enemy) return;
+    const shot = touching(ship, this.enemyBullets.active(), (b) => this.enemyBullets.hitbox(b));
+    const enemy = touching(ship, this.enemies.active(), (e) => this.enemies.hitbox(e));
+    const rock = touching(ship, this.asteroids.active(), (r) => this.asteroids.hitbox(r));
+    if (!shot && !enemy && !rock) return;
 
     const { health, result } = takeHit(this.health, PLAYER_HEALTH);
     this.health = health;
@@ -201,6 +196,10 @@ export class GameScene extends Phaser.Scene {
     if (enemy) {
       this.explosions.play(enemy.sprite.x, enemy.sprite.y);
       this.enemies.destroy(enemy);
+    }
+    if (rock) {
+      this.asteroids.destroy(rock);
+      this.shatter(rock);
     }
     if (result === 'lifeLost' || result === 'gameOver') {
       const { x, y } = this.player.position;
@@ -223,12 +222,20 @@ export class GameScene extends Phaser.Scene {
         fireIn: e.fireIn,
       })),
       waves: { ...this.waves },
+      asteroids: this.asteroids
+        .active()
+        .map((r) => ({ size: r.size, x: r.rock.x, y: r.rock.y, hp: r.hp })),
       shots: this.bullets.active().length,
       explosions: this.explosions.activeCount(),
       enemyShots: this.enemyBullets.active().map((sh) => ({ x: sh.sprite.x, y: sh.sprite.y })),
       health: { ...this.health, gameOver: isGameOver(this.health) },
       lastHit: this.lastHit,
     };
+  }
+
+  /** Spawns a large asteroid at `x`: at the top of the screen, or at `y` if given (tests). */
+  spawnAsteroid(x: number, y?: number): boolean {
+    return this.asteroids.spawnLarge(x, this.rng, y);
   }
 
   /** Turns the wave script on or off (tests use this to control the screen). */
@@ -239,6 +246,7 @@ export class GameScene extends Phaser.Scene {
   /** Removes all enemies and, unless `keepShots`, their shots (tests use this for a clean screen). */
   clearEnemies(keepShots = false): void {
     this.enemies.clear();
+    this.asteroids.clear();
     if (!keepShots) this.enemyBullets.clear();
   }
 
@@ -251,24 +259,38 @@ export class GameScene extends Phaser.Scene {
     return this.enemies.spawn(kind, x, firstShot ?? firstShotDelay(this.rng, ENEMY_FIRE), y);
   }
 
-  /** Each shot hits at most one enemy and is used up. */
+  /**
+   * Each shot hits at most one target and is used up: an enemy if it touches
+   * one, otherwise an asteroid.
+   */
   private resolveShotHits(): void {
-    const enemies = this.enemies.active();
-    if (enemies.length === 0) return;
     for (const shot of this.bullets.active()) {
-      const boxes = enemies.map((e) => this.enemies.hitbox(e));
-      const i = firstHit(this.bullets.hitbox(shot), boxes);
-      const target = enemies[i];
-      if (!target) continue;
-      this.bullets.release(shot);
-      const { x, y } = target.sprite;
-      if (this.enemies.hit(target, 1)) {
-        this.explosions.play(x, y);
-        this.score += ENEMY_TYPES[target.kind].points;
-        enemies.splice(i, 1);
-        if (enemies.length === 0) return;
+      const box = this.bullets.hitbox(shot);
+      const enemy = touching(box, this.enemies.active(), (e) => this.enemies.hitbox(e));
+      if (enemy) {
+        this.bullets.release(shot);
+        const { x, y } = enemy.sprite;
+        if (this.enemies.hit(enemy, 1)) {
+          this.explosions.play(x, y);
+          this.score += ENEMY_TYPES[enemy.kind].points;
+        }
+        continue;
+      }
+      const rock = touching(box, this.asteroids.active(), (r) => this.asteroids.hitbox(r));
+      if (rock) {
+        this.bullets.release(shot);
+        if (this.asteroids.hit(rock, 1)) {
+          this.score += ASTEROIDS[rock.size].points;
+          this.shatter(rock);
+        }
       }
     }
+  }
+
+  /** A destroyed or crashed rock explodes; a large one splits into small pieces. */
+  private shatter(rock: RockSlot): void {
+    this.explosions.play(rock.rock.x, rock.rock.y);
+    if (rock.size === 'large') this.asteroids.split(rock, this.rng);
   }
 
   private readAxis(): Axis {
@@ -289,4 +311,9 @@ function seedFromUrl(): number {
   const raw = new URLSearchParams(window.location.search).get('seed');
   const n = raw === null ? Number.NaN : Number.parseInt(raw, 10);
   return Number.isFinite(n) ? n : DEFAULT_SEED;
+}
+
+/** The first item whose hitbox overlaps `box`, if any. */
+function touching<T>(box: Box, items: readonly T[], hitbox: (item: T) => Box): T | undefined {
+  return items[firstHit(box, items.map(hitbox))];
 }

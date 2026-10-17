@@ -122,6 +122,12 @@ describe('checkWaves', () => {
     expect(p).toContain('spawn 5 (t=4, b): x 0.95 outside 0.200–0.800');
   });
 
+  it('counts only the crowd kinds when given', () => {
+    const crowd = line(0, 'a', [0.2, 0.3, 0.4, 0.5, 0.6]);
+    expect(checkWaves(crowd, { ...limits, crowdKinds: ['b'] })).toEqual([]);
+    expect(checkWaves(crowd, { ...limits, crowdKinds: ['a'] })).toHaveLength(1);
+  });
+
   it('reports a crowd bigger than the enemy pool', () => {
     const crowd = line(0, 'a', [0.2, 0.3, 0.4, 0.5, 0.6]);
     expect(checkWaves(crowd, limits)).toEqual(['up to 5 enemies at once, more than the 4 allowed']);

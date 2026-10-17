@@ -11,8 +11,10 @@ export interface TestHook {
   scene(): string | null;
   snapshot(): GameSnapshot | null;
   setSpawning(on: boolean): void;
-  /** Removes all enemies and, unless `keepShots`, their shots. */
+  /** Removes all enemies and asteroids and, unless `keepShots`, enemy shots. */
   clearEnemies(keepShots?: boolean): void;
+  /** Spawns a large asteroid at x (top of the screen) or (x, y). */
+  spawnAsteroid(x: number, y?: number): boolean;
   /** Spawns an enemy (default grunt) at x (top of the screen) or (x, y); optionally set its first shot. */
   spawnEnemy(x: number, y?: number, firstShot?: number, kind?: EnemyKind): boolean;
 }
@@ -39,6 +41,7 @@ export function installTestHook(game: Phaser.Game): void {
     snapshot: () => gameScene()?.snapshot() ?? null,
     setSpawning: (on) => required().setSpawning(on),
     clearEnemies: (keepShots) => required().clearEnemies(keepShots),
+    spawnAsteroid: (x, y) => required().spawnAsteroid(x, y),
     spawnEnemy: (x, y, firstShot, kind) => required().spawnEnemy(x, y, firstShot, kind),
   };
 }

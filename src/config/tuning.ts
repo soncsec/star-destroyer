@@ -7,6 +7,7 @@ export const GAME_HEIGHT = 320;
 /** Drawing order: higher numbers are drawn on top. */
 export const DEPTH = {
   background: 0,
+  asteroids: 8,
   enemies: 10,
   playerShots: 15,
   enemyShots: 25,
@@ -139,6 +140,37 @@ export const ENEMY_TYPES: Readonly<Record<EnemyKind, EnemyType>> = {
     move: { kind: 'dive', enterSpeed: 70, hoverY: 70, hoverTime: 0.9, diveSpeed: 170 },
   },
 };
+
+/**
+ * Asteroids (M2.5): grey cratered set. Hitboxes are about 80% of the measured
+ * visible rock (large 50×46, small about 23×25).
+ */
+export const ASTEROIDS = {
+  large: {
+    sprite: 'asteroid-large-1',
+    hp: 6,
+    points: 50,
+    hitbox: { w: 40, h: 36 },
+    /** Drift speed down, and the most it can drift sideways, pixels per second. */
+    speed: 28,
+    maxDrift: 8,
+    /** Most spin either way, degrees per second. */
+    maxSpin: 40,
+  },
+  small: {
+    /** One of these, picked with the seeded RNG. */
+    sprites: ['asteroid-large-2', 'asteroid-large-3', 'asteroid-large-5'],
+    hp: 1,
+    points: 25,
+    hitbox: { w: 18, h: 18 },
+  },
+  split: { pieces: 3, speed: 55, fanDeg: 120, jitterDeg: 12, maxSpin: 200 },
+  poolLarge: 6,
+  poolSmall: 24,
+} as const;
+
+/** Anything a wave script can spawn. */
+export type SpawnKind = EnemyKind | 'asteroid';
 
 /** Shared by every enemy type. */
 export const ENEMY_COMMON = {
