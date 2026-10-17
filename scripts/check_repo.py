@@ -14,7 +14,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 MAX_BYTES = 5 * 1024 * 1024
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
-FORBIDDEN = re.compile(r"(^|/)(legacy/|__MACOSX/|\.DS_Store$)")
+FORBIDDEN = re.compile(r"(^|/)(legacy(/|$)|__MACOSX/|\.DS_Store$)")
 
 
 def main() -> int:

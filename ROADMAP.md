@@ -87,7 +87,7 @@
 - [ ] T1.1 Portal reads one file per game (`games/<slug>.json`) instead of a single list
 - [ ] T1.2 Extract `soncsec/game-template` from Star Destroyer: scaffold, CI, security checks, tests, release script, CLAUDE.md and doc skeletons
 - [ ] T1.3 Release script locks the target to `/var/www/html/soncrant.com/pub/games/<slug>/` and refuses anything else (tested)
-- [ ] T1.4 `NEW-GAME.md` runbook: create the repo from the template, claim the slug in the portal, pick a dev port, start a Claude session in `~/games/<slug>/`
+- [ ] T1.4 `NEW-GAME.md` runbook: create the repo from the template, claim the slug in the portal, pick a dev port, start a Claude session in `~/dev/games/<slug>/`
 - [ ] T1.5 Dry run: create a throwaway game from the template, then delete it — *deletion needs approval*
 
 **Acceptance criteria:** the dry-run game passes CI and deploys to staging with no edits outside its own repo except its portal entry; two dev servers run side by side.

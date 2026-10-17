@@ -1,5 +1,5 @@
 # Source art pack (CC0, ~5,000 files) — kept local; only used assets are copied into public/assets/
-legacy/
+legacy
 
 # Dependencies and build output
 node_modules/
