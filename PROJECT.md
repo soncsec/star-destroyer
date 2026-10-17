@@ -60,7 +60,7 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 
 | Power-up | Effect | How often | Notes |
 |---|---|---|---|
-| Weapon | Raises the weapon one level (max 3): 1 single bolt, 2 double bolt, 3 spread shot | Common | Never times out; lost on death (back to level 1) |
+| Weapon | Raises the weapon one level (max 3). Shots start small and grow bigger and stronger: 1 single small streak (spark), 2 double ringed bolt (pulse), 3 spread of three big plasma blasts (charged, double damage) | Common | Never times out; lost on death (back to level 1) |
 | Shield | Blocks all damage for 30 seconds | Uncommon | Picking up another resets the timer to 30 s |
 | Screen clear | Destroys every enemy on screen, plus enemy shots | Rare | Never dropped during a boss fight |
 
@@ -138,6 +138,25 @@ Source: `legacy/` (Ansimuz Legacy Collection). **License: CC0**, so commercial u
 | Backgrounds (vertical stage 256×320, parallax layers) | `Warped/Environments/top-down-space-environment/`, `Warped/Environments/space_background_pack/` |
 | Weapon effects (pulse, bolt, spark, waveform, charged, crossed) | `Explosions and Magic/Warped shooting fx/` |
 | Explosions (7 variants) | `Explosions and Magic/Explosions pack/` |
+
+## 4b. Controls and hidden cheats (owner request 2026-10-17)
+
+**Controls** (all listed in an on-screen legend, except the cheats):
+
+| Key | Action |
+|---|---|
+| Arrows / WASD | Move |
+| Space | Fire (and play again after game over; Enter also works) |
+| P or Esc | Pause / resume. The pause screen shows the controls legend |
+| Q | Asks "QUIT TO ARCADE? Y / N"; Y returns to the arcade portal, N resumes |
+| H | Shows or hides the controls legend (also shown briefly at the start) |
+| F | Full screen on / off (whole-number pixel scaling kept) |
+| M | Mute / unmute (takes effect once sound arrives, M7.3) |
+
+**Hidden cheats** (owner decision: secret words typed during play; never shown in the game):
+- One word gives **+5 lives**; another toggles **invincibility**.
+- The words live in the code (the repo is public), not in the game's text or legend.
+- A run that used a cheat is not eligible for the high score (M7.2).
 
 ## 10. Decisions confirmed by the owner (2026-10-17)
 

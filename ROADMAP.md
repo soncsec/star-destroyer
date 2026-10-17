@@ -13,6 +13,7 @@
 | T1 Game template for parallel instances | Done (2026-10-17) |
 | M2 Core loop (level 1) | In progress |
 | M3 Power-ups | In progress |
+| C Controls and cheats (owner request) | Not started |
 | M4 Level system and first boss | Not started |
 | M5 Levels 2–4 | Not started |
 | M6 Levels 5–8 | Not started |
@@ -116,13 +117,26 @@
 **Demonstrable result:** all three power-ups drop and work as specified in PROJECT.md section 4a.
 
 - [x] M3.1 Drop system with per-type rarity (data-driven, seeded, unit tested); pickup icons from the gems pack: 12% of kills (enemies, large asteroids) drop a gem; weapon 6 : shield 3 : clear 1; clear never in boss fights; gems cut from the pack's gem sheet
-- [ ] M3.2 Weapon levels 1–3 (bolt, double, spread); reset to level 1 on death; no time-out
+- [ ] M3.2 Weapon levels 1–3, shots growing bigger and stronger (owner request): small spark → double pulse → spread of three charged blasts (double damage); reset to level 1 on death; no time-out
 - [ ] M3.3 Shield: energy-shield effect, blocks all damage for 30 s, timer shown in the HUD
 - [ ] M3.4 Screen clear: destroys all on-screen enemies with a large explosion; rare; never dropped during boss fights
 - [ ] M3.5 Hit-spark effects on impact
 - [ ] M3.6 Unit tests for every power-up rule, including "lost on death" and "no screen clear during bosses"
 
 **Acceptance criteria:** each power-up is visibly distinct and behaves as specified; rules are unit tested; frame rate holds with max weapon and a full wave.
+
+## C — Controls and cheats (owner request 2026-10-17)
+
+**Demonstrable result:** the player can pause, quit to the arcade, see the controls, play full screen and mute; the owner has two hidden cheats.
+
+- [ ] C1 Pause and resume with P or Esc (the world freezes, animations included); pause screen shows the controls legend
+- [ ] C2 Q asks "QUIT TO ARCADE? Y / N"; Y returns to the portal, N resumes
+- [ ] C3 Controls legend: H toggles it; shown on the pause screen and for a few seconds at the start; lists every control except the cheats
+- [ ] C4 F toggles full screen; M toggles mute (effective once sound arrives in M7.3)
+- [ ] C5 Hidden cheats typed during play: +5 lives, and invincibility on/off; not shown anywhere in the game; a cheat run can't set the high score
+- [ ] C6 Playwright: pause freezes the game, quit confirmation (Y and N), legend, cheats
+
+**Acceptance criteria:** every control works as listed in PROJECT.md 4b; cheats work and appear nowhere in the game's text; tests pass.
 
 ## M4 — Level system and first boss
 
