@@ -4,10 +4,12 @@ import { DEPTH, ENEMY_BASIC, GAME_HEIGHT, GAME_WIDTH } from '../config/tuning';
 import { offScreen, type Box } from '../logic/collision';
 import { applyDamage } from '../logic/enemy';
 
-interface EnemySlot {
+export interface EnemySlot {
   sprite: Phaser.GameObjects.Sprite;
   hp: number;
   flash: number;
+  /** Seconds until this enemy's next shot (counts down only while fully on screen). */
+  fireIn: number;
 }
 
 /** Pool of basic enemies that fly straight down. */
@@ -21,19 +23,21 @@ export class Enemies {
         .setDepth(DEPTH.enemies)
         .setActive(false)
         .setVisible(false);
-      this.slots.push({ sprite, hp: 0, flash: 0 });
+      this.slots.push({ sprite, hp: 0, flash: 0, fireIn: 0 });
     }
   }
 
   /**
    * Spawns an enemy at `x`, just above the screen unless `y` is given (tests
-   * use `y`). Returns false if the pool is full.
+   * use `y`), first shooting after `firstShot` seconds on screen. Returns false
+   * if the pool is full.
    */
-  spawn(x: number, y?: number): boolean {
+  spawn(x: number, firstShot: number, y?: number): boolean {
     const slot = this.slots.find((s) => !s.sprite.active);
     if (!slot) return false;
     slot.hp = ENEMY_BASIC.hp;
     slot.flash = 0;
+    slot.fireIn = firstShot;
     slot.sprite
       .setPosition(x, y ?? -slot.sprite.height / 2)
       .setAlpha(1)
@@ -53,6 +57,12 @@ export class Enemies {
         this.release(slot);
       }
     }
+  }
+
+  /** Whether the whole enemy is inside the screen (it may only shoot then). */
+  onScreen(slot: EnemySlot): boolean {
+    const half = slot.sprite.height / 2;
+    return slot.sprite.y - half >= 0 && slot.sprite.y + half <= GAME_HEIGHT;
   }
 
   active(): EnemySlot[] {

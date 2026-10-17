@@ -10,9 +10,10 @@ export interface TestHook {
   scene(): string | null;
   snapshot(): GameSnapshot | null;
   setSpawning(on: boolean): void;
-  clearEnemies(): void;
-  /** Spawns an enemy at x (top of the screen), or at (x, y). */
-  spawnEnemy(x: number, y?: number): boolean;
+  /** Removes all enemies and, unless `keepShots`, their shots. */
+  clearEnemies(keepShots?: boolean): void;
+  /** Spawns an enemy at x (top of the screen), or at (x, y); optionally set its first shot. */
+  spawnEnemy(x: number, y?: number, firstShot?: number): boolean;
 }
 
 declare global {
@@ -36,7 +37,7 @@ export function installTestHook(game: Phaser.Game): void {
     scene: () => game.scene.getScenes(true)[0]?.scene.key ?? null,
     snapshot: () => gameScene()?.snapshot() ?? null,
     setSpawning: (on) => required().setSpawning(on),
-    clearEnemies: () => required().clearEnemies(),
-    spawnEnemy: (x, y) => required().spawnEnemy(x, y),
+    clearEnemies: (keepShots) => required().clearEnemies(keepShots),
+    spawnEnemy: (x, y, firstShot) => required().spawnEnemy(x, y, firstShot),
   };
 }
