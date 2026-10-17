@@ -5,8 +5,10 @@ export const GAME_HEIGHT = 320;
 /** Drawing order: higher numbers are drawn on top. */
 export const DEPTH = {
   background: 0,
+  enemies: 10,
   playerShots: 15,
   player: 20,
+  explosions: 30,
 } as const;
 
 /** Background scroll speeds in pixels per second. The star layer moves faster for depth. */
@@ -51,3 +53,28 @@ export const WEAPON = {
   /** Most shots on screen at once; extra shots wait for a free slot. */
   poolSize: 16,
 } as const;
+
+/** The basic enemy (M1.7). More types and wave scripts arrive in M2. */
+export const ENEMY_BASIC = {
+  sprite: 'enemy-01',
+  /** Hits from the basic weapon needed to destroy it. */
+  hp: 3,
+  /** Pixels per second, downward. */
+  speed: 45,
+  /** Seconds between spawns. */
+  spawnInterval: 1.4,
+  /** Collision box: the visible body, slightly smaller than the 48×48 frame. */
+  hitbox: { w: 24, h: 28, offsetY: -3 },
+  /** How long the enemy flashes after being hit, in seconds. */
+  hitFlash: 0.08,
+  poolSize: 12,
+  points: 100,
+} as const;
+
+export const EXPLOSION = {
+  sprite: 'enemy-explosion',
+  poolSize: 8,
+} as const;
+
+/** Seed for gameplay randomness, so a run can be replayed. Override with ?seed=123 in the URL. */
+export const DEFAULT_SEED = 20261017;

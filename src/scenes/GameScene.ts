@@ -1,8 +1,20 @@
 import Phaser from 'phaser';
-import { BACKGROUND, GAME_HEIGHT, GAME_WIDTH, WEAPON } from '../config/tuning';
+import {
+  BACKGROUND,
+  DEFAULT_SEED,
+  ENEMY_BASIC,
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  WEAPON,
+} from '../config/tuning';
 import { Bullets } from '../entities/Bullets';
+import { Enemies } from '../entities/Enemies';
+import { Explosions } from '../entities/Explosions';
 import { Player } from '../entities/Player';
+import { firstHit } from '../logic/collision';
+import { stepSpawner } from '../logic/enemy';
 import type { Axis } from '../logic/player';
+import { createRng, type Rng } from '../logic/rng';
 import { stepFire, type FireState } from '../logic/weapon';
 
 type Keys = Record<
@@ -16,6 +28,11 @@ export class GameScene extends Phaser.Scene {
   private player!: Player;
   private bullets!: Bullets;
   private fireState: FireState = { cooldown: 0 };
+  private enemies!: Enemies;
+  private explosions!: Explosions;
+  private rng!: Rng;
+  private spawnTimer = 0;
+  private score = 0;
   private keys!: Keys;
 
   constructor() {
@@ -28,8 +45,13 @@ export class GameScene extends Phaser.Scene {
       .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, 'bg-blue-stars')
       .setOrigin(0)
       .setAlpha(0.8);
+    this.rng = createRng(seedFromUrl());
+    this.spawnTimer = 0;
+    this.score = 0;
+    this.enemies = new Enemies(this);
     this.bullets = new Bullets(this);
     this.player = new Player(this);
+    this.explosions = new Explosions(this);
 
     const kb = this.input.keyboard;
     if (!kb) throw new Error('keyboard input is not available');
@@ -60,6 +82,35 @@ export class GameScene extends Phaser.Scene {
       this.bullets.fire(x, y + WEAPON.muzzleOffsetY);
     }
     this.bullets.update(dt);
+
+    const spawn = stepSpawner(this.spawnTimer, dt, ENEMY_BASIC.spawnInterval);
+    this.spawnTimer = spawn.timeLeft;
+    if (spawn.spawn) {
+      const margin = ENEMY_BASIC.hitbox.w / 2 + 4;
+      this.enemies.spawn(this.rng.range(margin, GAME_WIDTH - margin));
+    }
+    this.enemies.update(dt);
+    this.resolveShotHits();
+  }
+
+  /** Each shot hits at most one enemy and is used up. */
+  private resolveShotHits(): void {
+    const enemies = this.enemies.active();
+    if (enemies.length === 0) return;
+    for (const shot of this.bullets.active()) {
+      const boxes = enemies.map((e) => this.enemies.hitbox(e));
+      const i = firstHit(this.bullets.hitbox(shot), boxes);
+      const target = enemies[i];
+      if (!target) continue;
+      this.bullets.release(shot);
+      const { x, y } = target.sprite;
+      if (this.enemies.hit(target, 1)) {
+        this.explosions.play(x, y);
+        this.score += ENEMY_BASIC.points;
+        enemies.splice(i, 1);
+        if (enemies.length === 0) return;
+      }
+    }
   }
 
   private readAxis(): Axis {
@@ -73,4 +124,11 @@ export class GameScene extends Phaser.Scene {
       y: up === down ? 0 : up ? -1 : 1,
     };
   }
+}
+
+/** Seed from the URL (?seed=123) for repeatable runs, otherwise the default. */
+function seedFromUrl(): number {
+  const raw = new URLSearchParams(window.location.search).get('seed');
+  const n = raw === null ? Number.NaN : Number.parseInt(raw, 10);
+  return Number.isFinite(n) ? n : DEFAULT_SEED;
 }

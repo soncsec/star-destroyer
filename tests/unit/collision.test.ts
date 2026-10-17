@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { offScreen, overlaps } from '../../src/logic/collision';
+import { firstHit, offScreen, overlaps } from '../../src/logic/collision';
 
 const box = (x: number, y: number, w = 10, h = 10) => ({ x, y, w, h });
 
@@ -42,5 +42,17 @@ describe('offScreen', () => {
     expect(offScreen(box(128, 326), 256, 320)).toBe(true);
     expect(offScreen(box(-6, 160), 256, 320)).toBe(true);
     expect(offScreen(box(262, 160), 256, 320)).toBe(true);
+  });
+});
+
+describe('firstHit', () => {
+  it('returns the index of the first overlapping box', () => {
+    const shots = [box(100, 100), box(0, 0), box(3, 3)];
+    expect(firstHit(box(0, 0, 20, 20), shots)).toBe(1);
+  });
+
+  it('returns -1 when nothing overlaps', () => {
+    expect(firstHit(box(0, 0), [box(50, 50), box(-50, 0)])).toBe(-1);
+    expect(firstHit(box(0, 0), [])).toBe(-1);
   });
 });
