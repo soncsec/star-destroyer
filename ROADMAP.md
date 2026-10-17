@@ -102,7 +102,7 @@
 
 - [x] M2.1 Health (5 hits per life), 3 lives, invulnerability flashes after losing a life (logic unit tested). Enemies crashing into the ship cost a hit until enemy shots arrive (M2.2)
 - [x] M2.2 Enemy bullets (boss bolt sprite). Each enemy fires on its own seeded timer once fully on screen; shots aim at the ship within 30° of straight down
-- [ ] M2.3 Enemy types 2 and 3 with distinct movement patterns
+- [x] M2.3 Enemy types 2 and 3 with distinct movement patterns: weaver (sways, 2 HP, 150 pts) and diver (hovers, then dives at where the ship was; 4 HP, 200 pts; doesn't shoot)
 - [ ] M2.4 Scripted wave schedule driven by data (unit tested)
 - [ ] M2.5 Destructible asteroids; large ones split into small ones
 - [ ] M2.6 Score and HUD

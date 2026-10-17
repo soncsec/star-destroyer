@@ -120,16 +120,18 @@ test('an enemy takes 3 hits, explodes and scores 100', async ({ page }) => {
 });
 
 test('the same ?seed= gives the same enemy spawns', async ({ page }) => {
-  const firstSpawnX = async (seed: number): Promise<number> => {
+  // Compare where and what the first enemy spawned as, not where it is now:
+  // weavers sway, so their current x depends on exactly when we look.
+  const firstSpawn = async (seed: number): Promise<{ kind: string; spawnX: number }> => {
     await openGame(page, `?seed=${seed}`);
     await expect.poll(async () => (await snapshot(page)).enemies.length).toBeGreaterThan(0);
-    const x = (await snapshot(page)).enemies[0]?.x;
-    if (x === undefined) throw new Error('no enemy spawned');
-    return x;
+    const e = (await snapshot(page)).enemies[0];
+    if (!e) throw new Error('no enemy spawned');
+    return { kind: e.kind, spawnX: e.spawnX };
   };
-  const a = await firstSpawnX(123);
-  const b = await firstSpawnX(123);
-  const c = await firstSpawnX(456);
-  expect(b).toBe(a);
-  expect(c).not.toBe(a);
+  const a = await firstSpawn(123);
+  const b = await firstSpawn(123);
+  const c = await firstSpawn(456);
+  expect(b).toEqual(a);
+  expect(c.spawnX).not.toBe(a.spawnX);
 });
