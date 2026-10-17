@@ -9,7 +9,7 @@
 |---|---|
 | M0 Setup | Done |
 | M1 Walking skeleton | Done (owner play-tested and approved 2026-10-17) |
-| P1 Portal and production server | Live 2026-10-17; production rollback rehearsal pending |
+| P1 Portal and production server | Done (2026-10-17) |
 | T1 Game template for parallel instances | Not started |
 | M2 Core loop (level 1) | Not started |
 | M3 Power-ups | Not started |
@@ -79,6 +79,8 @@
 - [x] P1.9 First production release; ZAP scan and smoke test from outside the network. Approved by the owner; released 2026-10-17 (game `20261017T172140Z-5c2b2e72`, portal `20261017T174255Z-6f2e61df`). Outside check by the games-portal `Production check` workflow: smoke tests passed with headers required; ZAP: 0 high (remaining: server version banner, COEP, cache info)
 
 **Acceptance criteria:** the portal and game load at the production URL from an outside network; the security headers are present; the ZAP scan has no high-severity findings; a rollback has been rehearsed; the other sites on the server still work.
+
+**Verified 2026-10-17:** outside check (games-portal `Production check` run 39056703574) passed with headers required and 0 high ZAP findings. Rollback rehearsed in production with owner approval: release B `20261017T181633Z-5c2b2e72` → rollback to A in 0.3 s (smoke test against the public URL passed, portal unaffected) → forward to B (smoke passed). Other sites checked unchanged after the Apache change.
 
 ## T1 — Game template for parallel instances (ADR-011)
 
