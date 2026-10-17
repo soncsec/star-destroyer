@@ -9,6 +9,7 @@ import {
   GAME_HEIGHT,
   GAME_WIDTH,
   PLAYER_HEALTH,
+  POWERUPS,
   WEAPON,
   type EnemyKind,
 } from '../config/tuning';
@@ -19,8 +20,10 @@ import { Enemies } from '../entities/Enemies';
 import { Explosions } from '../entities/Explosions';
 import { GameOverPanel } from '../entities/GameOverPanel';
 import { Hud } from '../entities/Hud';
+import { Pickups } from '../entities/Pickups';
 import { Player } from '../entities/Player';
 import { firstHit, type Box } from '../logic/collision';
+import { rollDrop, type PowerUpKind } from '../logic/drops';
 import { panelShown, startGameOver, stepGameOver, type GameOverState } from '../logic/gameOver';
 import { LEVEL_1 } from '../levels/level1';
 import { aimDown, firstShotDelay, nextShotDelay, stepEnemyFire } from '../logic/enemyFire';
@@ -57,6 +60,9 @@ export interface GameSnapshot {
   asteroids: { size: RockSize; x: number; y: number; hp: number }[];
   /** What the HUD shows. */
   hud: { score: string; lives: string; pips: boolean[] };
+  /** Pickups drifting down, and how many of each kind the ship has collected. */
+  pickups: { kind: PowerUpKind; x: number; y: number }[];
+  collected: Record<PowerUpKind, number>;
   /** The game-over panel, and whether a fresh key press will now restart. */
   gameOver: { visible: boolean; title: string; score: string; prompt: string; armed: boolean };
   shots: number;
@@ -84,6 +90,13 @@ export class GameScene extends Phaser.Scene {
   private asteroids!: Asteroids;
   private explosions!: Explosions;
   private hud!: Hud;
+  private pickups!: Pickups;
+  /** Power-ups collected this game, by kind (their effects arrive in M3.2–M3.4). */
+  private collected: Record<PowerUpKind, number> = { weapon: 0, shield: 0, clear: 0 };
+  /** True while a boss is on screen (M4): no screen-clear drops then. */
+  private bossFight = false;
+  /** Drop chance override (tests force drops); null uses the tuning. */
+  private dropChance: number | null = null;
   private gameOverPanel!: GameOverPanel;
   /** Set when the last life is lost; null while playing. */
   private gameOver: GameOverState | null = null;
@@ -120,6 +133,10 @@ export class GameScene extends Phaser.Scene {
     this.player = new Player(this);
     this.explosions = new Explosions(this);
     this.hud = new Hud(this, PLAYER_HEALTH.hitsPerLife);
+    this.pickups = new Pickups(this);
+    this.collected = { weapon: 0, shield: 0, clear: 0 };
+    this.bossFight = false;
+    this.dropChance = null;
     this.gameOverPanel = new GameOverPanel(this);
     this.gameOver = null;
 
@@ -173,12 +190,14 @@ export class GameScene extends Phaser.Scene {
     }
     this.enemies.update(dt, this.player.position);
     this.asteroids.update(dt);
+    this.pickups.update(dt);
     this.enemiesFire(dt);
     this.enemyBullets.update(dt);
     this.resolveShotHits();
 
     this.health = tickHealth(this.health, dt);
     this.resolvePlayerHits();
+    this.collectPickups();
     this.player.setVisible(
       !isGameOver(this.health) && shipVisible(this.health, PLAYER_HEALTH.flashHz),
     );
@@ -268,6 +287,8 @@ export class GameScene extends Phaser.Scene {
       waves: { ...this.waves },
       hud: this.hud.read(),
       gameOver: { ...this.gameOverPanel.read(), armed: this.gameOver?.armed ?? false },
+      pickups: this.pickups.active().map((p) => ({ kind: p.kind, x: p.sprite.x, y: p.sprite.y })),
+      collected: { ...this.collected },
       asteroids: this.asteroids
         .active()
         .map((r) => ({ size: r.size, x: r.rock.x, y: r.rock.y, hp: r.hp })),
@@ -280,6 +301,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   /** Spawns a large asteroid at `x`: at the top of the screen, or at `y` if given (tests). */
+  /** Overrides the drop chance (tests: 1 = every kill drops); null restores the tuning. */
+  setDropChance(chance: number | null): void {
+    this.dropChance = chance;
+  }
+
+  /** Drops a pickup of `kind` at (x, y) (tests). */
+  spawnPickup(kind: PowerUpKind, x: number, y: number): boolean {
+    return this.pickups.spawn(kind, x, y);
+  }
+
   spawnAsteroid(x: number, y?: number): boolean {
     return this.asteroids.spawnLarge(x, this.rng, y);
   }
@@ -304,6 +335,7 @@ export class GameScene extends Phaser.Scene {
   clearEnemies(keepShots = false): void {
     this.enemies.clear();
     this.asteroids.clear();
+    this.pickups.clear();
     if (!keepShots) this.enemyBullets.clear();
   }
 
@@ -330,6 +362,7 @@ export class GameScene extends Phaser.Scene {
         if (this.enemies.hit(enemy, 1)) {
           this.explosions.play(x, y);
           this.score += ENEMY_TYPES[enemy.kind].points;
+          this.maybeDrop(x, y);
         }
         continue;
       }
@@ -338,6 +371,7 @@ export class GameScene extends Phaser.Scene {
         this.bullets.release(shot);
         if (this.asteroids.hit(rock, 1)) {
           this.score += ASTEROIDS[rock.size].points;
+          if (rock.size === 'large') this.maybeDrop(rock.rock.x, rock.rock.y);
           this.shatter(rock);
         }
       }
@@ -345,6 +379,24 @@ export class GameScene extends Phaser.Scene {
   }
 
   /** A destroyed or crashed rock explodes; a large one splits into small pieces. */
+  /** A kill may drop a power-up where it happened (seeded; never a screen clear in a boss fight). */
+  private maybeDrop(x: number, y: number): void {
+    const rules = { ...POWERUPS.drops, chance: this.dropChance ?? POWERUPS.drops.chance };
+    const kind = rollDrop(this.rng, rules, { bossFight: this.bossFight });
+    if (kind) this.pickups.spawn(kind, x, y);
+  }
+
+  /** The ship collects any pickup it touches. */
+  private collectPickups(): void {
+    if (isGameOver(this.health)) return;
+    const ship = this.player.hitbox();
+    for (const p of this.pickups.active()) {
+      if (firstHit(ship, [this.pickups.hitbox(p)]) < 0) continue;
+      this.pickups.release(p);
+      this.collected[p.kind]++;
+    }
+  }
+
   private shatter(rock: RockSlot): void {
     this.explosions.play(rock.rock.x, rock.rock.y);
     if (rock.size === 'large') this.asteroids.split(rock, this.rng);

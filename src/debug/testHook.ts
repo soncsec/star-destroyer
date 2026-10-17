@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
 import type { EnemyKind } from '../config/tuning';
+import type { PowerUpKind } from '../logic/drops';
 import type { GameScene, GameSnapshot } from '../scenes/GameScene';
 
 /**
@@ -11,8 +12,12 @@ export interface TestHook {
   scene(): string | null;
   snapshot(): GameSnapshot | null;
   setSpawning(on: boolean): void;
-  /** Removes all enemies and asteroids and, unless `keepShots`, enemy shots. */
+  /** Removes all enemies, asteroids and pickups and, unless `keepShots`, enemy shots. */
   clearEnemies(keepShots?: boolean): void;
+  /** Overrides the drop chance (1 = every kill drops); null restores the tuning. */
+  setDropChance(chance: number | null): void;
+  /** Drops a pickup of `kind` at (x, y). */
+  spawnPickup(kind: PowerUpKind, x: number, y: number): boolean;
   /** Fires exactly one player shot from the ship. */
   fireShot(): boolean;
   /** Puts the ship on its last life with one hit left. */
@@ -48,6 +53,8 @@ export function installTestHook(game: Phaser.Game): void {
     spawnAsteroid: (x, y) => required().spawnAsteroid(x, y),
     oneHitLeft: () => required().oneHitLeft(),
     fireShot: () => required().fireShot(),
+    spawnPickup: (kind, x, y) => required().spawnPickup(kind, x, y),
+    setDropChance: (chance) => required().setDropChance(chance),
     spawnEnemy: (x, y, firstShot, kind) => required().spawnEnemy(x, y, firstShot, kind),
   };
 }

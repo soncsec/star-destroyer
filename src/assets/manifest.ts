@@ -4,7 +4,15 @@
  * tests/unit/manifest.test.ts checks these numbers against the real PNG files.
  */
 export type AssetGroup =
-  'player' | 'enemies' | 'boss' | 'asteroids' | 'backgrounds' | 'weapons' | 'explosions';
+  | 'player'
+  | 'enemies'
+  | 'boss'
+  | 'asteroids'
+  | 'backgrounds'
+  | 'weapons'
+  | 'explosions'
+  | 'pickups'
+  | 'effects';
 
 export interface SheetAsset {
   kind: 'sheet';
@@ -117,6 +125,13 @@ export const ASSETS: readonly Asset[] = [
   sheet('weapons', 'shot-pulse', 'pulse.png', 63, 32, 4, 14, true),
   sheet('weapons', 'shot-spark', 'spark.png', 63, 32, 5, 14, true),
   sheet('weapons', 'shot-waveform', 'waveform.png', 95, 32, 4, 14, true),
+
+  // Power-up pickups (M3): spinning gems, 7 frames of 12×12 each.
+  sheet('pickups', 'gem-yellow', 'gem-yellow.png', 12, 12, 7, 10, true),
+  sheet('pickups', 'gem-blue', 'gem-blue.png', 12, 12, 7, 10, true),
+  sheet('pickups', 'gem-pink', 'gem-pink.png', 12, 12, 7, 10, true),
+  // Shield bubble (M3.3): frames 0-3 form it, 4-7 break it.
+  sheet('effects', 'energy-shield', 'energy-shield.png', 51, 47, 8, 12, false),
 
   sheet('explosions', 'explosion-a', 'explosion-a.png', 32, 32, 8, 16, false),
   sheet('explosions', 'explosion-b', 'explosion-b.png', 64, 64, 8, 16, false),
