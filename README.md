@@ -11,4 +11,19 @@ A browser-based vertical space shooter built with Phaser 4, TypeScript and Vite,
 | [ROADMAP.md](ROADMAP.md) | Milestones, tasks and progress |
 | [CLAUDE.md](CLAUDE.md) | Development rules |
 
-Status: setup (M0).
+Status: M1 done; P1 (portal and production) in progress.
+
+## Releasing to production
+
+Only with the owner's approval for each release (CLAUDE.md).
+
+```sh
+cp deploy/server.env.example deploy/server.env   # once; fill in the real values (git-ignored)
+git checkout main && git pull
+scripts/release.sh deploy --dry-run   # checks and build only; shows what is on the server
+scripts/release.sh deploy             # upload, switch, smoke test (rolls back on failure)
+scripts/release.sh rollback           # back to the previous release
+scripts/release.sh status             # list releases on the server
+```
+
+`deploy` refuses to run unless HEAD is `origin/main`, the working tree is clean, and CI passed on that commit (including CodeQL and the ZAP scan of staging).

@@ -68,14 +68,14 @@
 
 **Demonstrable result:** `games.soncrant.com` loads from outside the home network, showing the arcade portal with a Star Destroyer card that opens the M1 build.
 
-- [ ] P1.1 Portal scaffold (Vite + TypeScript), CI pipeline matching the game's — games-portal PR #1
-- [ ] P1.2 Retro-arcade design: "Soncrant Arcade" wordmark and logo, card grid rendered from `games.json`, responsive layout — games-portal PR #2. Font: Press Start 2P (SIL OFL, bundled), approved by owner 2026-10-17
-- [ ] P1.3 Tests: `games.json` schema check, every card links to a page and an image that exist, Playwright render and accessibility check
+- [x] P1.1 Portal scaffold (Vite + TypeScript), CI pipeline matching the game's — games-portal PR #1
+- [x] P1.2 Retro-arcade design: "Soncrant Arcade" wordmark and logo, card grid rendered from `games.json`, responsive layout — games-portal PR #2. Font: Press Start 2P (SIL OFL, bundled), approved by owner 2026-10-17 (games-portal PR #2)
+- [x] P1.3 Tests: `games.json` schema check, every card links to a page and an image that exist, Playwright render and accessibility check (games-portal PR #3; link targets are checked by the release smoke test)
 - [x] P1.4 Decide HTTP or HTTPS (ADR-010): owner chose HTTP on port 80
-- [ ] P1.5 Server prep runbook: `deploy` user, SSH key, write access to `/var/www/html/soncrant.com/pub/games/` — *needs approval; owner runs the sudo steps or grants access*
-- [ ] P1.6 Owner maps `games.soncrant.com` to the `games/` folder in Apache. Claude supplies the security-header config for that folder, checked with `apachectl configtest` before reload; existing sites verified unaffected — *needs approval*
+- [x] P1.5 Server prep runbook: `deploy` user, SSH key, write access to `/var/www/html/soncrant.com/pub/games/`. Done 2026-10-17; key restricted to the dev machine, access verified
+- [x] P1.6 Owner maps `games.soncrant.com` to the `games/` folder in Apache. Claude supplies the security-header config for that folder, checked with `apachectl configtest` before reload; existing sites verified unaffected. Applied by the owner 2026-10-17; all 7 headers live, no folder listings, other sites unchanged
 - [ ] P1.7 DNS `A` record for `games.soncrant.com` and port 80 forwarding (owner)
-- [ ] P1.8 Release scripts for portal and game (atomic symlink switch, rollback command)
+- [ ] P1.8 Release scripts for portal and game (atomic symlink switch, rollback command). Game: `scripts/release.sh` (this PR); portal: next
 - [ ] P1.9 First production release; ZAP scan and smoke test from outside the network — *needs approval*
 
 **Acceptance criteria:** the portal and game load at the production URL from an outside network; the security headers are present; the ZAP scan has no high-severity findings; a rollback has been rehearsed; the other sites on the server still work.

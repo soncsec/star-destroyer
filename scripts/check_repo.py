@@ -5,6 +5,8 @@
 - Every image in public/assets/ is a real PNG and is listed in CREDITS.md.
 - Every asset listed in CREDITS.md exists.
 - No committed file is larger than 5 MB.
+- No private network addresses (server or dev machine) in tracked text files;
+  they belong in the git-ignored deploy/server.env.
 """
 import pathlib
 import re
@@ -15,6 +17,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 MAX_BYTES = 5 * 1024 * 1024
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 FORBIDDEN = re.compile(r"(^|/)(legacy(/|$)|__MACOSX/|\.DS_Store$)")
+PRIVATE_IP = re.compile(
+    r"\b(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})\b"
+)
+TEXT_SUFFIXES = {".md", ".ts", ".js", ".json", ".yml", ".yaml", ".py", ".sh", ".html", ".css", ".txt", ".example", ".conf", ""}
 
 
 def main() -> int:
@@ -29,6 +35,10 @@ def main() -> int:
         full = ROOT / path
         if full.is_file() and full.stat().st_size > MAX_BYTES:
             errors.append(f"file over 5 MB: {path}")
+        if full.is_file() and full.suffix in TEXT_SUFFIXES and path != "package-lock.json":
+            match = PRIVATE_IP.search(full.read_text(errors="ignore"))
+            if match:
+                errors.append(f"private network address {match.group()} in {path}")
 
     credits_file = ROOT / "CREDITS.md"
     credits = credits_file.read_text() if credits_file.exists() else ""
