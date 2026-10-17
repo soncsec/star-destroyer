@@ -8,8 +8,8 @@
 | Milestone | Status |
 |---|---|
 | M0 Setup | Done |
-| M1 Walking skeleton | Built; waiting for the owner's play-test on staging |
-| P1 Portal and production server | Not started |
+| M1 Walking skeleton | Done (owner play-tested and approved 2026-10-17) |
+| P1 Portal and production server | In progress |
 | T1 Game template for parallel instances | Not started |
 | M2 Core loop (level 1) | Not started |
 | M3 Power-ups | Not started |
@@ -68,8 +68,8 @@
 
 **Demonstrable result:** `games.soncrant.com` loads from outside the home network, showing the arcade portal with a Star Destroyer card that opens the M1 build.
 
-- [ ] P1.1 Portal scaffold (Vite + TypeScript), CI pipeline matching the game's
-- [ ] P1.2 Retro-arcade design: "Soncrant Arcade" wordmark and logo, card grid rendered from `games.json`, responsive layout
+- [ ] P1.1 Portal scaffold (Vite + TypeScript), CI pipeline matching the game's — games-portal PR #1
+- [ ] P1.2 Retro-arcade design: "Soncrant Arcade" wordmark and logo, card grid rendered from `games.json`, responsive layout — games-portal PR #2. Font: Press Start 2P (SIL OFL, bundled), approved by owner 2026-10-17
 - [ ] P1.3 Tests: `games.json` schema check, every card links to a page and an image that exist, Playwright render and accessibility check
 - [x] P1.4 Decide HTTP or HTTPS (ADR-010): owner chose HTTP on port 80
 - [ ] P1.5 Server prep runbook: `deploy` user, SSH key, write access to `/var/www/html/soncrant.com/pub/games/` — *needs approval; owner runs the sudo steps or grants access*
