@@ -55,6 +55,20 @@ export const WEAPON = {
 } as const;
 
 /** The basic enemy (M1.7). More types and wave scripts arrive in M2. */
+/** Health and lives (owner decisions: 5 hits per life, 3 lives). */
+export const PLAYER_HEALTH = {
+  hitsPerLife: 5,
+  lives: 3,
+  /** Seconds of invulnerability after a hit, so one collision counts once. */
+  hitInvulnerable: 0.6,
+  /** Seconds of invulnerability (flashing) after losing a life and respawning. */
+  respawnInvulnerable: 2,
+  /** Blinks per second while invulnerable. */
+  flashHz: 10,
+  /** Collision box: smaller than the 48×48 ship so near misses feel fair. */
+  hitbox: { w: 16, h: 20 },
+} as const;
+
 export const ENEMY_BASIC = {
   sprite: 'enemy-01',
   /** Hits from the basic weapon needed to destroy it. */
