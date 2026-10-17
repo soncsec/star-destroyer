@@ -34,7 +34,7 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 | Survival | Health bar and lives; game over screen with restart |
 | Enemies | 3 enemy types with distinct movement and firing patterns |
 | Obstacles | Destructible asteroids |
-| Weapons | Power-up drops; 2–3 weapon levels using the Warped shooting effects |
+| Weapons | Power-up drops; 2–3 weapon levels using the Warped shooting effects. **Power-ups are permanent and never time out** (owner decision 2026-10-17). Whether a level is lost on death is still open. |
 | Boss | Multi-part boss (body, left and right cannons, helmet) with beam and bolt attacks, multiple phases |
 | Scoring | Score display; high score saved in the browser (localStorage) |
 | Screens | Title, game, pause, game over, victory |

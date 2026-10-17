@@ -55,7 +55,7 @@
 - [x] M1.3 Asset manifest and preview scene showing every sheet animating correctly (open the game with `?scene=preview`)
 - [x] M1.4 Scrolling background (nebula plus a faster star layer) with whole-number pixel scaling
 - [x] M1.5 Player movement (arrows or WASD) with banking animation, engine flame and screen bounds
-- [ ] M1.6 Shooting with pooled bullets (the weapon effect sprites point right, so they're rotated −90° to fire upward)
+- [x] M1.6 Shooting with pooled bullets (Space; 5 shots per second; effect sprites rotated −90° to fire upward)
 - [ ] M1.7 One enemy type, collision, explosion
 - [ ] M1.8 Playwright: game boots with no console errors; an enemy can be destroyed through the test hook
 - [ ] M1.9 Auto-deploy to GitHub Pages on merge; ZAP baseline scan of staging
@@ -112,7 +112,7 @@
 - [ ] M3.1 Power-up drops (drop rate set in the tuning config)
 - [ ] M3.2 Weapon levels 1–3 using the pulse, bolt and charged effects
 - [ ] M3.3 Hit-spark effects on impact
-- [ ] M3.4 Unit tests for weapon progression and losing a level on death
+- [ ] M3.4 Unit tests for weapon progression. Power-ups never time out; what happens on death is pending the owner's decision
 
 **Acceptance criteria:** each weapon level is visually distinct and tested; frame rate holds with the maximum weapon level and a full wave on screen.
 

@@ -1,10 +1,12 @@
 import Phaser from 'phaser';
-import { BACKGROUND, GAME_HEIGHT, GAME_WIDTH } from '../config/tuning';
+import { BACKGROUND, GAME_HEIGHT, GAME_WIDTH, WEAPON } from '../config/tuning';
+import { Bullets } from '../entities/Bullets';
 import { Player } from '../entities/Player';
 import type { Axis } from '../logic/player';
+import { stepFire, type FireState } from '../logic/weapon';
 
 type Keys = Record<
-  'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd',
+  'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'fire',
   Phaser.Input.Keyboard.Key
 >;
 
@@ -12,6 +14,8 @@ export class GameScene extends Phaser.Scene {
   private nebula!: Phaser.GameObjects.TileSprite;
   private stars!: Phaser.GameObjects.TileSprite;
   private player!: Player;
+  private bullets!: Bullets;
+  private fireState: FireState = { cooldown: 0 };
   private keys!: Keys;
 
   constructor() {
@@ -24,6 +28,7 @@ export class GameScene extends Phaser.Scene {
       .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, 'bg-blue-stars')
       .setOrigin(0)
       .setAlpha(0.8);
+    this.bullets = new Bullets(this);
     this.player = new Player(this);
 
     const kb = this.input.keyboard;
@@ -37,6 +42,7 @@ export class GameScene extends Phaser.Scene {
       a: 'A',
       s: 'S',
       d: 'D',
+      fire: 'SPACE',
     }) as Keys;
   }
 
@@ -46,6 +52,14 @@ export class GameScene extends Phaser.Scene {
     this.nebula.tilePositionY -= BACKGROUND.nebulaSpeed * dt;
     this.stars.tilePositionY -= BACKGROUND.starsSpeed * dt;
     this.player.update(this.readAxis(), dt);
+
+    const shot = stepFire(this.fireState, this.keys.fire.isDown, dt, WEAPON.fireInterval);
+    this.fireState = shot.state;
+    if (shot.fire) {
+      const { x, y } = this.player.position;
+      this.bullets.fire(x, y + WEAPON.muzzleOffsetY);
+    }
+    this.bullets.update(dt);
   }
 
   private readAxis(): Axis {
