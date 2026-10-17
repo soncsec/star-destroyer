@@ -28,14 +28,17 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 
 | Area | Requirement |
 |---|---|
-| Stage | One stage, about 3–5 minutes: scripted enemy waves, then a boss fight |
+| Levels | **8 levels, each ending in a boss fight** (owner decision 2026-10-17). Each level uses different art where the pack has it (see section 4a). About 3–4 minutes per level |
 | Player | One ship (from the 4 available), banking animation, engine thrust |
 | Controls | Keyboard: arrows or WASD to move, Space to fire, P to pause |
-| Survival | Health bar and lives; game over screen with restart |
-| Enemies | 3 enemy types with distinct movement and firing patterns |
-| Obstacles | Destructible asteroids |
-| Weapons | Power-up drops; 2–3 weapon levels using the Warped shooting effects. **Power-ups are permanent and never time out** (owner decision 2026-10-17). Whether a level is lost on death is still open. |
-| Boss | Multi-part boss (body, left and right cannons, helmet) with beam and bolt attacks, multiple phases |
+| Survival | 3 lives, **5 hits per life** (health bar). Brief invulnerability after losing a life. Game over screen with restart |
+| Enemies | Several enemy types with distinct movement and firing patterns, varying by level |
+| Difficulty | Enemy fire gets gradually more frequent from level 1 to 8. **Level 8 must be hard but beatable** (limits in section 4a) |
+| Obstacles | Destructible asteroids; **large asteroids split into small ones** |
+| Weapons | Weapon power-up drops raise the weapon level (3 levels, using the Warped shooting effects). Weapon upgrades **never time out**, but **losing a life drops you back to the basic weapon** (owner decisions 2026-10-17) |
+| Shield | Power-up: a shield that blocks all damage for **30 seconds** |
+| Screen clear | **Rare** power-up that destroys every enemy on screen. **Never appears during a boss fight** |
+| Bosses | One boss per level, each with its own attack patterns. The multi-part top-down boss (body, cannons, helmet, beam) is the final boss |
 | Scoring | Score display; high score saved in the browser (localStorage) |
 | Screens | Title, game, pause, game over, victory |
 | Navigation | A link back to the games portal from the title screen |
@@ -45,11 +48,44 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 
 ### Out of scope (v1)
 
-- Multiple stages, ship selection
+- Ship selection
 - Mobile and touch controls, gamepad
 - Music
 - Online leaderboards, accounts, payments, analytics
 - Any backend or server-side code
+
+## 4a. Levels, power-ups and difficulty
+
+### Power-up rules (owner decisions 2026-10-17)
+
+| Power-up | Effect | How often | Notes |
+|---|---|---|---|
+| Weapon | Raises the weapon one level (max 3) | Common | Never times out; lost on death (back to level 1) |
+| Shield | Blocks all damage for 30 seconds | Uncommon | Picking up another resets the timer to 30 s *(proposed)* |
+| Screen clear | Destroys every enemy on screen, plus enemy shots *(proposed)* | Rare | Never dropped during a boss fight |
+
+### Proposed level plan (needs owner approval)
+
+The pack has about 5 distinct top-down space backgrounds and 6 distinct boss designs, so some art is reused with different layer combinations. Side-view ships are rotated to face down.
+
+| Level | Name | Background | Enemies | Boss |
+|---|---|---|---|---|
+| 1 | Teal Nebula | Top-down nebula + stars | Enemy types 1, 2 | Spaceship unit (rotated) |
+| 2 | Asteroid Belt | Purple asteroid-field background, heavy asteroids | Enemy types 1, 3 | Warped vehicle 1 (rotated) |
+| 3 | Blue Expanse | Blue space pack, layered | Enemy types 2, 3, alien flyers | Warped vehicle 2 (rotated) |
+| 4 | Red Giant | Red planet parallax pack | Alien flyers, enemy type 3 | Spaceship unit, upgraded attacks |
+| 5 | Station Run | Warped Zone 202 corridor, rotated into a vertical tunnel | Enemy types 1–3 | Warped vehicle 3 (rotated) |
+| 6 | Demon Rift | Red planet pack, darker layers | Flying-eye demons, fire skulls | Fire skull, enlarged role |
+| 7 | Deep Dark | Blue space pack, stars only | Mix of all | Twin Warped vehicle 1s |
+| 8 | The Core | Top-down nebula, night layers | Mix of all | **Top-down multi-part boss** (final) |
+
+### Difficulty curve and limits (keeps level 8 beatable)
+
+- Enemy fire rate rises gradually: level 8 fires at most **2.5×** as often as level 1 (about +14% per level).
+- Enemy shot speed rises at most 30% by level 8.
+- Every enemy attack pattern leaves a gap the player's ship can fit through.
+- Shield and weapon drops become slightly more common in later levels.
+- Verified by the owner beating level 8, plus automated checks that the per-level numbers stay within these limits.
 
 ## 5. Games portal scope — Version 1.0
 
