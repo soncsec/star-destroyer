@@ -54,7 +54,7 @@
 - [x] M1.2 CI workflow: format, lint, type check, Vitest with coverage, build, `npm audit`, CodeQL (security-extended), gitleaks; Dependabot with a 14-day cooldown
 - [x] M1.3 Asset manifest and preview scene showing every sheet animating correctly (open the game with `?scene=preview`)
 - [x] M1.4 Scrolling background (nebula plus a faster star layer) with whole-number pixel scaling
-- [ ] M1.5 Player movement with banking animation and screen bounds
+- [x] M1.5 Player movement (arrows or WASD) with banking animation, engine flame and screen bounds
 - [ ] M1.6 Shooting with pooled bullets (the weapon effect sprites point right, so they're rotated −90° to fire upward)
 - [ ] M1.7 One enemy type, collision, explosion
 - [ ] M1.8 Playwright: game boots with no console errors; an enemy can be destroyed through the test hook

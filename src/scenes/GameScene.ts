@@ -1,9 +1,18 @@
 import Phaser from 'phaser';
 import { BACKGROUND, GAME_HEIGHT, GAME_WIDTH } from '../config/tuning';
+import { Player } from '../entities/Player';
+import type { Axis } from '../logic/player';
+
+type Keys = Record<
+  'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd',
+  Phaser.Input.Keyboard.Key
+>;
 
 export class GameScene extends Phaser.Scene {
   private nebula!: Phaser.GameObjects.TileSprite;
   private stars!: Phaser.GameObjects.TileSprite;
+  private player!: Player;
+  private keys!: Keys;
 
   constructor() {
     super('Game');
@@ -15,6 +24,20 @@ export class GameScene extends Phaser.Scene {
       .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, 'bg-blue-stars')
       .setOrigin(0)
       .setAlpha(0.8);
+    this.player = new Player(this);
+
+    const kb = this.input.keyboard;
+    if (!kb) throw new Error('keyboard input is not available');
+    this.keys = kb.addKeys({
+      up: 'UP',
+      down: 'DOWN',
+      left: 'LEFT',
+      right: 'RIGHT',
+      w: 'W',
+      a: 'A',
+      s: 'S',
+      d: 'D',
+    }) as Keys;
   }
 
   override update(_time: number, deltaMs: number): void {
@@ -22,5 +45,18 @@ export class GameScene extends Phaser.Scene {
     // Moving the texture down makes the ship appear to fly up.
     this.nebula.tilePositionY -= BACKGROUND.nebulaSpeed * dt;
     this.stars.tilePositionY -= BACKGROUND.starsSpeed * dt;
+    this.player.update(this.readAxis(), dt);
+  }
+
+  private readAxis(): Axis {
+    const k = this.keys;
+    const left = k.left.isDown || k.a.isDown;
+    const right = k.right.isDown || k.d.isDown;
+    const up = k.up.isDown || k.w.isDown;
+    const down = k.down.isDown || k.s.isDown;
+    return {
+      x: left === right ? 0 : left ? -1 : 1,
+      y: up === down ? 0 : up ? -1 : 1,
+    };
   }
 }
