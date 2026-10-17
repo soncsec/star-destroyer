@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from './config/tuning';
+import { AssetPreviewScene } from './scenes/AssetPreviewScene';
 import { BootScene } from './scenes/BootScene';
+import { PreloadScene } from './scenes/PreloadScene';
 
 export const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -17,5 +19,5 @@ export const game = new Phaser.Game({
     default: 'arcade',
     arcade: { debug: false },
   },
-  scene: [BootScene],
+  scene: [PreloadScene, BootScene, AssetPreviewScene],
 });
