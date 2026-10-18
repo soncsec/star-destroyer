@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ASSETS } from '../../src/assets/manifest';
-import { ENEMY_TYPES } from '../../src/config/tuning';
+import { ENEMY_TYPES, GAME_WIDTH } from '../../src/config/tuning';
 import { LEVELS } from '../../src/levels';
 import { ASTEROID_LIMITS, WAVE_LIMITS, screenTime } from '../../src/levels/limits';
 import { LEVEL_1 } from '../../src/levels/level1';
@@ -31,6 +31,14 @@ describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${le
       expect(level.background[0]?.alpha).toBe(1);
     });
 
+    it('covers the full screen width with every layer (no seam)', () => {
+      for (const layer of level.background) {
+        const asset = ASSETS.find((a) => a.key === layer.texture);
+        const width = asset?.kind === 'image' ? asset.width : (asset?.frameWidth ?? 0);
+        expect(width * (layer.scale ?? 1), layer.texture).toBeGreaterThanOrEqual(GAME_WIDTH);
+      }
+    });
+
     it('scrolls nearer layers faster (depth)', () => {
       const speeds = level.background.map((l) => l.scrollSpeed);
       expect(speeds).toEqual([...speeds].sort((a, b) => a - b));
@@ -55,9 +63,10 @@ describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${le
   },
 );
 
-describe('level 2 (early version, M4.4)', () => {
-  it('matches the approved plan: Asteroid Belt, grunts and divers', () => {
-    expect(LEVEL_2).toMatchObject({ number: 2, name: 'Asteroid Belt' });
+describe('level 2 (M4.4, own art and boss M5.2)', () => {
+  it('matches the approved plan: Asteroid Belt, grunts and divers, purple field, vehicle-1 boss', () => {
+    expect(LEVEL_2).toMatchObject({ number: 2, name: 'Asteroid Belt', boss: 'vehicle-1' });
+    expect(LEVEL_2.background[0]?.texture).toBe('bg-asteroid-field');
     expect(LEVEL_2.roster).toEqual(['grunt', 'diver']);
     expect(LEVELS[1]).toBe(LEVEL_2);
   });

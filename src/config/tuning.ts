@@ -339,7 +339,7 @@ export const BOSS_DEFEAT = {
 };
 
 /** Bosses, by the art they use (PROJECT.md 4a level plan). More arrive with each level. */
-export type BossKind = 'spaceship-unit';
+export type BossKind = 'spaceship-unit' | 'vehicle-1';
 
 /**
  * Bosses (M4.3). Each fights in phases: as its health falls it switches to
@@ -390,6 +390,49 @@ export const BOSSES: Record<
         ],
         cooldown: 0.9,
         swayHz: 0.24,
+      },
+    ],
+  },
+  // Level 2: Warped vehicle 1, 176×96, turned to face down (96 wide, 176 tall).
+  // Tougher than level 1's: more health, wider fans, faster phases.
+  'vehicle-1': {
+    sprite: 'boss-vehicle-1',
+    angleDeg: 90,
+    hitbox: { w: 64, h: 150 },
+    hp: 220,
+    points: 7500,
+    entry: { startY: -90, hoverY: 80, speed: 40 },
+    swayAmplitude: 60,
+    muzzleOffsetY: 80,
+    shotSpeed: 125,
+    maxAimAngleDeg: 30,
+    phases: [
+      {
+        fromHp: 1,
+        attacks: [{ kind: 'fan', shots: 4, spreadDeg: 60 }, { kind: 'aimed' }, { kind: 'aimed' }],
+        cooldown: 1.3,
+        swayHz: 0.1,
+      },
+      {
+        fromHp: 0.6,
+        attacks: [
+          { kind: 'fan', shots: 5, spreadDeg: 80 },
+          { kind: 'fan', shots: 3, spreadDeg: 40 },
+          { kind: 'aimed' },
+        ],
+        cooldown: 1.05,
+        swayHz: 0.15,
+      },
+      {
+        fromHp: 0.3,
+        attacks: [
+          { kind: 'fan', shots: 6, spreadDeg: 90 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 5, spreadDeg: 70 },
+          { kind: 'aimed' },
+        ],
+        cooldown: 0.85,
+        swayHz: 0.2,
       },
     ],
   },

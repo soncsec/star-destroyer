@@ -157,7 +157,7 @@
 **Demonstrable result:** levels 1–4 are playable start to finish, each with its own look and boss.
 
 - [x] M5.1 Import and slice the extra art for levels 2–4 (manifest and credits updated): level 2 purple asteroid field (asteroid-fighter pack); level 4 red parallax layers, big planet and ring planet (space background pack, original version); bosses Warped vehicle 1 and 2; alien flyer. Level 3 uses the blue space pack layers already bundled
-- [ ] M5.2 Level 2 (Asteroid Belt) and its boss (an early version from M4.4 is playable, with level 1's backdrop and boss)
+- [x] M5.2 Level 2 (Asteroid Belt) and its boss: purple asteroid field (drawn 2× so the 160-wide tile covers the screen), grunts, divers and heavy asteroids, boss Warped vehicle 1 (220 HP, 7,500 points, fans up to 6 shots)
 - [ ] M5.3 Level 3 (Blue Expanse) and its boss
 - [ ] M5.4 Level 4 (Red Giant) and its boss
 - [ ] M5.5 Automated check that every level's data is valid and within the difficulty limits

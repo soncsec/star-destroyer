@@ -219,7 +219,8 @@ export class GameScene extends Phaser.Scene {
       sprite: this.add
         .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, layer.texture)
         .setOrigin(0)
-        .setAlpha(layer.alpha),
+        .setAlpha(layer.alpha)
+        .setTileScale(layer.scale ?? 1),
       scrollSpeed: layer.scrollSpeed,
     }));
     // Each level gets its own repeatable random sequence.
