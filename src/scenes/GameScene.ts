@@ -9,6 +9,7 @@ import {
   GAME_OVER,
   HIT_SPARK,
   LEVEL_COMPLETE,
+  VICTORY,
   ENEMY_FIRE,
   ENEMY_TYPES,
   GAME_HEIGHT,
@@ -31,6 +32,7 @@ import { Enemies } from '../entities/Enemies';
 import { Explosions } from '../entities/Explosions';
 import { GameOverPanel } from '../entities/GameOverPanel';
 import { LevelCompletePanel, type LevelCompleteInfo } from '../entities/LevelCompletePanel';
+import { VictoryPanel } from '../entities/VictoryPanel';
 import { Hud } from '../entities/Hud';
 import { Pickups } from '../entities/Pickups';
 import { ShieldBubble } from '../entities/ShieldBubble';
@@ -67,6 +69,7 @@ import {
   panelShown as flowPanelShown,
   startFlow,
   stepFlow,
+  type FlowRules,
   type FlowState,
 } from '../logic/levelFlow';
 import { createRng, type Rng } from '../logic/rng';
@@ -135,7 +138,13 @@ export interface GameSnapshot {
   /** The boss, once it has appeared (null before). */
   boss: ReturnType<Boss['read']>;
   /** Where the level is (waves, boss, complete) and the level-complete panel. */
-  flow: { stage: FlowState['stage']; panel: ReturnType<LevelCompletePanel['read']> };
+  flow: {
+    stage: FlowState['stage'];
+    /** Seconds of game time in this stage. */
+    t: number;
+    panel: ReturnType<LevelCompletePanel['read']>;
+    victory: ReturnType<VictoryPanel['read']>;
+  };
   /** Enemy shots in flight. */
   enemyShots: { x: number; y: number }[];
   health: Health & { gameOver: boolean };
@@ -188,6 +197,9 @@ export class GameScene extends Phaser.Scene {
   /** Waves, boss, level complete (M4.4). */
   private flow: FlowState = startFlow();
   private levelPanel!: LevelCompletePanel;
+  private victoryPanel!: VictoryPanel;
+  /** Seconds until the next victory firework. */
+  private fireworks = 0;
   /** Drop chance override (tests force drops); null uses the tuning. */
   private dropChance: number | null = null;
   private gameOverPanel!: GameOverPanel;
@@ -272,6 +284,8 @@ export class GameScene extends Phaser.Scene {
     this.dropChance = null;
     this.gameOverPanel = new GameOverPanel(this);
     this.levelPanel = new LevelCompletePanel(this);
+    this.victoryPanel = new VictoryPanel(this);
+    this.fireworks = 0;
     this.gameOver = null;
 
     const kb = this.input.keyboard;
@@ -448,14 +462,39 @@ export class GameScene extends Phaser.Scene {
         bossDefeated: this.boss.read()?.mode === 'defeated',
         key: { held, pressed },
       },
-      { ...LEVEL_COMPLETE, bossAfter: this.level.bossAfter },
+      this.flowRules(),
     );
     this.flow = step.state;
     if (step.startBoss) this.spawnBoss(this.level.boss);
-    if (flowPanelShown(this.flow, { ...LEVEL_COMPLETE, bossAfter: this.level.bossAfter })) {
-      this.levelPanel.show(this.levelInfo(), this.flow.t - LEVEL_COMPLETE.completeAfter);
+    if (flowPanelShown(this.flow, this.flowRules())) {
+      const t = this.flow.t - LEVEL_COMPLETE.completeAfter;
+      if (this.isLastLevel()) this.celebrate(dt, t);
+      else this.levelPanel.show(this.levelInfo(), t);
     }
     if (step.next) this.goToNextLevel();
+  }
+
+  private isLastLevel(): boolean {
+    return LEVELS[this.level.number] === undefined;
+  }
+
+  /** After the last level the victory screen waits for the player (M6.6); others move on by themselves. */
+  private flowRules(): FlowRules {
+    return {
+      ...LEVEL_COMPLETE,
+      bossAfter: this.level.bossAfter,
+      autoNext: this.isLastLevel() ? Infinity : LEVEL_COMPLETE.autoNext,
+    };
+  }
+
+  /** The victory screen, with fireworks going off behind it. */
+  private celebrate(dt: number, t: number): void {
+    this.victoryPanel.show({ score: this.score, lives: this.health.lives }, t);
+    this.fireworks -= dt;
+    if (this.fireworks > 0) return;
+    this.fireworks += VICTORY.fireworksEvery;
+    const { min, max } = VICTORY.fireworksY;
+    this.explosions.play(this.rng.range(0, GAME_WIDTH), this.rng.range(min, max));
   }
 
   /** The finished level and the one after it, for the panel. */
@@ -642,7 +681,12 @@ export class GameScene extends Phaser.Scene {
       sparks: this.sparks.playedCount(),
       blast: this.blast.activeCount() > 0,
       boss: this.boss.read(),
-      flow: { stage: this.flow.stage, panel: this.levelPanel.read() },
+      flow: {
+        stage: this.flow.stage,
+        t: this.flow.t,
+        panel: this.levelPanel.read(),
+        victory: this.victoryPanel.read(),
+      },
       enemyShots: this.enemyBullets.active().map((sh) => ({ x: sh.sprite.x, y: sh.sprite.y })),
       health: { ...this.health, gameOver: isGameOver(this.health) },
       lastHit: this.lastHit,

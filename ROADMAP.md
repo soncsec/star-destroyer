@@ -174,7 +174,7 @@
 - [x] M6.3 Level 6 (Demon Rift) and its boss: flying-eye demons (quick, frail, fast sway) and fire skulls (hover, then ram) over level 4's red layers darkened (background layers gain a `tint`); the flaming fire skull boss sways wide and fast through four phases
 - [x] M6.4 Level 7 (Deep Dark) and its twin boss: every enemy type over stars only; two Warped vehicle 1s, each with its own health, swaying as mirror images. After one attacks, the other waits at least half a cooldown, so their volleys never land together and each fan's gap check still holds. Level 7 ends when both are down
 - [x] M6.5 Level 8 (The Core) and the final multi-part boss (cannons, helmet, beam with warning, phases): every enemy type over the nebula at night. The boss is fought in three stages: its two cannons take turns firing; then the helmet fires fans; then the exposed core fires aimed shots and a beam that always charges first (1.2 s warning), with the boss holding still. Armour and hull block shots until each part's stage comes; part positions were measured pixel-exact against the art
-- [ ] M6.6 Victory screen after level 8
+- [x] M6.6 Victory screen after level 8: "VICTORY / THE CORE IS DESTROYED", the final score and lives left, with fireworks behind it; it waits for Space or Enter (no auto-advance), then a new game starts
 - [ ] M6.7 Automated frame-rate check during the final boss fight
 
 **Acceptance criteria:** the owner beats level 8 (hard but beatable); 60 fps holds during the final boss fight.
