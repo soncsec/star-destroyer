@@ -251,7 +251,7 @@ export const ENEMY_FIRE = {
 } as const;
 
 /** The three enemy types (M2.3). Hitboxes are about 80% of each sprite's visible body. */
-export type EnemyKind = 'grunt' | 'weaver' | 'diver' | 'flyer';
+export type EnemyKind = 'grunt' | 'weaver' | 'diver' | 'flyer' | 'eye' | 'skull';
 
 export interface EnemyType {
   /** Texture key (see the asset manifest). */
@@ -307,6 +307,31 @@ export const ENEMY_TYPES: Readonly<Record<EnemyKind, EnemyType>> = {
     hitbox: { w: 40, h: 34, offsetY: 4 },
     move: { kind: 'weave', speed: 30, amplitude: 48, period: 3.2 },
   },
+  /**
+   * Flying-eye demon (level 6 and later, M6.3): small, quick and frail, with a
+   * fast, tight sway while it shoots. Frame 48×48, body about 24×27.
+   */
+  eye: {
+    sprite: 'enemy-flying-eye',
+    hp: 2,
+    points: 175,
+    fires: true,
+    hitbox: { w: 20, h: 20, offsetY: 0 },
+    move: { kind: 'weave', speed: 48, amplitude: 28, period: 1.6 },
+  },
+  /**
+   * Fire skull (level 6 and later, M6.3): hovers, then rams like a diver, but
+   * tougher and faster. Frame 54×70; the hitbox covers the skull, not the
+   * wisps above it.
+   */
+  skull: {
+    sprite: 'enemy-fire-skull',
+    hp: 5,
+    points: 225,
+    fires: false,
+    hitbox: { w: 30, h: 36, offsetY: 6 },
+    move: { kind: 'dive', enterSpeed: 60, hoverY: 60, hoverTime: 0.7, diveSpeed: 190 },
+  },
 };
 
 /**
@@ -353,7 +378,7 @@ export const BOSS_DEFEAT = {
 
 /** Bosses, by the art they use (PROJECT.md 4a level plan). More arrive with each level. */
 export type BossKind =
-  'spaceship-unit' | 'vehicle-1' | 'vehicle-2' | 'spaceship-unit-mk2' | 'vehicle-3';
+  'spaceship-unit' | 'vehicle-1' | 'vehicle-2' | 'spaceship-unit-mk2' | 'vehicle-3' | 'fire-skull';
 
 /**
  * Bosses (M4.3). Each fights in phases: as its health falls it switches to
@@ -599,6 +624,61 @@ export const BOSSES: Record<
         ],
         cooldown: 0.85,
         swayHz: 0.14,
+      },
+    ],
+  },
+  // Level 6: the fire skull in flames, 96×112, front on (no turn). PROJECT.md
+  // 4a gives it an "enlarged role": smaller than the ships, so it sways wide
+  // and fast across the screen, through four phases.
+  'fire-skull': {
+    sprite: 'boss-fire-skull',
+    angleDeg: 0,
+    hitbox: { w: 60, h: 70, offsetY: 10 },
+    hp: 470,
+    points: 17500,
+    entry: { startY: -70, hoverY: 80, speed: 50 },
+    swayAmplitude: 90,
+    muzzleOffsetY: 40,
+    shotSpeed: 140,
+    maxAimAngleDeg: 35,
+    phases: [
+      {
+        fromHp: 1,
+        attacks: [{ kind: 'fan', shots: 5, spreadDeg: 70 }, { kind: 'aimed' }, { kind: 'aimed' }],
+        cooldown: 1.05,
+        swayHz: 0.2,
+      },
+      {
+        fromHp: 0.7,
+        attacks: [
+          { kind: 'fan', shots: 6, spreadDeg: 90 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 5, spreadDeg: 60 },
+        ],
+        cooldown: 0.9,
+        swayHz: 0.26,
+      },
+      {
+        fromHp: 0.4,
+        attacks: [
+          { kind: 'fan', shots: 7, spreadDeg: 100 },
+          { kind: 'aimed' },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 6, spreadDeg: 80 },
+        ],
+        cooldown: 0.78,
+        swayHz: 0.32,
+      },
+      {
+        fromHp: 0.15,
+        attacks: [
+          { kind: 'fan', shots: 7, spreadDeg: 110 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 7, spreadDeg: 100 },
+          { kind: 'aimed' },
+        ],
+        cooldown: 0.68,
+        swayHz: 0.38,
       },
     ],
   },

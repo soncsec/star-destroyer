@@ -111,3 +111,57 @@ test('an alien flyer sways side to side and starts with five health', async ({ p
   const s = await page.evaluate(() => window.__starDestroyer?.snapshot());
   expect(s?.enemies.find((e) => e.kind === 'flyer')?.hp).toBe(5);
 });
+
+test('a flying-eye demon sways quickly and starts with two health', async ({ page }) => {
+  await page.goto('./');
+  await expect
+    .poll(() => page.evaluate(() => window.__starDestroyer?.scene() ?? null), { timeout: 15_000 })
+    .toBe('Game');
+  await page.evaluate(() => {
+    window.__starDestroyer?.setSpawning(false);
+    window.__starDestroyer?.clearEnemies();
+    window.__starDestroyer?.spawnEnemy(128, 60, 999, 'eye');
+  });
+  const xs: number[] = [];
+  await expect
+    .poll(
+      async () => {
+        const s = await page.evaluate(() => window.__starDestroyer?.snapshot());
+        const eye = s?.enemies.find((e) => e.kind === 'eye');
+        if (eye) xs.push(eye.x);
+        return Math.max(...xs) - Math.min(...xs);
+      },
+      { timeout: 20_000, intervals: [100] },
+    )
+    .toBeGreaterThan(20);
+  const s = await page.evaluate(() => window.__starDestroyer?.snapshot());
+  expect(s?.enemies.find((e) => e.kind === 'eye')?.hp).toBe(2);
+});
+
+test('a fire skull hovers, then dives, and starts with five health', async ({ page }) => {
+  await page.goto('./');
+  await expect
+    .poll(() => page.evaluate(() => window.__starDestroyer?.scene() ?? null), { timeout: 15_000 })
+    .toBe('Game');
+  await page.evaluate(() => {
+    window.__starDestroyer?.setSpawning(false);
+    window.__starDestroyer?.clearEnemies();
+    window.__starDestroyer?.setShield(999);
+    window.__starDestroyer?.spawnEnemy(128, -30, 999, 'skull');
+  });
+  const first = await page.evaluate(() => window.__starDestroyer?.snapshot());
+  expect(first?.enemies.find((e) => e.kind === 'skull')?.hp).toBe(5);
+  // It comes down well past its hover height once it dives.
+  const ys: number[] = [];
+  await expect
+    .poll(
+      async () => {
+        const s = await page.evaluate(() => window.__starDestroyer?.snapshot());
+        const skull = s?.enemies.find((e) => e.kind === 'skull');
+        if (skull) ys.push(skull.y);
+        return Math.max(-1, ...ys);
+      },
+      { timeout: 20_000, intervals: [100] },
+    )
+    .toBeGreaterThan(120);
+});
