@@ -221,6 +221,8 @@ export class GameScene extends Phaser.Scene {
     }
     if (wasRunning && !running(state)) this.anims.pauseAll();
     if (!wasRunning && running(state)) this.anims.resumeAll();
+    // Redraw at once, so the screen never shows a different state from the game's.
+    this.controlsOverlay.show(this.controls);
   }
 
   override update(_time: number, deltaMs: number): void {
