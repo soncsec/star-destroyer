@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BOSSES } from '../../src/config/tuning';
-import { bossTotalHp } from '../../src/logic/boss';
+import { levelBossHp } from '../../src/levels/bosses';
 import { LEVELS } from '../../src/levels';
 import { LEVEL_2 } from '../../src/levels/level2';
 import type { GameSnapshot } from '../../src/scenes/GameScene';
@@ -101,11 +101,8 @@ test('every level runs waves, boss and panel in turn; after the last, the next p
       .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 20_000 })
       .toBe('fighting');
     expect((await snapshot(page)).boss?.kind).toBe(level.boss);
-    // Every ship of it (a twin has two).
-    await page.evaluate(
-      (hp) => window.__starDestroyer?.hurtBoss(hp),
-      bossTotalHp(BOSSES[level.boss]),
-    );
+    // Every ship or part of it (a twin has two ships; the final boss, four parts).
+    await page.evaluate((hp) => window.__starDestroyer?.hurtBoss(hp), levelBossHp(level.boss));
     await expect
       .poll(async () => (await snapshot(page)).flow.panel.visible, { timeout: 20_000 })
       .toBe(true);

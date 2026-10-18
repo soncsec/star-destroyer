@@ -1,6 +1,7 @@
 import type { BossRules } from '../logic/boss';
 import type { Cheat } from '../logic/cheats';
 import type { DropRules, PowerUpKind } from '../logic/drops';
+import type { FinalBossRules, FinalPart } from '../logic/finalBoss';
 import type { MovePattern } from '../logic/enemyMoves';
 import type { WeaponLevel } from '../logic/weaponLevels';
 
@@ -735,6 +736,110 @@ export const BOSSES: Record<
       },
     ],
   },
+};
+
+/** The final boss's kind (level 8, M6.5): its own rules, not a `BOSSES` entry. */
+export type FinalBossKind = 'final-boss';
+
+/** Any boss a level can end with. */
+export type LevelBossKind = BossKind | FinalBossKind;
+
+/**
+ * The final boss (M6.5): the Warped top-down boss, 192×144, already facing
+ * down. Fought in stages: its two cannons, then its helmet, then its exposed
+ * core, which adds a beam that always charges first (logic/finalBoss.ts).
+ * Part offsets were measured against the art: the cannon and helmet images
+ * match the whole-boss frame exactly at these positions, so they are drawn
+ * over the bare body (frame 2).
+ */
+export const FINAL_BOSS: FinalBossRules & {
+  body: string;
+  /** Body frame for each look: all parts on (bare body + part images), core cracked, wrecked. */
+  bodyFrames: { bare: number; cracked: number; wrecked: number };
+  /** The core shows the cracked frame below this fraction of its health. */
+  crackedBelow: number;
+  thrust: string;
+  /** Thrust flames, mostly behind the top of the body (the boss flies down the screen). */
+  thrustOffsetY: number;
+  partSprites: Readonly<Record<Exclude<FinalPart, 'core'>, string>>;
+  rays: string;
+  /** Rays frames: charging (the warning) and the beam itself. */
+  rayFrames: { warn: readonly number[]; fire: readonly number[] };
+  /** The beam art starts this far down its 224-tall frame. */
+  rayTop: number;
+} = {
+  body: 'boss',
+  bodyFrames: { bare: 2, cracked: 3, wrecked: 4 },
+  crackedBelow: 0.5,
+  thrust: 'boss-thrust',
+  thrustOffsetY: -48,
+  partSprites: {
+    cannonLeft: 'boss-cannon-left',
+    cannonRight: 'boss-cannon-right',
+    helmet: 'boss-helmet',
+  },
+  rays: 'boss-rays',
+  rayFrames: { warn: [0, 1, 2, 3, 4, 5, 6, 7], fire: [8, 9, 10] },
+  rayTop: 30,
+  entry: { startY: -80, hoverY: 72, speed: 35 },
+  swayAmplitude: 30,
+  shotSpeed: 140,
+  maxAimAngleDeg: 35,
+  parts: {
+    cannonLeft: {
+      hp: 140,
+      points: 5000,
+      offset: { x: -56, y: 32 },
+      hitbox: { w: 30, h: 36 },
+      muzzleY: 54,
+    },
+    cannonRight: {
+      hp: 140,
+      points: 5000,
+      offset: { x: 56, y: 32 },
+      hitbox: { w: 30, h: 36 },
+      muzzleY: 54,
+    },
+    helmet: {
+      hp: 220,
+      points: 10000,
+      offset: { x: 0, y: 4 },
+      hitbox: { w: 50, h: 46 },
+      muzzleY: 32,
+    },
+    core: { hp: 320, points: 25000, offset: { x: 0, y: 8 }, hitbox: { w: 28, h: 34 }, muzzleY: 30 },
+  },
+  hull: { w: 150, h: 90, offsetY: 0 },
+  stages: {
+    // The cannons take turns, so each fires every other attack.
+    cannons: {
+      attacks: [
+        { kind: 'fan', shots: 3, spreadDeg: 40 },
+        { kind: 'aimed' },
+        { kind: 'fan', shots: 3, spreadDeg: 40 },
+        { kind: 'aimed' },
+      ],
+      cooldown: 0.75,
+      swayHz: 0.12,
+    },
+    helmet: {
+      attacks: [
+        { kind: 'fan', shots: 7, spreadDeg: 100 },
+        { kind: 'aimed' },
+        { kind: 'fan', shots: 5, spreadDeg: 60 },
+        { kind: 'aimed' },
+        { kind: 'aimed' },
+      ],
+      cooldown: 0.8,
+      swayHz: 0.18,
+    },
+    core: {
+      attacks: [{ kind: 'aimed' }, { kind: 'aimed' }, { kind: 'fan', shots: 6, spreadDeg: 90 }],
+      cooldown: 0.7,
+      swayHz: 0.22,
+    },
+  },
+  beam: { every: 4, warn: 1.2, fire: 1.4, width: 16 },
 };
 
 /** Shared by every enemy type. */
