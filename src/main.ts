@@ -25,6 +25,9 @@ export const game = new Phaser.Game({
     // Whole-number zoom keeps pixels crisp; the page's CSS centers the canvas.
     mode: Phaser.Scale.NONE,
     zoom: zoomForWindow(),
+    // Full screen the centering #game container itself. Without this, Phaser
+    // wraps the canvas in a plain new div, and the game sits top-left.
+    fullscreenTarget: 'game',
   },
   physics: {
     default: 'arcade',

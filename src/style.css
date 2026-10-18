@@ -19,6 +19,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Fills the space around the game in full screen, too. */
+  background: #05070f;
 }
 
 canvas {
