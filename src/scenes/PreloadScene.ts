@@ -31,7 +31,10 @@ export class PreloadScene extends Phaser.Scene {
         repeatDelay: asset.loop ? 0 : 400,
       });
     }
+    // ?scene=preview opens the asset preview, a developer tool that isn't in the
+    // production build: there this is decided at build time and is just 'Game'.
     const next =
+      import.meta.env.MODE !== 'production' &&
       new URLSearchParams(window.location.search).get('scene') === 'preview'
         ? 'AssetPreview'
         : 'Game';
