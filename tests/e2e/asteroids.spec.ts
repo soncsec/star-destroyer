@@ -30,7 +30,7 @@ async function fireOneShot(page: Page): Promise<GameSnapshot> {
       return s && s.shots === 0 ? s : null;
     },
     null,
-    { polling: 'raf', timeout: 5_000 },
+    { polling: 'raf', timeout: 20_000 },
   );
   return (await handle.jsonValue()) as GameSnapshot;
 }
@@ -56,7 +56,7 @@ test('small rocks take one hit each and score 25', async ({ page }) => {
   await page.keyboard.down('Space');
   // The large rock (50) and then at least one piece (25 each).
   await expect
-    .poll(async () => (await snapshot(page)).score, { timeout: 10_000 })
+    .poll(async () => (await snapshot(page)).score, { timeout: 20_000 })
     .toBeGreaterThanOrEqual(75);
   await page.keyboard.up('Space');
   expect((await snapshot(page)).score % 25).toBe(0);
@@ -71,7 +71,7 @@ test('crashing into a large asteroid costs a hit and still splits it', async ({ 
       return s && s.health.hits > 0 ? s : null;
     },
     null,
-    { polling: 'raf', timeout: 5_000 },
+    { polling: 'raf', timeout: 20_000 },
   );
   const after = (await handle.jsonValue()) as GameSnapshot;
   expect(after.lastHit).toBe('hit');

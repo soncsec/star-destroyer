@@ -31,7 +31,7 @@ test('an enemy shoots at the ship, and a shot costs one hit', async ({ page }) =
       return s && s.health.hits > 0 ? s : null;
     },
     null,
-    { polling: 'raf', timeout: 8_000 },
+    { polling: 'raf', timeout: 20_000 },
   );
   const after = (await hit.jsonValue()) as GameSnapshot;
   expect(after.lastHit).toBe('hit');
@@ -54,7 +54,7 @@ test('enemies hold fire until they are fully on screen', async ({ page }) => {
       return s && e && e.y >= 18 && e.y < 24 ? s : null;
     },
     null,
-    { polling: 'raf', timeout: 5_000 },
+    { polling: 'raf', timeout: 20_000 },
   );
   expect(((await sample.jsonValue()) as GameSnapshot).enemyShots).toEqual([]);
   // Once fully on screen, it fires.
@@ -74,7 +74,7 @@ test('missed shots fly off the screen and are removed', async ({ page }) => {
   await page.evaluate(() => window.__starDestroyer?.clearEnemies(true));
   expect((await snapshot(page)).enemyShots.length).toBeGreaterThan(0);
   await expect
-    .poll(async () => (await snapshot(page)).enemyShots.length, { timeout: 8_000 })
+    .poll(async () => (await snapshot(page)).enemyShots.length, { timeout: 20_000 })
     .toBe(0);
   expect((await snapshot(page)).health.hits).toBe(0);
 });

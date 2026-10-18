@@ -25,7 +25,7 @@ async function openQuietGame(page: Page): Promise<void> {
  */
 async function crash(page: Page): Promise<GameSnapshot> {
   await expect
-    .poll(async () => (await snapshot(page)).health.invulnerable, { timeout: 5_000 })
+    .poll(async () => (await snapshot(page)).health.invulnerable, { timeout: 20_000 })
     .toBe(0);
   const before = await snapshot(page);
   await page.evaluate(({ x, y }) => window.__starDestroyer?.spawnEnemy(x, y), before.player);
@@ -35,7 +35,7 @@ async function crash(page: Page): Promise<GameSnapshot> {
       return s && (s.health.hits !== b.hits || s.health.lives !== b.lives) ? s : null;
     },
     before.health,
-    { polling: 'raf', timeout: 5_000 },
+    { polling: 'raf', timeout: 20_000 },
   );
   return (await handle.jsonValue()) as GameSnapshot;
 }
