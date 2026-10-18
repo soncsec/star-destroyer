@@ -86,6 +86,8 @@ export const ASSETS: readonly Asset[] = [
   sheet('enemies', 'enemy-01', 'enemy-01.png', 48, 48, 5, 10, true),
   sheet('enemies', 'enemy-02', 'enemy-02.png', 48, 48, 4, 10, true),
   sheet('enemies', 'enemy-03', 'enemy-03.png', 48, 48, 4, 10, true),
+  // Alien flyer (M5.1, levels 3 and 4): a winged bug, wings beating.
+  sheet('enemies', 'enemy-alien-flyer', 'alien-flyer.png', 83, 64, 8, 12, true),
   sheet('enemies', 'enemy-explosion', 'enemy-explosion.png', 80, 80, 7, 14, false),
 
   sheet('boss', 'boss', 'boss.png', 192, 144, 5, 8, true),
@@ -97,6 +99,9 @@ export const ASSETS: readonly Asset[] = [
   sheet('boss', 'boss-bolt', 'bolt.png', 8, 8, 2, 12, true),
   // Level 1 boss (M4.3): the Warped spaceship unit with its thrust, side view facing right.
   sheet('boss', 'boss-spaceship-unit', 'spaceship-unit.png', 106, 77, 8, 10, true),
+  // Level 2 and 3 bosses (M5.1): Warped vehicles 1 and 2, side view facing right, thrust animating.
+  sheet('boss', 'boss-vehicle-1', 'vehicle-1.png', 176, 96, 3, 10, true),
+  sheet('boss', 'boss-vehicle-2', 'vehicle-2.png', 176, 125, 3, 10, true),
 
   image('asteroids', 'asteroid-small-1', 'small-1.png', 17, 16),
   image('asteroids', 'asteroid-small-2', 'small-2.png', 11, 14),
@@ -120,6 +125,14 @@ export const ASSETS: readonly Asset[] = [
   image('backgrounds', 'bg-blue-with-stars', 'blue-with-stars.png', 272, 160),
   image('backgrounds', 'bg-prop-planet-big', 'prop-planet-big.png', 43, 43),
   image('backgrounds', 'bg-prop-planet-small', 'prop-planet-small.png', 16, 16),
+  // Level 2, Asteroid Belt (M5.1): the asteroid-fighter pack's purple field.
+  image('backgrounds', 'bg-asteroid-field', 'asteroid-field.png', 160, 288),
+  // Level 4, Red Giant (M5.1): the space background pack's original red parallax layers.
+  image('backgrounds', 'bg-red-back', 'red-back.png', 272, 160),
+  image('backgrounds', 'bg-red-stars', 'red-stars.png', 272, 160),
+  image('backgrounds', 'bg-red-far-planets', 'red-far-planets.png', 272, 160),
+  image('backgrounds', 'bg-red-big-planet', 'red-big-planet.png', 88, 87),
+  image('backgrounds', 'bg-red-ring-planet', 'red-ring-planet.png', 51, 115),
 
   sheet('weapons', 'shot-tracer', 'tracer.png', 10, 4, 2, 14, true),
   sheet('weapons', 'shot-bolt', 'bolt.png', 48, 32, 4, 14, true),
