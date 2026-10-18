@@ -31,7 +31,7 @@ export class Bullets {
   }
 
   /** Fires one shot. Returns false if every pooled shot is already in flight. */
-  fire(shot: Shot, sprite: string, hitbox: { w: number; h: number }): boolean {
+  fire(shot: Shot, sprite: string, hitbox: { w: number; h: number }, scale = 1): boolean {
     const slot = this.pool.find((b) => !b.sprite.active);
     if (!slot) return false;
     slot.vx = shot.vx;
@@ -42,7 +42,7 @@ export class Bullets {
       .setTexture(sprite)
       .setPosition(shot.x, shot.y)
       .setAngle(shotAngle(shot.vx, shot.vy)) // the art points right
-      .setScale(WEAPON.shotScale)
+      .setScale(scale)
       .setActive(true)
       .setVisible(true)
       .play(animKey(sprite));
