@@ -78,6 +78,7 @@
 - [x] P1.7 DNS `A` record for `games.soncrant.com` and port 80 forwarding (owner). Resolves inside and outside the network
 - [x] P1.8 Release scripts for portal and game (atomic symlink switch, rollback command). Game: star-destroyer #18; portal: games-portal #6 (single `_portal` switch)
 - [x] P1.9 First production release; ZAP scan and smoke test from outside the network. Approved by the owner; released 2026-10-17 (game `20261017T172140Z-5c2b2e72`, portal `20261017T174255Z-6f2e61df`). Outside check by the games-portal `Production check` workflow: smoke tests passed with headers required; ZAP: 0 high (remaining: server version banner, COEP, cache info)
+- [x] P1.11 E2E tests tolerate a busy machine (a release was refused 2026-10-18 when the load average hit 31 on 6 cores): waits for game-time events allow 20 s, default poll wait 15 s, test limit 60 s; the checks themselves are unchanged
 
 **Acceptance criteria:** the portal and game load at the production URL from an outside network; the security headers are present; the ZAP scan has no high-severity findings; a rollback has been rehearsed; the other sites on the server still work.
 

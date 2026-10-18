@@ -12,7 +12,12 @@ export default defineConfig({
   forbidOnly: isCI,
   retries: 0,
   reporter: isCI ? [['list'], ['html', { open: 'never' }]] : 'list',
-  timeout: 30_000,
+  // Game time advances with each frame, and other sessions share this machine:
+  // when it is busy, frames (and so game time) slow down. Generous wall-clock
+  // limits let a waited-for game event still arrive; the checks are unchanged,
+  // and on a healthy machine they pass just as fast.
+  timeout: 60_000,
+  expect: { timeout: 15_000 },
   use: {
     baseURL: `http://${HOST}:${PORT}/`,
     trace: 'retain-on-failure',

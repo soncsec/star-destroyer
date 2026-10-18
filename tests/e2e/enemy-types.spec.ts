@@ -42,7 +42,7 @@ test('a diver takes 4 hits and is worth 200 points', async ({ page }) => {
     player.x,
   );
   await page.keyboard.down('Space');
-  await expect.poll(async () => (await snapshot(page)).score, { timeout: 8_000 }).toBe(200);
+  await expect.poll(async () => (await snapshot(page)).score, { timeout: 20_000 }).toBe(200);
   await page.keyboard.up('Space');
   expect((await snapshot(page)).enemies).toEqual([]);
 });
@@ -53,7 +53,7 @@ test('a diver dives into a ship that stays still', async ({ page }) => {
     (x) => window.__starDestroyer?.spawnEnemy(x + 30, undefined, undefined, 'diver'),
     player.x,
   );
-  await expect.poll(async () => (await snapshot(page)).health.hits, { timeout: 8_000 }).toBe(1);
+  await expect.poll(async () => (await snapshot(page)).health.hits, { timeout: 20_000 }).toBe(1);
   const after = await snapshot(page);
   expect(after.lastHit).toBe('hit');
   expect(after.enemies).toEqual([]); // it crashed
@@ -70,10 +70,10 @@ test('a moving ship can dodge a diver, which flies on off the screen', async ({ 
   await page.waitForFunction(
     () => (window.__starDestroyer?.snapshot()?.enemies[0]?.y ?? 0) > 80,
     null,
-    { polling: 'raf', timeout: 8_000 },
+    { polling: 'raf', timeout: 20_000 },
   );
   await page.keyboard.down('ArrowRight');
-  await expect.poll(async () => (await snapshot(page)).enemies.length, { timeout: 6_000 }).toBe(0);
+  await expect.poll(async () => (await snapshot(page)).enemies.length, { timeout: 20_000 }).toBe(0);
   await page.keyboard.up('ArrowRight');
   expect((await snapshot(page)).health.hits).toBe(0);
 });
