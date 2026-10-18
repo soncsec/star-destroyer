@@ -39,14 +39,15 @@ test('a blue gem gives a 30-second shield, shown around the ship and in the HUD'
   expect(s.shield.timeLeft).toBeGreaterThan(29.5);
   expect(s.shield.bubbleVisible).toBe(true);
   expect(s.hud.shield).toBe('SHIELD 30');
-  // Game time follows the frames, so under load a wall-clock second can be less
-  // than a game second: wait for the HUD to count down, then check the timer.
+  // Game time follows the frames, which a busy browser runs in bursts, so the
+  // count can skip numbers between looks. Wait for it to move, then check the
+  // HUD shows the time left, rounded up, in that same frame.
   await expect
     .poll(async () => (await snapshot(page)).hud.shield, { timeout: 5_000 })
-    .toBe('SHIELD 29');
-  const later = (await snapshot(page)).shield.timeLeft;
-  expect(later).toBeLessThanOrEqual(29);
-  expect(later).toBeGreaterThan(28);
+    .not.toBe('SHIELD 30');
+  const later = await snapshot(page);
+  expect(later.shield.timeLeft).toBeLessThan(30);
+  expect(later.hud.shield).toBe(`SHIELD ${Math.ceil(later.shield.timeLeft)}`);
 });
 
 test('while shielded, crashes and enemy shots do no damage', async ({ page }) => {
