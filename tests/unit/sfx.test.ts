@@ -90,6 +90,16 @@ describe('sounds made in code (M7.3)', () => {
     expect(() => renderSound(tone(), 0)).toThrow(RangeError);
   });
 
+  it('every tuned sound can be heard: long enough, and loud enough after the master volume', () => {
+    // Owner 2026-10-18: a 0.07 s shot at volume 0.15 made no audible sound.
+    for (const [name, r] of Object.entries(SFX.sounds)) {
+      expect(r.seconds, name).toBeGreaterThanOrEqual(0.1);
+      const s = renderSound(r, RATE);
+      const peak = Math.max(...s.map(Math.abs)) * SFX.volume;
+      expect(peak, name).toBeGreaterThanOrEqual(0.1);
+    }
+  });
+
   it('every tuned sound is a valid, short recipe', () => {
     for (const [name, r] of Object.entries(SFX.sounds)) {
       expect(() => checkRecipe(r), name).not.toThrow();

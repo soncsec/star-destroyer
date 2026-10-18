@@ -156,7 +156,8 @@ export const SFX: { volume: number; sounds: Readonly<Record<SfxName, SoundRecipe
   /** Master volume, under the browser's own. */
   volume: 0.5,
   sounds: {
-    shot: { wave: 'square', seconds: 0.07, from: 900, to: 450, attack: 0.002, volume: 0.15 },
+    // Owner 2026-10-18: the first version (0.07 s, volume 0.15) was too faint to hear.
+    shot: { wave: 'square', seconds: 0.12, from: 1100, to: 330, attack: 0.003, volume: 0.35 },
     enemyDown: { wave: 'noise', seconds: 0.3, from: 3000, to: 400, attack: 0.002, volume: 0.45 },
     bossDown: { wave: 'noise', seconds: 1.2, from: 1500, to: 80, attack: 0.005, volume: 0.7 },
     hurt: { wave: 'sawtooth', seconds: 0.25, from: 300, to: 90, attack: 0.003, volume: 0.4 },
