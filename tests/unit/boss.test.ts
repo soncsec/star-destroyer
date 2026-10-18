@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ASSETS } from '../../src/assets/manifest';
 import {
   BOSSES,
   ENEMY_FIRE,
@@ -172,8 +173,24 @@ describe.each(Object.entries(BOSSES).map(([kind, boss]) => ({ kind, boss })))(
   'boss $kind (tuned)',
   ({ boss }) => {
     it('starts above the screen and hovers on it', () => {
-      expect(boss.entry.startY + boss.hitbox.h / 2).toBeLessThanOrEqual(0);
-      expect(boss.entry.hoverY - boss.hitbox.h / 2).toBeGreaterThanOrEqual(0);
+      const { h, offsetY } = boss.hitbox;
+      expect(boss.entry.startY + offsetY + h / 2).toBeLessThanOrEqual(0);
+      expect(boss.entry.hoverY + offsetY - h / 2).toBeGreaterThanOrEqual(0);
+    });
+
+    it('starts with its whole sprite above the screen', () => {
+      const art = ASSETS.find((a) => a.key === boss.sprite);
+      expect(art?.kind).toBe('sheet');
+      // Turned a quarter turn, the frame's width is its height on screen.
+      const turned = Math.abs(boss.angleDeg) % 180 === 90;
+      const tall = art?.kind !== 'sheet' ? Infinity : turned ? art.frameWidth : art.frameHeight;
+      expect(boss.entry.startY + tall / 2).toBeLessThanOrEqual(0);
+    });
+
+    it('fires from inside its hitbox, at its nose', () => {
+      const { h, offsetY } = boss.hitbox;
+      expect(boss.muzzleOffsetY).toBeGreaterThan(offsetY);
+      expect(boss.muzzleOffsetY).toBeLessThanOrEqual(offsetY + h / 2 + 12);
     });
 
     it('stays on screen while swaying', () => {

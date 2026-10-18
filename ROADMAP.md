@@ -172,7 +172,7 @@
 **Demonstrable result:** all 8 levels are playable, ending with the multi-part final boss.
 
 - [x] M6.1 Import and slice the extra art for levels 5–8: the Station Run tunnel (built from the Zone 202 corridor by `tools/art/build_tunnel.py`), Warped vehicle 3, the flying-eye demon and the fire skull (with and without flames). Levels 7 and 8 reuse art already in the game; the final boss art came in with M0.7
-- [ ] M6.2 Level 5 (Station Run) and its boss
+- [x] M6.2 Level 5 (Station Run) and its boss: grunts, weavers and divers down the Zone 202 tunnel (no asteroids inside the station); Warped vehicle 3, longer than the screen, hangs down from the top with only its front half showing, and only that half can be hit (boss hitboxes gain an `offsetY`)
 - [ ] M6.3 Level 6 (Demon Rift) and its boss
 - [ ] M6.4 Level 7 (Deep Dark) and its twin boss
 - [ ] M6.5 Level 8 (The Core) and the final multi-part boss (cannons, helmet, beam with warning, phases)

@@ -14,6 +14,7 @@ import { LEVEL_1 } from '../../src/levels/level1';
 import { LEVEL_2 } from '../../src/levels/level2';
 import { LEVEL_3 } from '../../src/levels/level3';
 import { LEVEL_4 } from '../../src/levels/level4';
+import { LEVEL_5 } from '../../src/levels/level5';
 import { checkWaves, mostAtOnce } from '../../src/logic/waves';
 
 describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${level.name})` })))(
@@ -164,6 +165,31 @@ describe('level 4 (M5.4)', () => {
     const widest = (b: typeof one): number =>
       Math.max(...b.phases.flatMap((p) => p.attacks.map((a) => (a.kind === 'fan' ? a.shots : 1))));
     expect(widest(four)).toBeGreaterThan(widest(one));
+  });
+});
+
+describe('level 5 (M6.2)', () => {
+  it('matches the approved plan: Station Run, enemy types 1-3, the Zone 202 tunnel, vehicle-3 boss', () => {
+    expect(LEVEL_5).toMatchObject({ number: 5, name: 'Station Run', boss: 'vehicle-3' });
+    expect(LEVEL_5.roster).toEqual(['grunt', 'weaver', 'diver']);
+    expect(LEVEL_5.background.map((l) => l.texture)).toEqual(['bg-station-tunnel']);
+    expect(LEVELS[4]).toBe(LEVEL_5);
+  });
+
+  it('uses every enemy in its roster, and no asteroids inside the station', () => {
+    expect(new Set(LEVEL_5.waves.map((s) => s.kind))).toEqual(new Set(LEVEL_5.roster));
+  });
+
+  it('has a boss too long for the screen, showing (and hittable on) its front half only', () => {
+    const boss = BOSSES['vehicle-3'];
+    const art = ASSETS.find((a) => a.key === boss.sprite);
+    const tall = art?.kind === 'sheet' ? art.frameWidth : 0;
+    expect(tall).toBeGreaterThan(GAME_HEIGHT);
+    const bottom = boss.entry.hoverY + tall / 2;
+    expect(bottom).toBeGreaterThan(tall / 3);
+    expect(bottom).toBeLessThan(tall * 0.6);
+    // The hitbox ends at the nose, on screen.
+    expect(boss.entry.hoverY + boss.hitbox.offsetY + boss.hitbox.h / 2).toBeLessThanOrEqual(bottom);
   });
 });
 

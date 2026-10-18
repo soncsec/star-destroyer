@@ -4,14 +4,16 @@ import struct, zlib
 def read(path):
     data = open(path, 'rb').read()
     assert data[:8] == b'\x89PNG\r\n\x1a\n'
-    pos, idat, w = 8, b'', None
+    pos, idat, w, plte, trns = 8, b'', None, None, b''
     while pos < len(data):
         n, t = struct.unpack('>I4s', data[pos:pos+8]); body = data[pos+8:pos+8+n]; pos += 12 + n
         if t == b'IHDR':
             w, h, depth, ctype, _, _, inter = struct.unpack('>IIBBBBB', body)
-            assert depth == 8 and ctype == 6 and inter == 0, (depth, ctype, inter)
+            assert depth == 8 and ctype in (3, 6) and inter == 0, (depth, ctype, inter)
+        elif t == b'PLTE': plte = body
+        elif t == b'tRNS': trns = body
         elif t == b'IDAT': idat += body
-    raw = zlib.decompress(idat); bpp = 4; stride = w * bpp
+    raw = zlib.decompress(idat); bpp = 4 if ctype == 6 else 1; stride = w * bpp
     rows, prev, i = [], bytearray(stride), 0
     for _ in range(h):
         f = raw[i]; line = bytearray(raw[i+1:i+1+stride]); i += 1 + stride
@@ -23,7 +25,11 @@ def read(path):
             elif f == 4:
                 p = a + b - c; pa, pb, pc = abs(p-a), abs(p-b), abs(p-c)
                 line[x] = (line[x] + (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 255
-        rows.append([tuple(line[j:j+4]) for j in range(0, stride, 4)]); prev = line
+        if ctype == 6:
+            rows.append([tuple(line[j:j+4]) for j in range(0, stride, 4)])
+        else:  # palette: index into PLTE, alpha from tRNS (opaque if missing)
+            rows.append([tuple(plte[3*k:3*k+3]) + ((trns[k] if k < len(trns) else 255),) for k in line])
+        prev = line
     return rows  # rows[y][x] = (r,g,b,a)
 
 def write(path, rows):
