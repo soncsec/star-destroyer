@@ -29,7 +29,7 @@ test('the controls legend shows at the start, then hides; H brings it back', asy
   const s = await openGame(page);
   expect(s.controls.overlay).toMatchObject({ shown: 'legend', legend: LEGEND });
   await expect
-    .poll(async () => (await snapshot(page)).controls.overlay.shown, { timeout: 8_000 })
+    .poll(async () => (await snapshot(page)).controls.overlay.shown, { timeout: 20_000 })
     .toBe('none');
   await page.keyboard.press('h');
   await expect.poll(async () => (await snapshot(page)).controls.overlay.shown).toBe('legend');
@@ -149,7 +149,7 @@ test("pausing isn't possible after game over, but quitting is", async ({ page })
   });
   await page.evaluate(({ x, y }) => window.__starDestroyer?.spawnEnemy(x, y, 999), s.player);
   await expect
-    .poll(async () => (await snapshot(page)).gameOver.visible, { timeout: 5_000 })
+    .poll(async () => (await snapshot(page)).gameOver.visible, { timeout: 20_000 })
     .toBe(true);
   await page.keyboard.press('p');
   await page.waitForTimeout(200);

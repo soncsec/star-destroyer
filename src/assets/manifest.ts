@@ -88,6 +88,9 @@ export const ASSETS: readonly Asset[] = [
   sheet('enemies', 'enemy-03', 'enemy-03.png', 48, 48, 4, 10, true),
   // Alien flyer (M5.1, levels 3 and 4): a winged bug, wings beating.
   sheet('enemies', 'enemy-alien-flyer', 'alien-flyer.png', 83, 64, 8, 12, true),
+  // Level 6, Demon Rift (M6.1): Gothicvania's flying-eye demon and fire skull (without its flames), side view.
+  sheet('enemies', 'enemy-flying-eye', 'flying-eye.png', 48, 48, 8, 12, true),
+  sheet('enemies', 'enemy-fire-skull', 'fire-skull.png', 54, 70, 4, 8, true),
   sheet('enemies', 'enemy-explosion', 'enemy-explosion.png', 80, 80, 7, 14, false),
 
   sheet('boss', 'boss', 'boss.png', 192, 144, 5, 8, true),
@@ -102,6 +105,10 @@ export const ASSETS: readonly Asset[] = [
   // Level 2 and 3 bosses (M5.1): Warped vehicles 1 and 2, side view facing right, thrust animating.
   sheet('boss', 'boss-vehicle-1', 'vehicle-1.png', 176, 96, 3, 10, true),
   sheet('boss', 'boss-vehicle-2', 'vehicle-2.png', 176, 125, 3, 10, true),
+  // Level 5 boss (M6.1): Warped vehicle 3, side view facing right, too long to fit on screen whole.
+  sheet('boss', 'boss-vehicle-3', 'vehicle-3.png', 329, 160, 3, 10, true),
+  // Level 6 boss (M6.1): the fire skull in flames.
+  sheet('boss', 'boss-fire-skull', 'fire-skull.png', 96, 112, 8, 10, true),
 
   image('asteroids', 'asteroid-small-1', 'small-1.png', 17, 16),
   image('asteroids', 'asteroid-small-2', 'small-2.png', 11, 14),
@@ -133,6 +140,8 @@ export const ASSETS: readonly Asset[] = [
   image('backgrounds', 'bg-red-far-planets', 'red-far-planets.png', 272, 160),
   image('backgrounds', 'bg-red-big-planet', 'red-big-planet.png', 88, 87),
   image('backgrounds', 'bg-red-ring-planet', 'red-ring-planet.png', 51, 115),
+  // Level 5, Station Run (M6.1): the Warped Zone 202 corridor turned upright (tools/art/build_tunnel.py).
+  image('backgrounds', 'bg-station-tunnel', 'station-tunnel.png', 256, 288),
 
   sheet('weapons', 'shot-tracer', 'tracer.png', 10, 4, 2, 14, true),
   sheet('weapons', 'shot-bolt', 'bolt.png', 48, 32, 4, 14, true),

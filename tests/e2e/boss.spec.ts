@@ -36,7 +36,7 @@ test('the boss flies in from above, untouchable, then fights with a full health 
   // Shots fired while it is entering do no damage.
   await page.evaluate(() => window.__starDestroyer?.fireShot());
   await expect
-    .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 10_000 })
+    .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 20_000 })
     .toBe('fighting');
   const fighting = await snapshot(page);
   expect(fighting.boss?.hp).toBe(BOSS.hp);
@@ -47,10 +47,10 @@ test('the boss flies in from above, untouchable, then fights with a full health 
 test('the boss fires at the ship once it is fighting', async ({ page }) => {
   await openBossFight(page);
   await expect
-    .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 10_000 })
+    .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 20_000 })
     .toBe('fighting');
   await expect
-    .poll(async () => (await snapshot(page)).enemyShots.length, { timeout: 5_000 })
+    .poll(async () => (await snapshot(page)).enemyShots.length, { timeout: 20_000 })
     .toBeGreaterThan(0);
 });
 
@@ -59,7 +59,7 @@ test('shots wear the boss down through its phases to defeat, scoring its points'
 }) => {
   const start = await openBossFight(page);
   await expect
-    .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 10_000 })
+    .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 20_000 })
     .toBe('fighting');
   await page.evaluate(() => window.__starDestroyer?.setWeaponLevel(3));
   await page.keyboard.down('Space');

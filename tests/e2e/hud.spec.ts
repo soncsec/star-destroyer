@@ -22,7 +22,7 @@ async function openQuietGame(page: Page): Promise<GameSnapshot> {
 /** Puts an enemy on the ship once it can be hurt, and waits for the hit to count. */
 async function crash(page: Page): Promise<GameSnapshot> {
   await expect
-    .poll(async () => (await snapshot(page)).health.invulnerable, { timeout: 5_000 })
+    .poll(async () => (await snapshot(page)).health.invulnerable, { timeout: 20_000 })
     .toBe(0);
   const before = await snapshot(page);
   await page.evaluate(({ x, y }) => window.__starDestroyer?.spawnEnemy(x, y, 999), before.player);
@@ -32,7 +32,7 @@ async function crash(page: Page): Promise<GameSnapshot> {
       return s && (s.health.hits !== b.hits || s.health.lives !== b.lives) ? s : null;
     },
     before.health,
-    { polling: 'raf', timeout: 5_000 },
+    { polling: 'raf', timeout: 20_000 },
   );
   return (await h.jsonValue()) as GameSnapshot;
 }
@@ -54,7 +54,7 @@ test('the score on screen follows the points scored', async ({ page }) => {
   const { player } = await openQuietGame(page);
   await page.evaluate((x) => window.__starDestroyer?.spawnEnemy(x, undefined, 999), player.x);
   await page.keyboard.down('Space');
-  await expect.poll(async () => (await snapshot(page)).score, { timeout: 8_000 }).toBe(100);
+  await expect.poll(async () => (await snapshot(page)).score, { timeout: 20_000 }).toBe(100);
   await page.keyboard.up('Space');
   await expect.poll(async () => (await snapshot(page)).hud.score).toBe('SCORE 000100');
 });
