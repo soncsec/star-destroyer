@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { DEPTH, GAME_HEIGHT, GAME_WIDTH, HUD, LEVEL_COMPLETE, VICTORY } from '../config/tuning';
 import { formatScore } from '../logic/hud';
+import { pressPrompt } from '../platform/touch';
 import { highScoreLine, type HighScoreInfo } from './GameOverPanel';
 
 /** What the victory screen reports about the finished game. */
@@ -49,7 +50,7 @@ export class VictoryPanel {
     this.score = text(cy - 6, HUD.fontSize, HUD.color);
     this.lives = text(cy + 10, HUD.fontSize, HUD.color);
     this.high = text(cy + 26, HUD.fontSize, HUD.color);
-    this.prompt = text(cy + 52, HUD.fontSize, HUD.color).setText('PRESS SPACE TO PLAY AGAIN');
+    this.prompt = text(cy + 52, HUD.fontSize, HUD.color).setText(pressPrompt('PLAY AGAIN'));
     this.parts = [backdrop, this.title, this.line, this.score, this.lives, this.high, this.prompt];
     this.hide();
   }

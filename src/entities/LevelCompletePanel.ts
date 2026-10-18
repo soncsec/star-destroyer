@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { DEPTH, GAME_HEIGHT, GAME_WIDTH, HUD, LEVEL_COMPLETE } from '../config/tuning';
 import { formatScore } from '../logic/hud';
+import { pressPrompt } from '../platform/touch';
 
 /** What the panel says about the level just finished and the one coming next. */
 export interface LevelCompleteInfo {
@@ -48,7 +49,7 @@ export class LevelCompletePanel {
     this.name = text(cy - 8, HUD.fontSize, HUD.color);
     this.score = text(cy + 8, HUD.fontSize, HUD.color);
     this.next = text(cy + 26, HUD.fontSize, LEVEL_COMPLETE.titleColor);
-    this.prompt = text(cy + 48, HUD.fontSize, HUD.color).setText('PRESS SPACE TO CONTINUE');
+    this.prompt = text(cy + 48, HUD.fontSize, HUD.color).setText(pressPrompt('CONTINUE'));
     this.parts = [backdrop, this.title, this.title2, this.name, this.score, this.next, this.prompt];
     this.hide();
   }

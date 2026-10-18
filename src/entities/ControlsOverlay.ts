@@ -14,6 +14,8 @@ export class ControlsOverlay {
   private readonly hint: Phaser.GameObjects.Text;
   private readonly legend: Phaser.GameObjects.Text[] = [];
   private shown: 'none' | 'legend' | 'paused' | 'confirmQuit' = 'none';
+  /** The legend rows are for touch (drag, hold, pause button) rather than keys. */
+  private touch = false;
 
   constructor(scene: Phaser.Scene) {
     const cx = GAME_WIDTH / 2;
@@ -38,8 +40,12 @@ export class ControlsOverlay {
     this.hideAll();
   }
 
-  /** Shows whatever the control state calls for. */
-  show(s: ControlState): void {
+  /**
+   * Shows whatever the control state calls for. With `touch`, the legend
+   * explains the touch controls, and the pause screen and quit question are
+   * just headings over the touch menu's buttons (TouchMenu).
+   */
+  show(s: ControlState, touch = false): void {
     const want =
       s.mode === 'confirmQuit'
         ? 'confirmQuit'
@@ -48,10 +54,15 @@ export class ControlsOverlay {
           : s.legend
             ? 'legend'
             : 'none';
-    if (want === this.shown) return;
+    if (want === this.shown && touch === this.touch) return;
     this.shown = want;
+    this.touch = touch;
     this.hideAll();
     if (want === 'none') return;
+    if (touch && want !== 'legend') {
+      this.heading(want === 'confirmQuit' ? 'QUIT TO ARCADE?' : 'PAUSED');
+      return;
+    }
     if (want === 'confirmQuit') {
       this.layout(['QUIT TO ARCADE?', 'Y / N'], false);
       return;
@@ -63,7 +74,8 @@ export class ControlsOverlay {
   read(): { shown: string; title: string; hint: string; legend: string[] } {
     const pairs: string[] = [];
     for (let i = 0; i < this.legend.length; i += 2) {
-      pairs.push(`${this.legend[i]?.text ?? ''} ${this.legend[i + 1]?.text ?? ''}`);
+      if (this.legend[i]?.visible)
+        pairs.push(`${this.legend[i]?.text ?? ''} ${this.legend[i + 1]?.text ?? ''}`);
     }
     return {
       shown: this.shown,
@@ -75,7 +87,12 @@ export class ControlsOverlay {
 
   /** Stacks the title, the legend rows and the hint in the middle of the screen. */
   private layout(heading: [string, string] | null, withLegend: boolean): void {
-    const rows = withLegend ? CONTROLS.legend.length : 0;
+    const table = this.touch ? CONTROLS.touchLegend : CONTROLS.legend;
+    table.forEach(([key, action], i) => {
+      this.legend[2 * i]?.setText(key);
+      this.legend[2 * i + 1]?.setText(action);
+    });
+    const rows = withLegend ? table.length : 0;
     const height = (heading ? 40 : 8) + rows * 12 + (heading ? 18 : 0);
     let y = GAME_HEIGHT / 2 - height / 2 + 10;
     // A lighter backing for the legend alone, which shows over live play at the start.
@@ -92,7 +109,7 @@ export class ControlsOverlay {
       y += 26;
     }
     if (withLegend) {
-      for (let i = 0; i < this.legend.length; i += 2) {
+      for (let i = 0; i < 2 * rows; i += 2) {
         this.legend[i]?.setY(y).setVisible(true);
         this.legend[i + 1]?.setY(y).setVisible(true);
         y += 12;
@@ -103,6 +120,16 @@ export class ControlsOverlay {
         .setText(heading[1])
         .setY(y + 8)
         .setVisible(true);
+  }
+
+  /** A heading over a dimmed screen, above the touch menu's buttons. */
+  private heading(title: string): void {
+    this.backdrop
+      .setSize(GAME_WIDTH, GAME_HEIGHT)
+      .setPosition(GAME_WIDTH / 2, GAME_HEIGHT / 2)
+      .setFillStyle(GAME_OVER.backdrop.color, 0.85)
+      .setVisible(true);
+    this.title.setText(title).setY(CONTROLS.touchHeadingY).setVisible(true);
   }
 
   private hideAll(): void {

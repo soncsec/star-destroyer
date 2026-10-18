@@ -35,7 +35,11 @@ import { Enemies } from '../entities/Enemies';
 import { Explosions } from '../entities/Explosions';
 import { GameOverPanel } from '../entities/GameOverPanel';
 import { LevelCompletePanel, type LevelCompleteInfo } from '../entities/LevelCompletePanel';
+import { TouchMenu } from '../entities/TouchMenu';
 import { VictoryPanel } from '../entities/VictoryPanel';
+import type { Drag } from '../logic/touch';
+import type { TouchAction } from '../logic/touchMenu';
+import { isTouchDevice } from '../platform/touch';
 import { Hud } from '../entities/Hud';
 import { Pickups } from '../entities/Pickups';
 import { ShieldBubble } from '../entities/ShieldBubble';
@@ -123,6 +127,8 @@ export interface GameSnapshot {
   /** Pause / quit / legend state and what the overlay shows; mute and full screen. */
   controls: { mode: string; legend: boolean; overlay: ReturnType<ControlsOverlay['read']> };
   muted: boolean;
+  /** Touch play: whether it's in use, a drag in progress, and the buttons on screen. */
+  touch: { used: boolean; dragging: boolean; buttons: ReturnType<TouchMenu['read']> };
   /** Sounds (M7.3): whether they are ready, and how often each has played this level. */
   sfx: { ready: boolean; played: Record<SfxName, number> };
   /** The best score so far, and whether this run set it (M7.2). */
@@ -210,6 +216,12 @@ export class GameScene extends Phaser.Scene {
   /** Seconds until the next victory firework. */
   private fireworks = 0;
   private sfx!: Sfx;
+  /** Touchscreen play (owner request 2026-10-18): the buttons, and the drag in progress. */
+  private touchMenu!: TouchMenu;
+  /** The screen has been touched (or this is a phone or tablet): show the touch buttons. */
+  private touchUsed = false;
+  private drag: Drag | null = null;
+  private finger = { x: 0, y: 0 };
   /** The beam's last mode, to sound its warning and its firing as they start. */
   private lastBeam: string | undefined;
   /** The level-complete jingle has played for this level. */
@@ -333,6 +345,18 @@ export class GameScene extends Phaser.Scene {
     this.controls = startControls(!carry);
     this.introLegend = carry ? -1 : 0;
     this.controlsOverlay = new ControlsOverlay(this);
+    this.touchMenu = new TouchMenu(this);
+    this.touchUsed = isTouchDevice();
+    this.drag = null;
+    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+      if (p.wasTouch) this.onTouchDown({ x: p.x, y: p.y });
+    });
+    this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+      if (p.wasTouch && this.drag) this.finger = { x: p.x, y: p.y };
+    });
+    this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
+      if (p.wasTouch) this.drag = null;
+    });
     const actions: Record<string, () => void> = {
       Space: () => (this.restartPressed = true),
       Enter: () => (this.restartPressed = true),
@@ -385,6 +409,44 @@ export class GameScene extends Phaser.Scene {
   }
 
   /** Applies a pause/quit/legend key, freezing or resuming animations to match. */
+  /**
+   * A finger touches the screen: a button if it's on one; otherwise it starts
+   * steering (and firing), and counts as a press for the panels ("tap to
+   * continue").
+   */
+  private onTouchDown(point: { x: number; y: number }): void {
+    this.touchUsed = true;
+    const button = this.touchMenu.at(point);
+    if (button) {
+      this.onTouchButton(button.action);
+      return;
+    }
+    if (!running(this.controls)) return;
+    this.restartPressed = true;
+    this.finger = point;
+    this.drag = { finger: point, ship: { x: this.player.position.x, y: this.player.position.y } };
+  }
+
+  /** The touch buttons do what the keys do. */
+  private onTouchButton(action: TouchAction): void {
+    this.drag = null;
+    const keys: Partial<Record<TouchAction, ControlKey>> = {
+      pause: 'pause',
+      resume: 'pause',
+      quit: 'quit',
+      yes: 'yes',
+      no: 'no',
+    };
+    const key = keys[action];
+    if (key) this.onControl(key);
+    else if (action === 'mute') this.sound.mute = !this.sound.mute;
+    else this.scale.toggleFullscreen();
+    this.touchMenu.show(this.touchUsed, this.controls.mode, {
+      gameOver: isGameOver(this.health),
+      muted: this.sound.mute,
+    });
+  }
+
   private onControl(key: ControlKey): void {
     const wasRunning = running(this.controls);
     const { state, quit } = pressKey(this.controls, key, { gameOver: isGameOver(this.health) });
@@ -397,7 +459,7 @@ export class GameScene extends Phaser.Scene {
     if (wasRunning && !running(state)) this.anims.pauseAll();
     if (!wasRunning && running(state)) this.anims.resumeAll();
     // Redraw at once, so the screen never shows a different state from the game's.
-    this.controlsOverlay.show(this.controls);
+    this.controlsOverlay.show(this.controls, this.touchUsed);
   }
 
   override update(_time: number, deltaMs: number): void {
@@ -409,7 +471,11 @@ export class GameScene extends Phaser.Scene {
         this.introLegend = -1;
       }
     }
-    this.controlsOverlay.show(this.controls);
+    this.controlsOverlay.show(this.controls, this.touchUsed);
+    this.touchMenu.show(this.touchUsed, this.controls.mode, {
+      gameOver: isGameOver(this.health),
+      muted: this.sound.mute,
+    });
     if (!running(this.controls)) {
       // Paused or asking to quit: the world stands still.
       this.restartPressed = false;
@@ -421,9 +487,13 @@ export class GameScene extends Phaser.Scene {
       sprite.y = driftY(sprite.y, prop.scrollSpeed * dt, sprite.height, GAME_HEIGHT, prop.gap);
     }
     const alive = !isGameOver(this.health);
-    if (alive) this.player.update(this.readAxis(), dt);
+    if (alive) {
+      if (this.drag) this.player.updateTouch(this.drag, this.finger, dt);
+      else this.player.update(this.readAxis(), dt);
+    }
 
-    const firing = alive && this.keys.fire.isDown;
+    // A finger on the screen fires, as holding Space does.
+    const firing = alive && (this.keys.fire.isDown || this.drag !== null);
     const shot = stepFire(this.fireState, firing, dt, this.gun().fireInterval);
     this.fireState = shot.state;
     if (shot.fire) this.fireVolley();
@@ -483,7 +553,7 @@ export class GameScene extends Phaser.Scene {
    */
   private updateFlow(dt: number, pressed: boolean): void {
     if (this.gameOver) return;
-    const held = this.keys.fire.isDown || this.keys.enter.isDown;
+    const held = this.keys.fire.isDown || this.keys.enter.isDown || this.drag !== null;
     const step = stepFlow(
       this.flow,
       dt,
@@ -588,7 +658,7 @@ export class GameScene extends Phaser.Scene {
       }
       return;
     }
-    const held = this.keys.fire.isDown || this.keys.enter.isDown;
+    const held = this.keys.fire.isDown || this.keys.enter.isDown || this.drag !== null;
     const step = stepGameOver(this.gameOver, dt, { held, pressed }, GAME_OVER);
     this.gameOver = step.state;
     const shown = panelShown(this.gameOver, GAME_OVER);
@@ -698,7 +768,11 @@ export class GameScene extends Phaser.Scene {
       this.explosions.play(x, y);
       this.powerUps = loseLife();
       this.shieldBubble.reset();
-      if (result === 'lifeLost') this.player.reset();
+      if (result === 'lifeLost') {
+        this.player.reset();
+        // Steer on from the restart point, not from where the ship was lost.
+        if (this.drag) this.drag = { finger: this.finger, ship: { ...this.player.position } };
+      }
     }
   }
 
@@ -729,6 +803,7 @@ export class GameScene extends Phaser.Scene {
       cheats: { invincible: this.invincible, used: this.cheated },
       highScore: { ...this.highScore },
       sfx: { ready: this.sfx.ready, played: this.sfx.counts() },
+      touch: { used: this.touchUsed, dragging: this.drag !== null, buttons: this.touchMenu.read() },
       fullscreen: this.scale.isFullscreen,
       gameOver: { ...this.gameOverPanel.read(), armed: this.gameOver?.armed ?? false },
       pickups: this.pickups.active().map((p) => ({ kind: p.kind, x: p.sprite.x, y: p.sprite.y })),

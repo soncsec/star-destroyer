@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { DEPTH, GAME_HEIGHT, GAME_OVER, GAME_WIDTH, HIGH_SCORE, HUD } from '../config/tuning';
 import { formatScore } from '../logic/hud';
+import { pressPrompt } from '../platform/touch';
 
 /** The best score so far, and whether this run just set it. */
 export interface HighScoreInfo {
@@ -43,7 +44,7 @@ export class GameOverPanel {
     this.title = text(cy - 32, 16, GAME_OVER.titleColor).setText('GAME OVER');
     this.score = text(cy - 6, HUD.fontSize, HUD.color);
     this.high = text(cy + 10, HUD.fontSize, HUD.color);
-    this.prompt = text(cy + 32, HUD.fontSize, HUD.color).setText('PRESS SPACE TO PLAY AGAIN');
+    this.prompt = text(cy + 32, HUD.fontSize, HUD.color).setText(pressPrompt('PLAY AGAIN'));
     this.parts = [backdrop, this.title, this.score, this.high, this.prompt];
     this.show(false, 0, 0, { best: 0, isNew: false });
   }
