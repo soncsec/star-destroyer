@@ -5,6 +5,7 @@ import {
   CHEATS,
   CONTROLS,
   DEFAULT_SEED,
+  DEPTH,
   GAME_OVER,
   ENEMY_FIRE,
   ENEMY_TYPES,
@@ -12,6 +13,7 @@ import {
   GAME_WIDTH,
   PLAYER_HEALTH,
   POWERUPS,
+  SCREEN_CLEAR,
   SHIELD,
   WEAPON,
   WEAPON_LEVELS,
@@ -53,6 +55,7 @@ import {
 } from '../logic/health';
 import type { Axis } from '../logic/player';
 import { createRng, type Rng } from '../logic/rng';
+import { screenClear } from '../logic/screenClear';
 import { collectShield, shieldSeconds, shieldUp, tickShield, type Shield } from '../logic/shield';
 import { startWaves, stepWaves, type WaveRunner } from '../logic/waves';
 import { stepFire, type FireState } from '../logic/weapon';
@@ -95,6 +98,8 @@ export interface GameSnapshot {
   /** Damage of each player shot in flight. */
   shotDamage: number[];
   explosions: number;
+  /** Whether the screen clear's big blast is playing. */
+  blast: boolean;
   /** Enemy shots in flight. */
   enemyShots: { x: number; y: number }[];
   health: Health & { gameOver: boolean };
@@ -122,6 +127,8 @@ export class GameScene extends Phaser.Scene {
   private enemyBullets!: EnemyBullets;
   private asteroids!: Asteroids;
   private explosions!: Explosions;
+  /** The screen clear's big blast (one at a time). */
+  private blast!: Explosions;
   private hud!: Hud;
   private pickups!: Pickups;
   /** Power-ups collected this game, by kind (their effects arrive in M3.2–M3.4). */
@@ -174,6 +181,7 @@ export class GameScene extends Phaser.Scene {
     this.bullets = new Bullets(this);
     this.player = new Player(this);
     this.explosions = new Explosions(this);
+    this.blast = new Explosions(this, SCREEN_CLEAR.blast, 1, DEPTH.blast);
     this.hud = new Hud(this, PLAYER_HEALTH.hitsPerLife);
     this.pickups = new Pickups(this);
     this.collected = { weapon: 0, shield: 0, clear: 0 };
@@ -457,13 +465,13 @@ export class GameScene extends Phaser.Scene {
       shots: this.bullets.active().length,
       shotDamage: this.bullets.active().map((b) => b.damage),
       explosions: this.explosions.activeCount(),
+      blast: this.blast.activeCount() > 0,
       enemyShots: this.enemyBullets.active().map((sh) => ({ x: sh.sprite.x, y: sh.sprite.y })),
       health: { ...this.health, gameOver: isGameOver(this.health) },
       lastHit: this.lastHit,
     };
   }
 
-  /** Spawns a large asteroid at `x`: at the top of the screen, or at `y` if given (tests). */
   /** Sets the seconds of shield left (tests reach the end of a shield quickly). */
   setShield(seconds: number): void {
     this.shield = Math.max(0, seconds);
@@ -479,6 +487,7 @@ export class GameScene extends Phaser.Scene {
     return this.pickups.spawn(kind, x, y);
   }
 
+  /** Spawns a large asteroid at `x`: at the top of the screen, or at `y` if given (tests). */
   spawnAsteroid(x: number, y?: number): boolean {
     return this.asteroids.spawnLarge(x, this.rng, y);
   }
@@ -562,7 +571,6 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  /** A destroyed or crashed rock explodes; a large one splits into small pieces. */
   /** A kill may drop a power-up where it happened (seeded; never a screen clear in a boss fight). */
   private maybeDrop(x: number, y: number): void {
     const rules = { ...POWERUPS.drops, chance: this.dropChance ?? POWERUPS.drops.chance };
@@ -580,9 +588,36 @@ export class GameScene extends Phaser.Scene {
       this.collected[p.kind]++;
       if (p.kind === 'shield') this.shield = collectShield(this.shield, SHIELD);
       if (p.kind === 'weapon') this.weaponLevel = levelUp(this.weaponLevel, WEAPON_LEVELS.length);
+      if (p.kind === 'clear') this.clearScreen();
     }
   }
 
+  /**
+   * Screen clear: every enemy on screen explodes and scores, and every enemy
+   * shot vanishes, under one big blast at the ship and a white flash. Its kills
+   * drop nothing, so one clear can't set off another.
+   */
+  private clearScreen(): void {
+    const targets = this.enemies.active();
+    const result = screenClear(
+      targets.map((e) => ({ box: this.enemies.hitbox(e), points: ENEMY_TYPES[e.kind].points })),
+      GAME_WIDTH,
+      GAME_HEIGHT,
+    );
+    for (const i of result.destroyed) {
+      const enemy = targets[i];
+      if (!enemy) continue;
+      this.explosions.play(enemy.sprite.x, enemy.sprite.y);
+      this.enemies.destroy(enemy);
+    }
+    this.score += result.points;
+    this.enemyBullets.clear();
+    const { x, y } = this.player.position;
+    this.blast.play(x, y);
+    this.cameras.main.flash(SCREEN_CLEAR.flashMs);
+  }
+
+  /** A destroyed or crashed rock explodes; a large one splits into small pieces. */
   private shatter(rock: RockSlot): void {
     this.explosions.play(rock.rock.x, rock.rock.y);
     if (rock.size === 'large') this.asteroids.split(rock, this.rng);
