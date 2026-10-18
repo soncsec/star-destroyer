@@ -11,11 +11,11 @@
 | M1 Walking skeleton | Done (owner play-tested and approved 2026-10-17) |
 | P1 Portal and production server | Done (2026-10-17) |
 | T1 Game template for parallel instances | Done (2026-10-17) |
-| M2 Core loop (level 1) | In progress |
-| M3 Power-ups | Built; waiting for the owner's play-test |
-| C Controls and cheats (owner request) | Built; waiting for merge and the owner's play-test |
-| M4 Level system and first boss | Built; waiting for the owner's play-test |
-| M5 Levels 2–4 | In progress |
+| M2 Core loop (level 1) | Done |
+| M3 Power-ups | Done; play-test pending |
+| C Controls and cheats (owner request) | Done; play-test pending |
+| M4 Level system and first boss | Done; play-test pending |
+| M5 Levels 2–4 | Done; play-test pending |
 | M6 Levels 5–8 | In progress |
 | M7 Polish and balance | Not started |
 | M8 v1.0 release | Not started |
@@ -192,8 +192,13 @@
 - [ ] M7.5 Difficulty balance pass across all 8 levels from the owner's play-tests
 - [ ] M7.6 Cross-browser check: Chrome, Firefox, Safari, Edge
 - [ ] M7.7 Final card screenshot for the portal
+- [ ] M7.9 Play-test level skip (owner 2026-10-18, product review): `?level=n` starts at level n on every build and counts as a cheat (no high score). Built first, so the owner can play-test levels 6–8 and the final boss on any device
+- [ ] M7.10 Continues (owner 2026-10-18): on game over, continue from the current level with 3 fresh lives and the score reset to 0; a continued run can still set the high score
+- [ ] M7.11 Real-device check: the owner plays through on Chrome, Firefox and Brave (desktop) and on Safari on an iPhone; the touch pause menu hides its full-screen button where the browser has no full-screen API (iPhone Safari)
 
 **Acceptance criteria:** the owner signs off on game feel and difficulty; no console errors in a full playthrough on all four browsers.
+
+**Releases (owner 2026-10-18):** production is released in two batches, once all of M6 has merged and once all of M7 has, instead of after every merge.
 
 ## M8 — v1.0 release
 
