@@ -1,28 +1,49 @@
 import Phaser from 'phaser';
 import { animKey } from '../assets/manifest';
 import { BOSSES, DEPTH, GAME_WIDTH, HUD, type BossKind } from '../config/tuning';
-import { bossHealth, damageBoss, startBoss, stepBoss, type BossState } from '../logic/boss';
-import type { Box } from '../logic/collision';
+import {
+  bossLineup,
+  bossTotalHp,
+  damageBoss,
+  startBoss,
+  stepBossGroup,
+  type BossSlot,
+  type BossState,
+  type BossVolley,
+} from '../logic/boss';
+import { firstHit, type Box } from '../logic/collision';
 import type { Vec } from '../logic/enemyFire';
 
+/** Most ships one boss can have (a twin). */
+const MAX_SHIPS = 2;
+
+/** One ship of the boss on screen. */
+interface Ship {
+  state: BossState;
+  flash: number;
+}
+
 /**
- * The boss on screen (one at a time) and its health bar. The rules are in
- * logic/boss.ts; this draws them.
+ * The boss on screen (one at a time: one ship, or a twin pair, M6.4) and its
+ * health bar, which shows the health of all its ships together. The rules are
+ * in logic/boss.ts; this draws them.
  */
 export class Boss {
-  private readonly sprite: Phaser.GameObjects.Sprite;
+  private readonly sprites: Phaser.GameObjects.Sprite[];
   private readonly barBack: Phaser.GameObjects.Rectangle;
   private readonly barFill: Phaser.GameObjects.Rectangle;
   private kind: BossKind | null = null;
-  private state: BossState | null = null;
-  private flash = 0;
+  private slots: BossSlot[] = [];
+  private ships: Ship[] = [];
 
   constructor(scene: Phaser.Scene) {
-    this.sprite = scene.add
-      .sprite(0, 0, BOSSES['spaceship-unit'].sprite)
-      .setDepth(DEPTH.enemies)
-      .setActive(false)
-      .setVisible(false);
+    this.sprites = Array.from({ length: MAX_SHIPS }, () =>
+      scene.add
+        .sprite(0, 0, BOSSES['spaceship-unit'].sprite)
+        .setDepth(DEPTH.enemies)
+        .setActive(false)
+        .setVisible(false),
+    );
     const bar = HUD.bossBar;
     const left = (GAME_WIDTH - bar.w) / 2;
     this.barBack = scene.add
@@ -40,72 +61,103 @@ export class Boss {
   /** Brings in a boss of `kind` from above the screen. */
   spawn(kind: BossKind): void {
     const rules = BOSSES[kind];
+    this.clear();
     this.kind = kind;
-    this.state = startBoss(rules, GAME_WIDTH / 2);
-    this.flash = 0;
-    this.sprite
-      .setTexture(rules.sprite)
-      .setAngle(rules.angleDeg)
-      .setPosition(this.state.x, this.state.y)
-      .setAlpha(1)
-      .setActive(true)
-      .setVisible(true)
-      .play(animKey(rules.sprite));
+    this.slots = bossLineup(rules, GAME_WIDTH / 2);
+    this.ships = this.slots.map((slot) => ({
+      state: startBoss(rules, slot.centerX, slot.side, slot.delay),
+      flash: 0,
+    }));
+    this.ships.forEach((ship, i) => {
+      this.sprite(i)
+        .setTexture(rules.sprite)
+        .setAngle(rules.angleDeg)
+        .setPosition(ship.state.x, ship.state.y)
+        .setAlpha(1)
+        .setActive(true)
+        .setVisible(true)
+        .play(animKey(rules.sprite));
+    });
     this.drawBar();
   }
 
-  /** True from the moment it appears until it is defeated or cleared. */
+  /** True from the moment it appears until every ship is defeated or it is cleared. */
   get active(): boolean {
-    return this.state !== null && this.state.mode !== 'defeated';
+    return this.ships.some((s) => s.state.mode !== 'defeated');
   }
 
-  /** Moves it and returns any shots it fires this step: where from, and their velocities. */
-  update(dt: number, target: Vec): { from: Vec; shots: Vec[] } {
-    const { kind, state } = this;
-    if (!kind || !state || state.mode === 'defeated') return { from: target, shots: [] };
+  /** Moves it and returns the shots its ships fire this step. */
+  update(dt: number, target: Vec): BossVolley[] {
+    const { kind } = this;
+    if (!kind || !this.active) return [];
+    const step = stepBossGroup(
+      this.ships.map((s) => s.state),
+      BOSSES[kind],
+      dt,
+      target,
+      this.slots,
+    );
+    this.ships.forEach((ship, i) => {
+      ship.state = step.parts[i] ?? ship.state;
+      ship.flash = Math.max(0, ship.flash - dt);
+      this.sprite(i)
+        .setPosition(ship.state.x, ship.state.y)
+        .setAlpha(ship.flash > 0 ? 0.35 : 1);
+    });
+    return step.volleys;
+  }
+
+  /** Which ship `box` touches (one that can be hit now), or -1. */
+  touching(box: Box): number {
+    return this.ships.findIndex((_, i) => {
+      const ship = this.hitbox(i);
+      return ship !== null && firstHit(box, [ship]) >= 0;
+    });
+  }
+
+  /** Index of the first ship that can be hit now, or -1. */
+  firstFighting(): number {
+    return this.ships.findIndex((s) => s.state.mode === 'fighting');
+  }
+
+  /**
+   * Damages ship `index`. Returns the points scored and where it was if this
+   * hit defeated it, else null.
+   */
+  hit(index: number, amount: number): { points: number; at: Vec } | null {
+    const { kind } = this;
+    const ship = this.ships[index];
+    if (!kind || !ship) return null;
     const rules = BOSSES[kind];
-    const step = stepBoss(state, rules, dt, target, GAME_WIDTH / 2);
-    this.state = step.state;
-    this.sprite.setPosition(step.state.x, step.state.y);
-    this.flash = Math.max(0, this.flash - dt);
-    this.sprite.setAlpha(this.flash > 0 ? 0.35 : 1);
-    return { from: { x: step.state.x, y: step.state.y + rules.muzzleOffsetY }, shots: step.shots };
-  }
-
-  /** Its collision box while it can be hit (fighting), otherwise null. */
-  hitbox(): Box | null {
-    if (!this.kind || this.state?.mode !== 'fighting') return null;
-    const h = BOSSES[this.kind].hitbox;
-    return { x: this.state.x, y: this.state.y + h.offsetY, w: h.w, h: h.h };
-  }
-
-  /** Damages it. Returns the points scored if this hit defeated it, else 0. */
-  hit(amount: number): number {
-    const { kind, state } = this;
-    if (!kind || !state) return 0;
-    const rules = BOSSES[kind];
-    const r = damageBoss(state, rules, amount);
-    this.state = r.state;
-    this.flash = HUD.bossHitFlash;
+    const r = damageBoss(ship.state, rules, amount);
+    ship.state = r.state;
+    ship.flash = HUD.bossHitFlash;
     this.drawBar();
-    if (!r.defeated) return 0;
-    this.hide();
-    return rules.points;
+    if (!r.defeated) return null;
+    const at = { x: ship.state.x, y: ship.state.y };
+    this.hideShip(index);
+    if (!this.active) this.hideBar();
+    return { points: rules.points, at };
   }
 
-  /** Where it is, for explosions. */
-  get position(): Vec {
-    return { x: this.sprite.x, y: this.sprite.y };
+  /** Health left on ship `index` (0 if there is no such ship). */
+  hpOf(index: number): number {
+    return this.ships[index]?.state.hp ?? 0;
   }
 
   /** Removes it without a fight (a new game, or tests). */
   clear(): void {
     this.kind = null;
-    this.state = null;
-    this.hide();
+    this.ships = [];
+    this.slots = [];
+    this.sprites.forEach((_, i) => this.hideShip(i));
+    this.hideBar();
   }
 
-  /** What is on screen, for the e2e test hook. */
+  /**
+   * What is on screen, for the e2e test hook: the boss as a whole (health
+   * summed; mode 'defeated' once every ship is), plus each ship.
+   */
   read(): {
     kind: BossKind;
     mode: BossState['mode'];
@@ -115,30 +167,64 @@ export class Boss {
     y: number;
     bar: number;
     barVisible: boolean;
+    ships: { mode: BossState['mode']; hp: number; phase: number; x: number; y: number }[];
   } | null {
-    if (!this.kind || !this.state) return null;
+    const first = this.ships[0];
+    if (!this.kind || !first) return null;
+    const ships = this.ships.map(({ state: s }) => ({
+      mode: s.mode,
+      hp: s.hp,
+      phase: s.phase,
+      x: s.x,
+      y: s.y,
+    }));
+    const lead = this.ships.find((s) => s.state.mode !== 'defeated') ?? first;
+    const mode: BossState['mode'] = !this.active
+      ? 'defeated'
+      : ships.some((s) => s.mode === 'fighting')
+        ? 'fighting'
+        : 'entering';
     return {
       kind: this.kind,
-      mode: this.state.mode,
-      hp: this.state.hp,
-      phase: this.state.phase,
-      x: this.state.x,
-      y: this.state.y,
+      mode,
+      hp: ships.reduce((sum, s) => sum + s.hp, 0),
+      phase: Math.max(...ships.map((s) => s.phase)),
+      x: lead.state.x,
+      y: lead.state.y,
       bar: this.barFill.width / HUD.bossBar.w,
       barVisible: this.barFill.visible,
+      ships,
     };
   }
 
+  private sprite(index: number): Phaser.GameObjects.Sprite {
+    const sprite = this.sprites[index];
+    if (!sprite) throw new RangeError(`no boss sprite ${index}`);
+    return sprite;
+  }
+
+  private hitbox(index: number): Box | null {
+    const ship = this.ships[index];
+    if (!this.kind || ship?.state.mode !== 'fighting') return null;
+    const h = BOSSES[this.kind].hitbox;
+    return { x: ship.state.x, y: ship.state.y + h.offsetY, w: h.w, h: h.h };
+  }
+
   private drawBar(): void {
-    if (!this.kind || !this.state) return;
-    const fill = bossHealth(this.state, BOSSES[this.kind]);
+    if (!this.kind || this.ships.length === 0) return;
+    const hp = this.ships.reduce((sum, s) => sum + s.state.hp, 0);
+    const fill = hp / bossTotalHp(BOSSES[this.kind]);
     this.barBack.setVisible(true);
     this.barFill.setVisible(true).setSize(HUD.bossBar.w * fill, HUD.bossBar.h);
   }
 
-  private hide(): void {
-    this.sprite.stop();
-    this.sprite.setActive(false).setVisible(false);
+  private hideShip(index: number): void {
+    const sprite = this.sprite(index);
+    sprite.stop();
+    sprite.setActive(false).setVisible(false);
+  }
+
+  private hideBar(): void {
     this.barBack.setVisible(false);
     this.barFill.setVisible(false);
   }
