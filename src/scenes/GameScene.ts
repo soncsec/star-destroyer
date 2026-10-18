@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import {
-  BACKGROUND,
   ASTEROIDS,
   CHEATS,
   CONTROLS,
@@ -43,7 +42,8 @@ import {
 } from '../logic/controls';
 import { rollDrop, type PowerUpKind } from '../logic/drops';
 import { panelShown, startGameOver, stepGameOver, type GameOverState } from '../logic/gameOver';
-import { LEVEL_1 } from '../levels/level1';
+import { LEVELS } from '../levels';
+import type { Level } from '../levels/types';
 import { aimDown, firstShotDelay, nextShotDelay, stepEnemyFire } from '../logic/enemyFire';
 import {
   isGameOver,
@@ -86,6 +86,8 @@ export interface GameSnapshot {
   }[];
   /** Progress through the level's wave script. */
   waves: WaveRunner;
+  /** The level being played. */
+  level: { number: number; name: string };
   asteroids: { size: RockSize; x: number; y: number; hp: number }[];
   /** What the HUD shows. */
   hud: { score: string; lives: string; pips: boolean[]; shield: string };
@@ -124,8 +126,10 @@ type Keys = Record<
 >;
 
 export class GameScene extends Phaser.Scene {
-  private nebula!: Phaser.GameObjects.TileSprite;
-  private stars!: Phaser.GameObjects.TileSprite;
+  /** The level being played (M4.1). */
+  private level!: Level;
+  /** The level's scrolling background layers, furthest back first. */
+  private backdrop: { sprite: Phaser.GameObjects.TileSprite; scrollSpeed: number }[] = [];
   private player!: Player;
   private bullets!: Bullets;
   private fireState: FireState = { cooldown: 0 };
@@ -176,11 +180,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.nebula = this.add.tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, 'bg-stage-back').setOrigin(0);
-    this.stars = this.add
-      .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, 'bg-blue-stars')
-      .setOrigin(0)
-      .setAlpha(0.8);
+    const level = LEVELS[0];
+    if (!level) throw new Error('no levels');
+    this.level = level;
+    this.backdrop = level.background.map((layer) => ({
+      sprite: this.add
+        .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, layer.texture)
+        .setOrigin(0)
+        .setAlpha(layer.alpha),
+      scrollSpeed: layer.scrollSpeed,
+    }));
     this.rng = createRng(seedFromUrl());
     this.waves = startWaves();
     this.score = 0;
@@ -309,8 +318,7 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     // Moving the texture down makes the ship appear to fly up.
-    this.nebula.tilePositionY -= BACKGROUND.nebulaSpeed * dt;
-    this.stars.tilePositionY -= BACKGROUND.starsSpeed * dt;
+    for (const layer of this.backdrop) layer.sprite.tilePositionY -= layer.scrollSpeed * dt;
     const alive = !isGameOver(this.health);
     if (alive) this.player.update(this.readAxis(), dt);
 
@@ -320,7 +328,9 @@ export class GameScene extends Phaser.Scene {
     this.bullets.update(dt);
 
     if (this.spawning && !this.gameOver) {
-      const step = stepWaves(this.waves, LEVEL_1.waves, dt, LEVEL_1.loopGap);
+      // Until the boss arrives (M4.4) the wave script loops, with the boss's
+      // quiet gap between loops.
+      const step = stepWaves(this.waves, this.level.waves, dt, this.level.bossAfter);
       this.waves = step.runner;
       for (const sp of step.spawns) {
         if (sp.kind === 'asteroid') this.asteroids.spawnLarge(sp.x * GAME_WIDTH, this.rng);
@@ -466,6 +476,7 @@ export class GameScene extends Phaser.Scene {
         fireIn: e.fireIn,
       })),
       waves: { ...this.waves },
+      level: { number: this.level.number, name: this.level.name },
       hud: this.hud.read(),
       shield: { timeLeft: this.powerUps.shield, bubbleVisible: this.shieldBubble.visible },
       controls: {

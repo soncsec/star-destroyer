@@ -108,12 +108,6 @@ export const HUD = {
   pip: { w: 6, h: 4, gap: 2, on: 0x2de2e6, off: 0x2b2160 },
 } as const;
 
-/** Background scroll speeds in pixels per second. The star layer moves faster for depth. */
-export const BACKGROUND = {
-  nebulaSpeed: 10,
-  starsSpeed: 28,
-} as const;
-
 export const PLAYER = {
   /** Texture key of the player's ship (see the asset manifest). */
   ship: 'ship-01-red',

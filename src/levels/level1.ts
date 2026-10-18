@@ -1,18 +1,19 @@
 /**
  * Level 1, Teal Nebula: grunts and weavers (PROJECT.md 4a level plan), plus a
- * few large asteroids that split when shot (M2.5).
- * Until levels end with a boss (M4), the wave script loops.
+ * few large asteroids that split when shot (M2.5), then the spaceship-unit boss.
  */
 import type { SpawnKind } from '../config/tuning';
-import { column, line, script, vee, type WaveSpawn } from '../logic/waves';
+import { column, line, script, vee } from '../logic/waves';
+import type { Level } from './types';
 
-export interface LevelWaves {
-  waves: readonly WaveSpawn<SpawnKind>[];
-  /** Seconds of quiet after the last spawn before the script starts over. */
-  loopGap: number;
-}
-
-export const LEVEL_1: LevelWaves = {
+export const LEVEL_1: Level = {
+  number: 1,
+  name: 'Teal Nebula',
+  background: [
+    { texture: 'bg-stage-back', scrollSpeed: 10, alpha: 1 },
+    { texture: 'bg-blue-stars', scrollSpeed: 28, alpha: 0.8 },
+  ],
+  roster: ['grunt', 'weaver'],
   waves: script<SpawnKind>(
     line(0, 'grunt', [0.3, 0.5, 0.7]),
     line(4, 'weaver', [0.5]),
@@ -31,5 +32,6 @@ export const LEVEL_1: LevelWaves = {
     line(39, 'asteroid', [0.65]),
     vee(41, 'weaver', 0.5, 3, 0.25, 0.8),
   ),
-  loopGap: 4,
+  boss: 'spaceship-unit',
+  bossAfter: 4,
 };
