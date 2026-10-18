@@ -16,6 +16,8 @@ test('the game plays level 1 from its wave script', async ({ page }) => {
     .poll(() => page.evaluate(() => window.__starDestroyer?.scene() ?? null), { timeout: 15_000 })
     .toBe('Game');
 
+  expect((await snapshot(page)).level).toEqual({ number: 1, name: LEVEL_1.name });
+
   // The opening line of three grunts, exactly where the script puts them.
   const opening = LEVEL_1.waves.filter((s) => s.t === 0);
   await expect.poll(async () => (await snapshot(page)).enemies.length).toBe(opening.length);

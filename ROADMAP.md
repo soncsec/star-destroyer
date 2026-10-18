@@ -14,7 +14,7 @@
 | M2 Core loop (level 1) | In progress |
 | M3 Power-ups | Built; waiting for the owner's play-test |
 | C Controls and cheats (owner request) | Built; waiting for merge and the owner's play-test |
-| M4 Level system and first boss | Not started |
+| M4 Level system and first boss | In progress |
 | M5 Levels 2–4 | Not started |
 | M6 Levels 5–8 | Not started |
 | M7 Polish and balance | Not started |
@@ -142,7 +142,7 @@
 
 **Demonstrable result:** level 1 ends with a boss, and beating it moves on to level 2.
 
-- [ ] M4.1 Data-driven level format: background layers, enemy roster, wave script, boss, difficulty numbers (ADR-012)
+- [x] M4.1 Data-driven level format: background layers, enemy roster, wave script, boss, difficulty numbers (ADR-012). `src/levels/types.ts` (`Level`: number, name, background layers, roster, waves, boss, `bossAfter`), `LEVELS` list, level 1 converted; difficulty numbers come from `difficulty(level)` in M4.2; every level is checked by unit tests
 - [ ] M4.2 Difficulty curve function with the limits in PROJECT.md section 4a (unit tested)
 - [ ] M4.3 Boss framework: entry, health bar, phases, attack patterns, defeat
 - [ ] M4.4 Level 1 boss; level-complete screen; transition to the next level
