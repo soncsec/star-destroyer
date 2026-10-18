@@ -36,7 +36,15 @@ export interface TestHook {
   spawnAsteroid(x: number, y?: number): boolean;
   /** Spawns an enemy (default grunt) at x (top of the screen) or (x, y); optionally set its first shot. */
   spawnEnemy(x: number, y?: number, firstShot?: number, kind?: EnemyKind): boolean;
+  /**
+   * Milliseconds of work (update and render) for each recent frame, and
+   * Phaser's frame rate (M6.7). `reset` clears the record first.
+   */
+  frameTimes(reset?: boolean): { workMs: number[]; fps: number };
 }
+
+/** Frames kept for `frameTimes` (about 30 s at 60 fps). */
+const FRAME_RECORD = 1800;
 
 declare global {
   interface Window {
@@ -55,6 +63,17 @@ export function installTestHook(game: Phaser.Game): void {
     return s;
   };
 
+  // Time each frame's work: from the start of the step to the end of rendering.
+  const work: number[] = [];
+  let stepStart = 0;
+  game.events.on('prestep', () => {
+    stepStart = performance.now();
+  });
+  game.events.on('postrender', () => {
+    work.push(performance.now() - stepStart);
+    if (work.length > FRAME_RECORD) work.shift();
+  });
+
   window.__starDestroyer = {
     scene: () => game.scene.getScenes(true)[0]?.scene.key ?? null,
     snapshot: () => gameScene()?.snapshot() ?? null,
@@ -71,5 +90,9 @@ export function installTestHook(game: Phaser.Game): void {
     setDropChance: (chance) => required().setDropChance(chance),
     setShield: (seconds) => required().setShield(seconds),
     spawnEnemy: (x, y, firstShot, kind) => required().spawnEnemy(x, y, firstShot, kind),
+    frameTimes: (reset) => {
+      if (reset) work.length = 0;
+      return { workMs: [...work], fps: game.loop.actualFps };
+    },
   };
 }
