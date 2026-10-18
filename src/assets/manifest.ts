@@ -95,6 +95,8 @@ export const ASSETS: readonly Asset[] = [
   image('boss', 'boss-helmet', 'helmet.png', 64, 56),
   sheet('boss', 'boss-rays', 'rays.png', 64, 224, 11, 14, false),
   sheet('boss', 'boss-bolt', 'bolt.png', 8, 8, 2, 12, true),
+  // Level 1 boss (M4.3): the Warped spaceship unit with its thrust, side view facing right.
+  sheet('boss', 'boss-spaceship-unit', 'spaceship-unit.png', 106, 77, 8, 10, true),
 
   image('asteroids', 'asteroid-small-1', 'small-1.png', 17, 16),
   image('asteroids', 'asteroid-small-2', 'small-2.png', 11, 14),

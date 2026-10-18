@@ -145,7 +145,7 @@
 
 - [x] M4.1 Data-driven level format: background layers, enemy roster, wave script, boss, difficulty numbers (ADR-012). `src/levels/types.ts` (`Level`: number, name, background layers, roster, waves, boss, `bossAfter`), `LEVELS` list, level 1 converted; difficulty numbers come from `difficulty(level)` in M4.2; every level is checked by unit tests
 - [x] M4.2 Difficulty curve function with the limits in PROJECT.md section 4a (unit tested). `difficulty(level)` in `src/logic/difficulty.ts`, numbers in `DIFFICULTY`: fire rate ×2.5 by level 8 in equal steps (+13.98% per level), shot speed +30% by level 8, weapon and shield drops +25% by level 8 with the screen clear's chance unchanged
-- [ ] M4.3 Boss framework: entry, health bar, phases, attack patterns, defeat
+- [x] M4.3 Boss framework: entry, health bar, phases, attack patterns, defeat. `src/logic/boss.ts` (enters from above untouchable, sways, phases by health, aimed and fan attacks, fans proven to leave a ship-wide gap, defeat), `BOSSES` tuning, `entities/Boss.ts` with a health bar; level 1's spaceship-unit boss (Warped art turned to face down) can be spawned via the test hook until M4.4 brings it in at the level's end
 - [ ] M4.4 Level 1 boss; level-complete screen; transition to the next level
 - [ ] M4.5 Playwright: complete level 1 via the test hook and reach level 2
 
