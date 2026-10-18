@@ -80,5 +80,5 @@ test('shots wear the boss down through its phases to defeat, scoring its points'
   expect(done.boss?.hp).toBe(0);
   expect(done.boss?.barVisible).toBe(false);
   expect(done.score).toBe(start.score + BOSS.points);
-  expect(done.blast).toBe(true);
+  expect(done.blasts).toBe(start.blasts + 1);
 });
