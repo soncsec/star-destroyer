@@ -15,6 +15,8 @@ export const DEPTH = {
   enemies: 10,
   playerShots: 15,
   enemyShots: 25,
+  /** The screen clear's blast stays behind the ship, so the player never loses sight of it. */
+  blast: 18,
   player: 20,
   explosions: 30,
   hud: 100,
@@ -307,7 +309,16 @@ export const ENEMY_COMMON = {
 
 export const EXPLOSION = {
   sprite: 'enemy-explosion',
-  poolSize: 8,
+  /** Enough for a screen clear to blow up a full pool of enemies at once. */
+  poolSize: 16,
+} as const;
+
+/** Screen-clear power-up (M3.4): every enemy on screen and every enemy shot is destroyed. */
+export const SCREEN_CLEAR = {
+  /** The big blast centered on the ship: 192×192, 22 frames. */
+  blast: 'explosion-e',
+  /** A short white flash of the whole screen, in milliseconds. */
+  flashMs: 200,
 } as const;
 
 /** Seed for gameplay randomness, so a run can be replayed. Override with ?seed=123 in the URL. */
