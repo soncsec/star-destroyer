@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ASSETS } from '../../src/assets/manifest';
-import { ENEMY_TYPES, GAME_WIDTH } from '../../src/config/tuning';
+import { BOSSES, ENEMY_TYPES, GAME_WIDTH } from '../../src/config/tuning';
 import { LEVELS } from '../../src/levels';
 import {
   ASTEROID_LIMITS,
@@ -12,6 +12,7 @@ import {
 import { LEVEL_1 } from '../../src/levels/level1';
 import { LEVEL_2 } from '../../src/levels/level2';
 import { LEVEL_3 } from '../../src/levels/level3';
+import { LEVEL_4 } from '../../src/levels/level4';
 import { checkWaves, mostAtOnce } from '../../src/logic/waves';
 
 describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${level.name})` })))(
@@ -43,6 +44,18 @@ describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${le
         const asset = ASSETS.find((a) => a.key === layer.texture);
         const width = asset?.kind === 'image' ? asset.width : (asset?.frameWidth ?? 0);
         expect(width * (layer.scale ?? 1), layer.texture).toBeGreaterThanOrEqual(GAME_WIDTH);
+      }
+    });
+
+    it('draws its props from images, on screen sideways, drifting slower than the nearest layer', () => {
+      const nearest = Math.max(...level.background.map((l) => l.scrollSpeed));
+      for (const prop of level.props ?? []) {
+        expect(ASSETS.find((a) => a.key === prop.texture)?.kind, prop.texture).toBe('image');
+        expect(prop.x).toBeGreaterThanOrEqual(0);
+        expect(prop.x).toBeLessThanOrEqual(1);
+        expect(prop.scrollSpeed).toBeGreaterThan(0);
+        expect(prop.scrollSpeed).toBeLessThan(nearest);
+        expect(prop.gap).toBeGreaterThanOrEqual(0);
       }
     });
 
@@ -97,6 +110,30 @@ describe('level 3 (M5.3)', () => {
     expect(new Set(LEVEL_3.waves.map((s) => s.kind))).toEqual(
       new Set([...LEVEL_3.roster, 'asteroid']),
     );
+  });
+});
+
+describe('level 4 (M5.4)', () => {
+  it('matches the approved plan: Red Giant, alien flyers and enemy type 3, upgraded spaceship unit', () => {
+    expect(LEVEL_4).toMatchObject({ number: 4, name: 'Red Giant', boss: 'spaceship-unit-mk2' });
+    expect(LEVEL_4.roster).toEqual(['diver', 'flyer']);
+    expect(LEVEL_4.background.map((l) => l.texture)).toContain('bg-red-back');
+    expect(LEVEL_4.props?.map((p) => p.texture)).toEqual([
+      'bg-red-big-planet',
+      'bg-red-ring-planet',
+    ]);
+    expect(LEVELS[3]).toBe(LEVEL_4);
+  });
+
+  it("has a boss with upgraded attacks: level 1's ship, tougher, with an extra phase and wider fans", () => {
+    const one = BOSSES['spaceship-unit'];
+    const four = BOSSES['spaceship-unit-mk2'];
+    expect(four.sprite).toBe(one.sprite);
+    expect(four.hp).toBeGreaterThan(one.hp);
+    expect(four.phases.length).toBeGreaterThan(one.phases.length);
+    const widest = (b: typeof one): number =>
+      Math.max(...b.phases.flatMap((p) => p.attacks.map((a) => (a.kind === 'fan' ? a.shots : 1))));
+    expect(widest(four)).toBeGreaterThan(widest(one));
   });
 });
 

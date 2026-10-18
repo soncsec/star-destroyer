@@ -352,7 +352,7 @@ export const BOSS_DEFEAT = {
 };
 
 /** Bosses, by the art they use (PROJECT.md 4a level plan). More arrive with each level. */
-export type BossKind = 'spaceship-unit' | 'vehicle-1' | 'vehicle-2';
+export type BossKind = 'spaceship-unit' | 'vehicle-1' | 'vehicle-2' | 'spaceship-unit-mk2';
 
 /**
  * Bosses (M4.3). Each fights in phases: as its health falls it switches to
@@ -494,6 +494,60 @@ export const BOSSES: Record<
         ],
         cooldown: 0.8,
         swayHz: 0.18,
+      },
+    ],
+  },
+  // Level 4: the spaceship unit again, upgraded (PROJECT.md 4a: "upgraded
+  // attacks"): more health, a fourth phase, wider fans, faster sway.
+  'spaceship-unit-mk2': {
+    sprite: 'boss-spaceship-unit',
+    angleDeg: 90,
+    hitbox: { w: 60, h: 84 },
+    hp: 340,
+    points: 12500,
+    entry: { startY: -60, hoverY: 70, speed: 45 },
+    swayAmplitude: 85,
+    muzzleOffsetY: 44,
+    shotSpeed: 135,
+    maxAimAngleDeg: 30,
+    phases: [
+      {
+        fromHp: 1,
+        attacks: [{ kind: 'fan', shots: 5, spreadDeg: 70 }, { kind: 'aimed' }, { kind: 'aimed' }],
+        cooldown: 1.1,
+        swayHz: 0.15,
+      },
+      {
+        fromHp: 0.7,
+        attacks: [
+          { kind: 'fan', shots: 6, spreadDeg: 90 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 4, spreadDeg: 50 },
+        ],
+        cooldown: 0.95,
+        swayHz: 0.2,
+      },
+      {
+        fromHp: 0.4,
+        attacks: [
+          { kind: 'fan', shots: 7, spreadDeg: 100 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 5, spreadDeg: 60 },
+          { kind: 'aimed' },
+        ],
+        cooldown: 0.8,
+        swayHz: 0.26,
+      },
+      {
+        fromHp: 0.15,
+        attacks: [
+          { kind: 'fan', shots: 7, spreadDeg: 110 },
+          { kind: 'fan', shots: 6, spreadDeg: 90 },
+          { kind: 'aimed' },
+          { kind: 'aimed' },
+        ],
+        cooldown: 0.7,
+        swayHz: 0.32,
       },
     ],
   },
