@@ -30,6 +30,12 @@ Files are copied unchanged from the pack and renamed for consistency, except the
 | `assets/backgrounds/prop-planet-small.png` | 16×16 | `Warped/Environments/space_background_pack/Blue Version/layered/prop-planet-small.png` |
 | `assets/backgrounds/stage-back.png` | 256×320 | `Warped/Environments/top-down-space-environment/PNG/layers/stage-back.png` |
 | `assets/backgrounds/stage-props.png` | 256×151 | `Warped/Environments/top-down-space-environment/PNG/layers/sprites.png` |
+| `assets/backgrounds/asteroid-field.png` | 160×288 | `Warped/Misc/asteroid-fighter Pack/PNG/background.png` |
+| `assets/backgrounds/red-back.png` | 272×160 | `Warped/Environments/space_background_pack/Old Version/layers/parallax-space-backgound.png` |
+| `assets/backgrounds/red-big-planet.png` | 88×87 | `Warped/Environments/space_background_pack/Old Version/layers/parallax-space-big-planet.png` |
+| `assets/backgrounds/red-far-planets.png` | 272×160 | `Warped/Environments/space_background_pack/Old Version/layers/parallax-space-far-planets.png` |
+| `assets/backgrounds/red-ring-planet.png` | 51×115 | `Warped/Environments/space_background_pack/Old Version/layers/parallax-space-ring-planet.png` |
+| `assets/backgrounds/red-stars.png` | 272×160 | `Warped/Environments/space_background_pack/Old Version/layers/parallax-space-stars.png` |
 | `assets/boss/bolt.png` | 16×8 | `Warped/Characters/top-down-boss/PNG/spritesheets/bolt.png` |
 | `assets/effects/energy-shield.png` | 408×47 | `Explosions and Magic/Grotto-escape-2-FX/spritesheets/energy-shield.png` |
 | `assets/effects/hit-spark.png` | 160×32 | `Explosions and Magic/Warped shooting fx/hits/Hits-3/spritesheet.png` |
@@ -44,10 +50,13 @@ Files are copied unchanged from the pack and renamed for consistency, except the
 | `assets/boss/helmet.png` | 64×56 | `Warped/Characters/top-down-boss/PNG/spritesheets/helmet.png` |
 | `assets/boss/rays.png` | 704×224 | `Warped/Characters/top-down-boss/PNG/spritesheets/rays.png` |
 | `assets/boss/spaceship-unit.png` | 848×77 | `Warped/Characters/spaceship-unit/Spritesheets/Spritesheet.png` |
+| `assets/boss/vehicle-1.png` | 528×96 | `Warped/Characters/Warped Vehicles Files/vehicle 1/spritesheet.png` |
+| `assets/boss/vehicle-2.png` | 528×125 | `Warped/Characters/Warped Vehicles Files/vehicle 2/spritesheet.png` |
 | `assets/enemies/enemy-01.png` | 240×48 | `Warped/Characters/top-down-shooter-enemies/spritesheets/enemy-01.png` |
 | `assets/enemies/enemy-02.png` | 192×48 | `Warped/Characters/top-down-shooter-enemies/spritesheets/enemy-02.png` |
 | `assets/enemies/enemy-03.png` | 192×48 | `Warped/Characters/top-down-shooter-enemies/spritesheets/enemy-03.png` |
 | `assets/enemies/enemy-explosion.png` | 560×80 | `Warped/Characters/top-down-shooter-enemies/spritesheets/enemy-explosion.png` |
+| `assets/enemies/alien-flyer.png` | 664×64 | `Warped/Characters/alien-flying-enemy/spritesheet.png` |
 | `assets/explosions/explosion-a.png` | 256×32 | `Explosions and Magic/Explosions pack/explosion-1-a/spritesheet.png` |
 | `assets/explosions/explosion-b.png` | 512×64 | `Explosions and Magic/Explosions pack/explosion-1-b/spritesheet.png` |
 | `assets/explosions/explosion-c.png` | 1280×80 | `Explosions and Magic/Explosions pack/explosion-1-c/spritesheet.png` |

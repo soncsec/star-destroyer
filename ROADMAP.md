@@ -14,8 +14,8 @@
 | M2 Core loop (level 1) | In progress |
 | M3 Power-ups | Built; waiting for the owner's play-test |
 | C Controls and cheats (owner request) | Built; waiting for merge and the owner's play-test |
-| M4 Level system and first boss | In progress |
-| M5 Levels 2–4 | Not started |
+| M4 Level system and first boss | Built; waiting for the owner's play-test |
+| M5 Levels 2–4 | In progress |
 | M6 Levels 5–8 | Not started |
 | M7 Polish and balance | Not started |
 | M8 v1.0 release | Not started |
@@ -156,7 +156,7 @@
 
 **Demonstrable result:** levels 1–4 are playable start to finish, each with its own look and boss.
 
-- [ ] M5.1 Import and slice the extra art for levels 2–4 (manifest and credits updated)
+- [x] M5.1 Import and slice the extra art for levels 2–4 (manifest and credits updated): level 2 purple asteroid field (asteroid-fighter pack); level 4 red parallax layers, big planet and ring planet (space background pack, original version); bosses Warped vehicle 1 and 2; alien flyer. Level 3 uses the blue space pack layers already bundled
 - [ ] M5.2 Level 2 (Asteroid Belt) and its boss (an early version from M4.4 is playable, with level 1's backdrop and boss)
 - [ ] M5.3 Level 3 (Blue Expanse) and its boss
 - [ ] M5.4 Level 4 (Red Giant) and its boss
