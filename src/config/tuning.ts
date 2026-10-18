@@ -259,6 +259,13 @@ export const FRAME_BUDGET = {
   frameMs: 1000 / 60,
   medianMs: 1000 / 60 / 2,
   p95Ms: 1000 / 60,
+  /**
+   * Linux WebKit (Safari's engine in the tests) has slow-frame spikes when
+   * the shared machine is busy, which say little about Safari's own graphics,
+   * so it gets two frames for the 95th percentile; the median limit is the
+   * same (owner, 2026-10-18).
+   */
+  webkit: { medianMs: 1000 / 60 / 2, p95Ms: (2 * 1000) / 60 },
 } as const;
 
 /** Score, health pips and lives across the top of the screen (M2.6). */

@@ -27,5 +27,8 @@ describe('frame-time summaries (M6.7)', () => {
     expect(FRAME_BUDGET.frameMs).toBeCloseTo(1000 / 60, 6);
     expect(FRAME_BUDGET.medianMs).toBeLessThanOrEqual(FRAME_BUDGET.frameMs / 2);
     expect(FRAME_BUDGET.p95Ms).toBeLessThanOrEqual(FRAME_BUDGET.frameMs);
+    // WebKit: the same median, and at most two frames for the slowest 5%.
+    expect(FRAME_BUDGET.webkit.medianMs).toBe(FRAME_BUDGET.medianMs);
+    expect(FRAME_BUDGET.webkit.p95Ms).toBeLessThanOrEqual(2 * FRAME_BUDGET.frameMs);
   });
 });
