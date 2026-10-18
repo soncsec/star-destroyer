@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { SHIELD } from '../../src/config/tuning';
 import type { GameSnapshot } from '../../src/scenes/GameScene';
 
 async function snapshot(page: Page): Promise<GameSnapshot> {
@@ -31,22 +32,23 @@ async function collectShield(page: Page): Promise<GameSnapshot> {
   return snapshot(page);
 }
 
-test('a blue gem gives a 30-second shield, shown around the ship and in the HUD', async ({
+test('a blue gem gives a 10-second shield, shown around the ship and in the HUD', async ({
   page,
 }) => {
   await openQuietGame(page);
   const s = await collectShield(page);
-  expect(s.shield.timeLeft).toBeGreaterThan(29.5);
+  expect(SHIELD.duration).toBe(10); // owner decision 2026-10-18 (was 30)
+  expect(s.shield.timeLeft).toBeGreaterThan(SHIELD.duration - 0.5);
   expect(s.shield.bubbleVisible).toBe(true);
-  expect(s.hud.shield).toBe('SHIELD 30');
+  expect(s.hud.shield).toBe(`SHIELD ${SHIELD.duration}`);
   // Game time follows the frames, which a busy browser runs in bursts, so the
   // count can skip numbers between looks. Wait for it to move, then check the
   // HUD shows the time left, rounded up, in that same frame.
   await expect
     .poll(async () => (await snapshot(page)).hud.shield, { timeout: 5_000 })
-    .not.toBe('SHIELD 30');
+    .not.toBe(`SHIELD ${SHIELD.duration}`);
   const later = await snapshot(page);
-  expect(later.shield.timeLeft).toBeLessThan(30);
+  expect(later.shield.timeLeft).toBeLessThan(SHIELD.duration);
   expect(later.hud.shield).toBe(`SHIELD ${Math.ceil(later.shield.timeLeft)}`);
 });
 
@@ -65,13 +67,13 @@ test('while shielded, crashes and enemy shots do no damage', async ({ page }) =>
   expect(s.enemies[0]?.y).toBeLessThan(player.y - 30);
 });
 
-test('another blue gem resets the shield to 30 seconds', async ({ page }) => {
+test('another blue gem resets the shield to its full 10 seconds', async ({ page }) => {
   await openQuietGame(page);
   await collectShield(page);
-  await page.evaluate(() => window.__starDestroyer?.setShield(10));
-  expect((await snapshot(page)).shield.timeLeft).toBeLessThanOrEqual(10);
+  await page.evaluate(() => window.__starDestroyer?.setShield(3));
+  expect((await snapshot(page)).shield.timeLeft).toBeLessThanOrEqual(3);
   const s = await collectShield(page);
-  expect(s.shield.timeLeft).toBeGreaterThan(29.5);
+  expect(s.shield.timeLeft).toBeGreaterThan(SHIELD.duration - 0.5);
 });
 
 test('the shield runs out: the bubble goes, the HUD clears, and hits count again', async ({

@@ -42,6 +42,7 @@ export class Bullets {
       .setTexture(sprite)
       .setPosition(shot.x, shot.y)
       .setAngle(shotAngle(shot.vx, shot.vy)) // the art points right
+      .setScale(WEAPON.shotScale)
       .setActive(true)
       .setVisible(true)
       .play(animKey(sprite));

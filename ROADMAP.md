@@ -118,10 +118,11 @@
 
 - [x] M3.1 Drop system with per-type rarity (data-driven, seeded, unit tested); pickup icons from the gems pack: 12% of kills (enemies, large asteroids) drop a gem; weapon 6 : shield 3 : clear 1; clear never in boss fights; gems cut from the pack's gem sheet
 - [x] M3.2 Weapon levels 1–3, shots growing bigger and stronger (owner request): small tracer → double pulse → spread of three charged blasts (double damage); reset to level 1 on death; no time-out. Level 1 is the space-marine tracer (visible 10×4), then pulse ×2, then charged ×3 spread at 2 damage
-- [x] M3.3 Shield: energy-shield effect, blocks all damage for 30 s, timer shown in the HUD. A new pickup resets to 30 s; the bubble (2× art) absorbs enemy shots and destroys rammers; blinks for the last 3 s; HUD shows SHIELD n
+- [x] M3.3 Shield: energy-shield effect, blocks all damage for 30 s (10 s since M3.7), timer shown in the HUD. A new pickup resets to full time; the bubble (2× art) absorbs enemy shots and destroys rammers; blinks for the last 3 s; HUD shows SHIELD n
 - [x] M3.4 Screen clear: destroys all on-screen enemies with a large explosion; rare; never dropped during boss fights. Also removes every enemy shot (owner); each kill scores; enemies still above the screen and asteroids are spared; its kills drop nothing; 192 px blast behind the ship plus a short white flash
 - [x] M3.5 Hit-spark effects on impact: a cyan spark (pack's Warped hits-3, 5 frames, 0.25 s) wherever a player shot hits an enemy or asteroid (also non-lethal hits) and where an enemy shot hits the ship or the shield; pooled
 - [x] M3.6 Unit tests for every power-up rule, including "lost on death" and "no screen clear during bosses". Rules that lived in the game scene (what each gem does, lost on death, only shot-down kills drop gems) moved to `src/logic/powerups.ts` with unit tests
+- [x] M3.7 Balance (owner request 2026-10-18, "too easy"): stronger weapon levels fire a little less often and fly a little slower (level 2: 5% down on both, level 3: 10%); player shots drawn 40% smaller with matching hitboxes; shield lasts 10 s instead of 30
 
 **Acceptance criteria:** each power-up is visibly distinct and behaves as specified; rules are unit tested; frame rate holds with max weapon and a full wave.
 
