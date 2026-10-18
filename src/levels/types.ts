@@ -15,6 +15,12 @@ export interface BackgroundLayer {
   scrollSpeed: number;
   /** 1 = opaque. */
   alpha: number;
+  /**
+   * Whole-number zoom for art narrower than the screen (2 draws each pixel
+   * 2×2, so a 160-wide tile covers the 256-wide screen without a seam).
+   * Default 1.
+   */
+  scale?: 1 | 2;
 }
 
 export interface Level {

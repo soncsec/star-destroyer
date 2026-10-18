@@ -1,8 +1,7 @@
 /**
- * Level 2, Asteroid Belt (PROJECT.md 4a level plan): grunts and divers, and
- * heavy asteroids. Early version (owner decision 2026-10-18): it borrows level
- * 1's backdrop and boss until M5 adds the purple asteroid-field art and its own
- * boss (Warped vehicle 1). Its difficulty numbers come from `difficulty(2)`.
+ * Level 2, Asteroid Belt (PROJECT.md 4a level plan): grunts and divers, heavy
+ * asteroids over the purple asteroid field, and Warped vehicle 1 as its boss
+ * (M5.2). Its difficulty numbers come from `difficulty(2)`.
  */
 import type { SpawnKind } from '../config/tuning';
 import { column, line, script, vee } from '../logic/waves';
@@ -12,8 +11,9 @@ export const LEVEL_2: Level = {
   number: 2,
   name: 'Asteroid Belt',
   background: [
-    { texture: 'bg-stage-back', scrollSpeed: 14, alpha: 1 },
-    { texture: 'bg-blue-stars', scrollSpeed: 36, alpha: 0.8 },
+    // The field is 160 wide: drawn 2× it covers the 256-wide screen in one piece.
+    { texture: 'bg-asteroid-field', scrollSpeed: 7, alpha: 1, scale: 2 },
+    { texture: 'bg-blue-stars', scrollSpeed: 36, alpha: 0.6 },
   ],
   roster: ['grunt', 'diver'],
   waves: script<SpawnKind>(
@@ -41,6 +41,6 @@ export const LEVEL_2: Level = {
     line(41, 'asteroid', [0.25]),
     line(42, 'asteroid', [0.75]),
   ),
-  boss: 'spaceship-unit',
+  boss: 'vehicle-1',
   bossAfter: 4,
 };
