@@ -143,7 +143,7 @@
 **Demonstrable result:** level 1 ends with a boss, and beating it moves on to level 2.
 
 - [x] M4.1 Data-driven level format: background layers, enemy roster, wave script, boss, difficulty numbers (ADR-012). `src/levels/types.ts` (`Level`: number, name, background layers, roster, waves, boss, `bossAfter`), `LEVELS` list, level 1 converted; difficulty numbers come from `difficulty(level)` in M4.2; every level is checked by unit tests
-- [ ] M4.2 Difficulty curve function with the limits in PROJECT.md section 4a (unit tested)
+- [x] M4.2 Difficulty curve function with the limits in PROJECT.md section 4a (unit tested). `difficulty(level)` in `src/logic/difficulty.ts`, numbers in `DIFFICULTY`: fire rate ×2.5 by level 8 in equal steps (+13.98% per level), shot speed +30% by level 8, weapon and shield drops +25% by level 8 with the screen clear's chance unchanged
 - [ ] M4.3 Boss framework: entry, health bar, phases, attack patterns, defeat
 - [ ] M4.4 Level 1 boss; level-complete screen; transition to the next level
 - [ ] M4.5 Playwright: complete level 1 via the test hook and reach level 2
