@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import {
   BACKGROUND,
   ASTEROIDS,
+  CONTROLS,
   DEFAULT_SEED,
   GAME_OVER,
   ENEMY_FIRE,
@@ -16,6 +17,7 @@ import {
 } from '../config/tuning';
 import { Asteroids, type RockSize, type RockSlot } from '../entities/Asteroids';
 import { Bullets } from '../entities/Bullets';
+import { ControlsOverlay } from '../entities/ControlsOverlay';
 import { EnemyBullets } from '../entities/EnemyBullets';
 import { Enemies } from '../entities/Enemies';
 import { Explosions } from '../entities/Explosions';
@@ -24,6 +26,14 @@ import { Hud } from '../entities/Hud';
 import { Pickups } from '../entities/Pickups';
 import { Player } from '../entities/Player';
 import { firstHit, type Box } from '../logic/collision';
+import {
+  pressKey,
+  running,
+  startControls,
+  tickLegend,
+  type ControlKey,
+  type ControlState,
+} from '../logic/controls';
 import { rollDrop, type PowerUpKind } from '../logic/drops';
 import { panelShown, startGameOver, stepGameOver, type GameOverState } from '../logic/gameOver';
 import { LEVEL_1 } from '../levels/level1';
@@ -62,6 +72,10 @@ export interface GameSnapshot {
   asteroids: { size: RockSize; x: number; y: number; hp: number }[];
   /** What the HUD shows. */
   hud: { score: string; lives: string; pips: boolean[] };
+  /** Pause / quit / legend state and what the overlay shows; mute and full screen. */
+  controls: { mode: string; legend: boolean; overlay: ReturnType<ControlsOverlay['read']> };
+  muted: boolean;
+  fullscreen: boolean;
   /** Pickups drifting down, and how many of each kind the ship has collected. */
   pickups: { kind: PowerUpKind; x: number; y: number }[];
   collected: Record<PowerUpKind, number>;
@@ -109,6 +123,10 @@ export class GameScene extends Phaser.Scene {
   private gameOver: GameOverState | null = null;
   /** A new Space or Enter press since the last frame (catches taps shorter than a frame). */
   private restartPressed = false;
+  private controls: ControlState = startControls(true);
+  private controlsOverlay!: ControlsOverlay;
+  /** Seconds the start-of-game legend has shown; -1 once it's done or H was pressed. */
+  private introLegend = 0;
   private rng!: Rng;
   private waves: WaveRunner = startWaves();
   private score = 0;
@@ -170,10 +188,56 @@ export class GameScene extends Phaser.Scene {
     };
     this.keys.fire.on('down', onPress);
     this.keys.enter.on('down', onPress);
+
+    // Pause, quit, legend, full screen and mute (PROJECT.md 4b).
+    this.controls = startControls(true);
+    this.introLegend = 0;
+    this.controlsOverlay = new ControlsOverlay(this);
+    const bind = (code: string, action: () => void): void => {
+      kb.addKey(code).on('down', action);
+    };
+    const control = (key: ControlKey) => (): void => this.onControl(key);
+    bind('P', control('pause'));
+    bind('ESC', control('escape'));
+    bind('Q', control('quit'));
+    bind('Y', control('yes'));
+    bind('N', control('no'));
+    bind('H', control('help'));
+    bind('F', () => this.scale.toggleFullscreen());
+    bind('M', () => {
+      this.sound.mute = !this.sound.mute;
+    });
+  }
+
+  /** Applies a pause/quit/legend key, freezing or resuming animations to match. */
+  private onControl(key: ControlKey): void {
+    const wasRunning = running(this.controls);
+    const { state, quit } = pressKey(this.controls, key, { gameOver: isGameOver(this.health) });
+    this.controls = state;
+    if (key === 'help') this.introLegend = -1; // the player took over the legend
+    if (quit) {
+      window.location.assign(new URL(CONTROLS.quitUrl, window.location.href).href);
+      return;
+    }
+    if (wasRunning && !running(state)) this.anims.pauseAll();
+    if (!wasRunning && running(state)) this.anims.resumeAll();
   }
 
   override update(_time: number, deltaMs: number): void {
     const dt = deltaMs / 1000;
+    if (this.introLegend >= 0 && running(this.controls)) {
+      this.introLegend += dt;
+      if (this.introLegend >= CONTROLS.introLegendSeconds) {
+        this.controls = tickLegend(this.controls, this.introLegend, CONTROLS.introLegendSeconds);
+        this.introLegend = -1;
+      }
+    }
+    this.controlsOverlay.show(this.controls);
+    if (!running(this.controls)) {
+      // Paused or asking to quit: the world stands still.
+      this.restartPressed = false;
+      return;
+    }
     // Moving the texture down makes the ship appear to fly up.
     this.nebula.tilePositionY -= BACKGROUND.nebulaSpeed * dt;
     this.stars.tilePositionY -= BACKGROUND.starsSpeed * dt;
@@ -292,6 +356,13 @@ export class GameScene extends Phaser.Scene {
       })),
       waves: { ...this.waves },
       hud: this.hud.read(),
+      controls: {
+        mode: this.controls.mode,
+        legend: this.controls.legend,
+        overlay: this.controlsOverlay.read(),
+      },
+      muted: this.sound.mute,
+      fullscreen: this.scale.isFullscreen,
       gameOver: { ...this.gameOverPanel.read(), armed: this.gameOver?.armed ?? false },
       pickups: this.pickups.active().map((p) => ({ kind: p.kind, x: p.sprite.x, y: p.sprite.y })),
       collected: { ...this.collected },
