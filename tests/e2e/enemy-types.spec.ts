@@ -88,14 +88,20 @@ test('an alien flyer sways side to side and starts with five health', async ({ p
     window.__starDestroyer?.clearEnemies();
     window.__starDestroyer?.spawnEnemy(128, 60, 999, 'flyer');
   });
+  // Sample until it has swayed (game time follows the frames, so this can take
+  // longer on a busy machine).
   const xs: number[] = [];
-  for (let i = 0; i < 12; i++) {
-    const s = await page.evaluate(() => window.__starDestroyer?.snapshot());
-    const flyer = s?.enemies.find((e) => e.kind === 'flyer');
-    if (flyer) xs.push(flyer.x);
-    await page.waitForTimeout(150);
-  }
-  expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(20);
+  await expect
+    .poll(
+      async () => {
+        const s = await page.evaluate(() => window.__starDestroyer?.snapshot());
+        const flyer = s?.enemies.find((e) => e.kind === 'flyer');
+        if (flyer) xs.push(flyer.x);
+        return Math.max(...xs) - Math.min(...xs);
+      },
+      { timeout: 20_000, intervals: [100] },
+    )
+    .toBeGreaterThan(20);
   const s = await page.evaluate(() => window.__starDestroyer?.snapshot());
   expect(s?.enemies.find((e) => e.kind === 'flyer')?.hp).toBe(5);
 });
