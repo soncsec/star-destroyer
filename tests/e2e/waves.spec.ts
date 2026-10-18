@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { levelDifficulty } from '../../src/levels/difficulty';
 import { LEVEL_1 } from '../../src/levels/level1';
 import type { GameSnapshot } from '../../src/scenes/GameScene';
 
@@ -16,7 +17,9 @@ test('the game plays level 1 from its wave script', async ({ page }) => {
     .poll(() => page.evaluate(() => window.__starDestroyer?.scene() ?? null), { timeout: 15_000 })
     .toBe('Game');
 
-  expect((await snapshot(page)).level).toEqual({ number: 1, name: LEVEL_1.name });
+  const start = await snapshot(page);
+  expect(start.level).toEqual({ number: 1, name: LEVEL_1.name });
+  expect(start.difficulty).toEqual(levelDifficulty(1));
 
   // The opening line of three grunts, exactly where the script puts them.
   const opening = LEVEL_1.waves.filter((s) => s.t === 0);

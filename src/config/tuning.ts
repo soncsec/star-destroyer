@@ -321,6 +321,18 @@ export const EXPLOSION = {
   poolSize: 16,
 } as const;
 
+/**
+ * Difficulty curve (M4.2): how the level-1 numbers above grow towards level 8.
+ * PROJECT.md 4a limits: fire rate at most 2.5× by level 8 (about +14% per
+ * level), shot speed at most +30%, shield and weapon drops slightly more common.
+ */
+export const DIFFICULTY = {
+  lastLevel: 8,
+  fireRateAtLast: 2.5,
+  shotSpeedAtLast: 1.3,
+  helpfulDropsAtLast: 1.25,
+} as const;
+
 /** Hit sparks (M3.5): a short flash wherever a shot hits something. */
 export const HIT_SPARK = {
   sprite: 'hit-spark',
