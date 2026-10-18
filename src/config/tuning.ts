@@ -255,7 +255,7 @@ export const ENEMY_FIRE = {
 } as const;
 
 /** The three enemy types (M2.3). Hitboxes are about 80% of each sprite's visible body. */
-export type EnemyKind = 'grunt' | 'weaver' | 'diver';
+export type EnemyKind = 'grunt' | 'weaver' | 'diver' | 'flyer';
 
 export interface EnemyType {
   /** Texture key (see the asset manifest). */
@@ -297,6 +297,19 @@ export const ENEMY_TYPES: Readonly<Record<EnemyKind, EnemyType>> = {
     fires: false,
     hitbox: { w: 34, h: 28, offsetY: 0 },
     move: { kind: 'dive', enterSpeed: 70, hoverY: 70, hoverTime: 0.9, diveSpeed: 170 },
+  },
+  /**
+   * Alien flyer (levels 3 and 4, M5.3): a winged bug, bigger and tougher, that
+   * sways wide and slow while it shoots. Frame 83×64; the hitbox covers the
+   * body, not the wingtips.
+   */
+  flyer: {
+    sprite: 'enemy-alien-flyer',
+    hp: 5,
+    points: 250,
+    fires: true,
+    hitbox: { w: 40, h: 34, offsetY: 4 },
+    move: { kind: 'weave', speed: 30, amplitude: 48, period: 3.2 },
   },
 };
 
@@ -343,7 +356,7 @@ export const BOSS_DEFEAT = {
 };
 
 /** Bosses, by the art they use (PROJECT.md 4a level plan). More arrive with each level. */
-export type BossKind = 'spaceship-unit' | 'vehicle-1';
+export type BossKind = 'spaceship-unit' | 'vehicle-1' | 'vehicle-2';
 
 /**
  * Bosses (M4.3). Each fights in phases: as its health falls it switches to
@@ -437,6 +450,54 @@ export const BOSSES: Record<
         ],
         cooldown: 0.85,
         swayHz: 0.2,
+      },
+    ],
+  },
+  // Level 3: Warped vehicle 2, 176×125, turned to face down (125 wide, 176 tall).
+  // Tougher again: more health, fans up to 7 shots, a faster tempo.
+  'vehicle-2': {
+    sprite: 'boss-vehicle-2',
+    angleDeg: 90,
+    hitbox: { w: 84, h: 150 },
+    hp: 280,
+    points: 10000,
+    entry: { startY: -90, hoverY: 80, speed: 40 },
+    swayAmplitude: 50,
+    muzzleOffsetY: 82,
+    shotSpeed: 130,
+    maxAimAngleDeg: 30,
+    phases: [
+      {
+        fromHp: 1,
+        attacks: [
+          { kind: 'fan', shots: 5, spreadDeg: 70 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 4, spreadDeg: 50 },
+        ],
+        cooldown: 1.2,
+        swayHz: 0.1,
+      },
+      {
+        fromHp: 0.6,
+        attacks: [
+          { kind: 'fan', shots: 6, spreadDeg: 90 },
+          { kind: 'aimed' },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 5, spreadDeg: 60 },
+        ],
+        cooldown: 0.95,
+        swayHz: 0.14,
+      },
+      {
+        fromHp: 0.3,
+        attacks: [
+          { kind: 'fan', shots: 7, spreadDeg: 100 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 6, spreadDeg: 80 },
+          { kind: 'aimed' },
+        ],
+        cooldown: 0.8,
+        swayHz: 0.18,
       },
     ],
   },

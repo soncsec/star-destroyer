@@ -2,9 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { ASSETS } from '../../src/assets/manifest';
 import { ENEMY_TYPES, GAME_WIDTH } from '../../src/config/tuning';
 import { LEVELS } from '../../src/levels';
-import { ASTEROID_LIMITS, WAVE_LIMITS, screenTime } from '../../src/levels/limits';
+import {
+  ASTEROID_LIMITS,
+  WAVE_LIMITS,
+  frameHeight,
+  screenTime,
+  sheetFrameHeight,
+} from '../../src/levels/limits';
 import { LEVEL_1 } from '../../src/levels/level1';
 import { LEVEL_2 } from '../../src/levels/level2';
+import { LEVEL_3 } from '../../src/levels/level3';
 import { checkWaves, mostAtOnce } from '../../src/logic/waves';
 
 describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${level.name})` })))(
@@ -78,6 +85,21 @@ describe('level 2 (M4.4, own art and boss M5.2)', () => {
   });
 });
 
+describe('level 3 (M5.3)', () => {
+  it('matches the approved plan: Blue Expanse, enemy types 2 and 3 plus alien flyers, vehicle-2 boss', () => {
+    expect(LEVEL_3).toMatchObject({ number: 3, name: 'Blue Expanse', boss: 'vehicle-2' });
+    expect(LEVEL_3.roster).toEqual(['weaver', 'diver', 'flyer']);
+    expect(LEVEL_3.background[0]?.texture).toBe('bg-blue-back');
+    expect(LEVELS[2]).toBe(LEVEL_3);
+  });
+
+  it('uses every enemy in its roster', () => {
+    expect(new Set(LEVEL_3.waves.map((s) => s.kind))).toEqual(
+      new Set([...LEVEL_3.roster, 'asteroid']),
+    );
+  });
+});
+
 describe('level 1 waves', () => {
   it('match the approved plan: Teal Nebula, grunts and weavers, spaceship-unit boss', () => {
     expect(LEVEL_1).toMatchObject({ number: 1, name: 'Teal Nebula', boss: 'spaceship-unit' });
@@ -109,6 +131,13 @@ describe('level 1 waves', () => {
 });
 
 describe('wave limits', () => {
+  it("use each enemy kind's real frame height (the flyer is taller)", () => {
+    expect(frameHeight('grunt')).toBe(48);
+    expect(frameHeight('flyer')).toBe(64);
+    expect(() => sheetFrameHeight('no-such-sprite')).toThrow('no sprite sheet');
+    expect(() => sheetFrameHeight('bg-blue-back')).toThrow('no sprite sheet'); // an image, not a sheet
+  });
+
   it('keep weavers further from the edges than grunts (they sway)', () => {
     expect(WAVE_LIMITS.xRange['weaver']?.min).toBeGreaterThan(
       WAVE_LIMITS.xRange['grunt']?.min ?? 1,
