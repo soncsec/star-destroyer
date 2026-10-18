@@ -24,13 +24,19 @@ const NEVER = 999; // first shot so late it never happens during the test
 test('a weaver sways side to side as it descends', async ({ page }) => {
   await openQuietGame(page);
   await page.evaluate((n) => window.__starDestroyer?.spawnEnemy(128, 40, n, 'weaver'), NEVER);
+  // Sample until it has swayed most of the way both sides. Game time follows the
+  // frames, so on a busy machine one sway takes longer than its 2.4 s.
   const xs: number[] = [];
-  for (let i = 0; i < 16; i++) {
-    const e = (await snapshot(page)).enemies[0];
-    if (e) xs.push(e.x);
-    await page.waitForTimeout(150);
-  }
-  expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(50); // amplitude 36 each way
+  await expect
+    .poll(
+      async () => {
+        const e = (await snapshot(page)).enemies[0];
+        if (e) xs.push(e.x);
+        return Math.max(...xs) - Math.min(...xs);
+      },
+      { timeout: 20_000, intervals: [100] },
+    )
+    .toBeGreaterThan(50); // amplitude 36 each way
   expect(Math.max(...xs)).toBeLessThanOrEqual(128 + 36 + 0.5);
   expect(Math.min(...xs)).toBeGreaterThanOrEqual(128 - 36 - 0.5);
 });
