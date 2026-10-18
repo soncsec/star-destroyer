@@ -12,7 +12,6 @@ import {
   GAME_HEIGHT,
   GAME_WIDTH,
   PLAYER_HEALTH,
-  POWERUPS,
   SCREEN_CLEAR,
   SHIELD,
   WEAPON,
@@ -43,7 +42,9 @@ import {
 import { rollDrop, type PowerUpKind } from '../logic/drops';
 import { panelShown, startGameOver, stepGameOver, type GameOverState } from '../logic/gameOver';
 import { LEVELS } from '../levels';
+import { levelDifficulty } from '../levels/difficulty';
 import type { Level } from '../levels/types';
+import type { Difficulty } from '../logic/difficulty';
 import { aimDown, firstShotDelay, nextShotDelay, stepEnemyFire } from '../logic/enemyFire';
 import {
   isGameOver,
@@ -88,6 +89,8 @@ export interface GameSnapshot {
   waves: WaveRunner;
   /** The level being played. */
   level: { number: number; name: string };
+  /** That level's difficulty numbers. */
+  difficulty: Difficulty;
   asteroids: { size: RockSize; x: number; y: number; hp: number }[];
   /** What the HUD shows. */
   hud: { score: string; lives: string; pips: boolean[]; shield: string };
@@ -128,6 +131,8 @@ type Keys = Record<
 export class GameScene extends Phaser.Scene {
   /** The level being played (M4.1). */
   private level!: Level;
+  /** That level's fire rates, shot speed and drop rates (M4.2). */
+  private difficulty!: Difficulty;
   /** The level's scrolling background layers, furthest back first. */
   private backdrop: { sprite: Phaser.GameObjects.TileSprite; scrollSpeed: number }[] = [];
   private player!: Player;
@@ -183,6 +188,7 @@ export class GameScene extends Phaser.Scene {
     const level = LEVELS[0];
     if (!level) throw new Error('no levels');
     this.level = level;
+    this.difficulty = levelDifficulty(level.number);
     this.backdrop = level.background.map((layer) => ({
       sprite: this.add
         .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, layer.texture)
@@ -380,7 +386,7 @@ export class GameScene extends Phaser.Scene {
 
   /** Each enemy on screen shoots on its own timer, aimed (within limits) at the ship. */
   private enemiesFire(dt: number): void {
-    const next = (): number => nextShotDelay(this.rng, ENEMY_FIRE);
+    const next = (): number => nextShotDelay(this.rng, this.difficulty.fire);
     const target = this.player.position;
     for (const e of this.enemies.active()) {
       if (!ENEMY_TYPES[e.kind].fires) continue;
@@ -391,7 +397,7 @@ export class GameScene extends Phaser.Scene {
       this.enemyBullets.fire(
         from.x,
         from.y,
-        aimDown(from, target, ENEMY_FIRE.speed, ENEMY_FIRE.maxAimAngleDeg),
+        aimDown(from, target, this.difficulty.shotSpeed, ENEMY_FIRE.maxAimAngleDeg),
       );
     }
   }
@@ -477,6 +483,7 @@ export class GameScene extends Phaser.Scene {
       })),
       waves: { ...this.waves },
       level: { number: this.level.number, name: this.level.name },
+      difficulty: this.difficulty,
       hud: this.hud.read(),
       shield: { timeLeft: this.powerUps.shield, bubbleVisible: this.shieldBubble.visible },
       controls: {
@@ -571,7 +578,12 @@ export class GameScene extends Phaser.Scene {
    * `firstShot` seconds on screen (tests).
    */
   spawnEnemy(x: number, y?: number, firstShot?: number, kind: EnemyKind = 'grunt'): boolean {
-    return this.enemies.spawn(kind, x, firstShot ?? firstShotDelay(this.rng, ENEMY_FIRE), y);
+    return this.enemies.spawn(
+      kind,
+      x,
+      firstShot ?? firstShotDelay(this.rng, this.difficulty.fire),
+      y,
+    );
   }
 
   /**
@@ -614,7 +626,8 @@ export class GameScene extends Phaser.Scene {
    */
   private maybeDrop(x: number, y: number, cause: KillCause): void {
     if (!killCanDrop(cause)) return;
-    const rules = { ...POWERUPS.drops, chance: this.dropChance ?? POWERUPS.drops.chance };
+    const base = this.difficulty.drops;
+    const rules = { ...base, chance: this.dropChance ?? base.chance };
     const kind = rollDrop(this.rng, rules, { bossFight: this.bossFight });
     if (kind) this.pickups.spawn(kind, x, y);
   }
