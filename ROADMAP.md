@@ -12,7 +12,7 @@
 | P1 Portal and production server | Done (2026-10-17) |
 | T1 Game template for parallel instances | Done (2026-10-17) |
 | M2 Core loop (level 1) | In progress |
-| M3 Power-ups | In progress |
+| M3 Power-ups | Built; waiting for the owner's play-test |
 | C Controls and cheats (owner request) | Built; waiting for merge and the owner's play-test |
 | M4 Level system and first boss | Not started |
 | M5 Levels 2–4 | Not started |
@@ -121,7 +121,7 @@
 - [x] M3.3 Shield: energy-shield effect, blocks all damage for 30 s, timer shown in the HUD. A new pickup resets to 30 s; the bubble (2× art) absorbs enemy shots and destroys rammers; blinks for the last 3 s; HUD shows SHIELD n
 - [x] M3.4 Screen clear: destroys all on-screen enemies with a large explosion; rare; never dropped during boss fights. Also removes every enemy shot (owner); each kill scores; enemies still above the screen and asteroids are spared; its kills drop nothing; 192 px blast behind the ship plus a short white flash
 - [x] M3.5 Hit-spark effects on impact: a cyan spark (pack's Warped hits-3, 5 frames, 0.25 s) wherever a player shot hits an enemy or asteroid (also non-lethal hits) and where an enemy shot hits the ship or the shield; pooled
-- [ ] M3.6 Unit tests for every power-up rule, including "lost on death" and "no screen clear during bosses"
+- [x] M3.6 Unit tests for every power-up rule, including "lost on death" and "no screen clear during bosses". Rules that lived in the game scene (what each gem does, lost on death, only shot-down kills drop gems) moved to `src/logic/powerups.ts` with unit tests
 
 **Acceptance criteria:** each power-up is visibly distinct and behaves as specified; rules are unit tested; frame rate holds with max weapon and a full wave.
 

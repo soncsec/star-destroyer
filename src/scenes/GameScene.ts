@@ -57,10 +57,18 @@ import {
 import type { Axis } from '../logic/player';
 import { createRng, type Rng } from '../logic/rng';
 import { screenClear } from '../logic/screenClear';
-import { collectShield, shieldSeconds, shieldUp, tickShield, type Shield } from '../logic/shield';
+import {
+  collectPowerUp,
+  killCanDrop,
+  loseLife,
+  startPowerUps,
+  type KillCause,
+  type PowerUps,
+} from '../logic/powerups';
+import { shieldSeconds, shieldUp, tickShield } from '../logic/shield';
 import { startWaves, stepWaves, type WaveRunner } from '../logic/waves';
 import { stepFire, type FireState } from '../logic/weapon';
-import { levelUp, volley } from '../logic/weaponLevels';
+import { volley } from '../logic/weaponLevels';
 
 /** Read-only view of the game state, used by the e2e test hook. */
 export interface GameSnapshot {
@@ -122,9 +130,8 @@ export class GameScene extends Phaser.Scene {
   private bullets!: Bullets;
   private fireState: FireState = { cooldown: 0 };
   /** Current weapon level, 1 to WEAPON_LEVELS.length (owner rules: no time-out, reset on death). */
-  private weaponLevel = 1;
-  /** Seconds of shield left (M3.3); 0 = none. */
-  private shield: Shield = 0;
+  /** Weapon level and shield time (M3.2, M3.3); all lost on death. */
+  private powerUps: PowerUps = startPowerUps();
   private shieldBubble!: ShieldBubble;
   private enemies!: Enemies;
   private enemyBullets!: EnemyBullets;
@@ -191,8 +198,7 @@ export class GameScene extends Phaser.Scene {
     this.hud = new Hud(this, PLAYER_HEALTH.hitsPerLife);
     this.pickups = new Pickups(this);
     this.collected = { weapon: 0, shield: 0, clear: 0 };
-    this.weaponLevel = 1;
-    this.shield = 0;
+    this.powerUps = startPowerUps();
     this.shieldBubble = new ShieldBubble(this);
     this.bossFight = false;
     this.dropChance = null;
@@ -331,13 +337,18 @@ export class GameScene extends Phaser.Scene {
     this.health = tickHealth(this.health, dt);
     this.resolvePlayerHits();
     this.collectPickups();
-    this.shield = tickShield(this.shield, dt);
+    this.powerUps.shield = tickShield(this.powerUps.shield, dt);
     const { x: sx, y: sy } = this.player.position;
-    this.shieldBubble.update(sx, sy, this.shield);
+    this.shieldBubble.update(sx, sy, this.powerUps.shield);
     this.player.setVisible(
       !isGameOver(this.health) && shipVisible(this.health, PLAYER_HEALTH.flashHz),
     );
-    this.hud.update(this.score, this.health.hits, this.health.lives, shieldSeconds(this.shield));
+    this.hud.update(
+      this.score,
+      this.health.hits,
+      this.health.lives,
+      shieldSeconds(this.powerUps.shield),
+    );
     this.updateGameOver(dt);
   }
 
@@ -406,7 +417,7 @@ export class GameScene extends Phaser.Scene {
    */
   private resolvePlayerHits(): void {
     if (isGameOver(this.health)) return;
-    if (shieldUp(this.shield)) {
+    if (shieldUp(this.powerUps.shield)) {
       this.shieldBlocks();
       return;
     }
@@ -435,8 +446,7 @@ export class GameScene extends Phaser.Scene {
     if (result === 'lifeLost' || result === 'gameOver') {
       const { x, y } = this.player.position;
       this.explosions.play(x, y);
-      this.weaponLevel = 1; // owner rule: power-ups are lost on death
-      this.shield = 0;
+      this.powerUps = loseLife();
       this.shieldBubble.reset();
       if (result === 'lifeLost') this.player.reset();
     }
@@ -457,7 +467,7 @@ export class GameScene extends Phaser.Scene {
       })),
       waves: { ...this.waves },
       hud: this.hud.read(),
-      shield: { timeLeft: this.shield, bubbleVisible: this.shieldBubble.visible },
+      shield: { timeLeft: this.powerUps.shield, bubbleVisible: this.shieldBubble.visible },
       controls: {
         mode: this.controls.mode,
         legend: this.controls.legend,
@@ -469,7 +479,7 @@ export class GameScene extends Phaser.Scene {
       gameOver: { ...this.gameOverPanel.read(), armed: this.gameOver?.armed ?? false },
       pickups: this.pickups.active().map((p) => ({ kind: p.kind, x: p.sprite.x, y: p.sprite.y })),
       collected: { ...this.collected },
-      weaponLevel: this.weaponLevel,
+      weaponLevel: this.powerUps.weaponLevel,
       asteroids: this.asteroids
         .active()
         .map((r) => ({ size: r.size, x: r.rock.x, y: r.rock.y, hp: r.hp })),
@@ -486,7 +496,7 @@ export class GameScene extends Phaser.Scene {
 
   /** Sets the seconds of shield left (tests reach the end of a shield quickly). */
   setShield(seconds: number): void {
-    this.shield = Math.max(0, seconds);
+    this.powerUps.shield = Math.max(0, seconds);
   }
 
   /** Overrides the drop chance (tests: 1 = every kill drops); null restores the tuning. */
@@ -511,12 +521,12 @@ export class GameScene extends Phaser.Scene {
 
   /** Sets the weapon level directly (tests). */
   setWeaponLevel(level: number): void {
-    this.weaponLevel = Math.min(WEAPON_LEVELS.length, Math.max(1, Math.round(level)));
+    this.powerUps.weaponLevel = Math.min(WEAPON_LEVELS.length, Math.max(1, Math.round(level)));
   }
 
   /** One trigger pull: every shot of the current weapon level. False if the pool ran out. */
   private fireVolley(): boolean {
-    const level = WEAPON_LEVELS[this.weaponLevel - 1];
+    const level = WEAPON_LEVELS[this.powerUps.weaponLevel - 1];
     if (!level) return false;
     const { x, y } = this.player.position;
     let all = true;
@@ -570,7 +580,7 @@ export class GameScene extends Phaser.Scene {
         if (this.enemies.hit(enemy, shot.damage)) {
           this.explosions.play(x, y);
           this.score += ENEMY_TYPES[enemy.kind].points;
-          this.maybeDrop(x, y);
+          this.maybeDrop(x, y, 'shot');
         }
         continue;
       }
@@ -580,15 +590,19 @@ export class GameScene extends Phaser.Scene {
         this.bullets.release(shot);
         if (this.asteroids.hit(rock, shot.damage)) {
           this.score += ASTEROIDS[rock.size].points;
-          if (rock.size === 'large') this.maybeDrop(rock.rock.x, rock.rock.y);
+          if (rock.size === 'large') this.maybeDrop(rock.rock.x, rock.rock.y, 'shot');
           this.shatter(rock);
         }
       }
     }
   }
 
-  /** A kill may drop a power-up where it happened (seeded; never a screen clear in a boss fight). */
-  private maybeDrop(x: number, y: number): void {
+  /**
+   * A kill may drop a power-up where it happened: only one shot down (seeded;
+   * never a screen clear in a boss fight).
+   */
+  private maybeDrop(x: number, y: number, cause: KillCause): void {
+    if (!killCanDrop(cause)) return;
     const rules = { ...POWERUPS.drops, chance: this.dropChance ?? POWERUPS.drops.chance };
     const kind = rollDrop(this.rng, rules, { bossFight: this.bossFight });
     if (kind) this.pickups.spawn(kind, x, y);
@@ -602,9 +616,12 @@ export class GameScene extends Phaser.Scene {
       if (firstHit(ship, [this.pickups.hitbox(p)]) < 0) continue;
       this.pickups.release(p);
       this.collected[p.kind]++;
-      if (p.kind === 'shield') this.shield = collectShield(this.shield, SHIELD);
-      if (p.kind === 'weapon') this.weaponLevel = levelUp(this.weaponLevel, WEAPON_LEVELS.length);
-      if (p.kind === 'clear') this.clearScreen();
+      const got = collectPowerUp(this.powerUps, p.kind, {
+        maxWeaponLevel: WEAPON_LEVELS.length,
+        shield: SHIELD,
+      });
+      this.powerUps = got.powerUps;
+      if (got.clearScreen) this.clearScreen();
     }
   }
 
