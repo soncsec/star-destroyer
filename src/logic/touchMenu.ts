@@ -4,7 +4,8 @@
  *
  * While playing there is one small pause button. Paused, the menu offers
  * resume, quit, sound and full screen; quitting asks first, with yes and no.
- * The buttons do what the keys do (P, Q, Y, N, M, F).
+ * The buttons do what the keys do (P, Q, Y, N, M, F). Where the browser can't
+ * go full screen (Safari on iPhone), that button is left out.
  */
 import type { Box } from './collision';
 import type { Mode } from './controls';
@@ -27,12 +28,16 @@ export interface TouchLayout {
   menu: { w: number; h: number; top: number; gap: number };
 }
 
+/** What the menu's labels depend on: game over, sound, and whether full screen is possible. */
+export interface TouchContext {
+  gameOver: boolean;
+  muted: boolean;
+  /** Whether the browser offers full screen at all (iPhone Safari doesn't). */
+  fullscreen: boolean;
+}
+
 /** The buttons on screen for this control mode (none after game over but the quit ones). */
-export function touchButtons(
-  mode: Mode,
-  ctx: { gameOver: boolean; muted: boolean },
-  layout: TouchLayout,
-): TouchButton[] {
+export function touchButtons(mode: Mode, ctx: TouchContext, layout: TouchLayout): TouchButton[] {
   const cx = layout.screen.w / 2;
   const column = (items: [TouchAction, string][]): TouchButton[] =>
     items.map(([action, label], i) => ({
@@ -50,13 +55,15 @@ export function touchButtons(
       ['yes', 'YES, QUIT'],
       ['no', 'NO'],
     ]);
-  if (mode === 'paused')
-    return column([
+  if (mode === 'paused') {
+    const items: [TouchAction, string][] = [
       ['resume', 'RESUME'],
       ['quit', 'QUIT'],
       ['mute', ctx.muted ? 'SOUND ON' : 'SOUND OFF'],
-      ['fullscreen', 'FULL SCREEN'],
-    ]);
+    ];
+    if (ctx.fullscreen) items.push(['fullscreen', 'FULL SCREEN']);
+    return column(items);
+  }
   if (ctx.gameOver) return [];
   const { y, w, h } = layout.pause;
   return [{ action: 'pause', label: 'II', box: { x: cx, y, w, h } }];

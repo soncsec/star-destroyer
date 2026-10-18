@@ -190,7 +190,7 @@
 - [ ] M7.5 Difficulty balance pass across all 8 levels from the owner's play-tests
 - [ ] M7.6 Cross-browser check: Chrome, Firefox, Safari, Edge
 - [ ] M7.7 Final card screenshot for the portal
-- [x] M7.8 Touchscreens (owner request 2026-10-18): play on phones and tablets. Drag anywhere to steer (the ship follows the finger's movement at its normal top speed, so touch is no easier than keys), firing while a finger is down; an on-screen pause button and a pause menu (resume, quit with yes / no, sound, full screen); tap to start, continue and play again; prompts say "TAP TO …" on touch devices. On phones and tablets the game fills the screen (an owner-approved exception to whole-number zoom); no page scrolling or zooming while playing. Tested on an emulated Pixel 7 (Playwright `phone` project)
+- [x] M7.8 Touchscreens (owner request 2026-10-18): play on phones and tablets. Drag anywhere to steer (the ship follows the finger's movement at its normal top speed, so touch is no easier than keys), firing while a finger is down; an on-screen pause button and a pause menu (resume, quit with yes / no, sound, full screen); tap to start, continue and play again; prompts say "TAP TO …" on touch devices. On phones and tablets the game fills the screen (an owner-approved exception to whole-number zoom); no page scrolling or zooming while playing. Where the browser has no full screen (Safari on iPhone) the full-screen button is left out. Tested on an emulated Pixel 7 (Playwright `phone` project)
 
 **Acceptance criteria:** the owner signs off on game feel and difficulty; no console errors in a full playthrough on all four browsers.
 

@@ -7,7 +7,7 @@ const layout: TouchLayout = {
   pause: { y: 10, w: 24, h: 16 },
   menu: { w: 160, h: 28, top: 120, gap: 8 },
 };
-const ctx = { gameOver: false, muted: false };
+const ctx = { gameOver: false, muted: false, fullscreen: true };
 
 describe('touch buttons (owner request 2026-10-18)', () => {
   it('while playing: just the pause button, top center', () => {
@@ -27,6 +27,11 @@ describe('touch buttons (owner request 2026-10-18)', () => {
     expect(b.every((x) => x.box.x === 128)).toBe(true);
     expect(b[2]?.label).toBe('SOUND OFF');
     expect(touchButtons('paused', { ...ctx, muted: true }, layout)[2]?.label).toBe('SOUND ON');
+  });
+
+  it('paused where the browser has no full screen (iPhone Safari): no such button', () => {
+    const b = touchButtons('paused', { ...ctx, fullscreen: false }, layout);
+    expect(b.map((x) => x.action)).toEqual(['resume', 'quit', 'mute']);
   });
 
   it('asking to quit: yes or no', () => {
