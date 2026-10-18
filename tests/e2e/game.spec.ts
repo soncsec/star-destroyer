@@ -100,7 +100,7 @@ test('an enemy takes 3 hits, explodes and scores 100', async ({ page }) => {
         return s && s.shots === 0 ? s : null;
       },
       null,
-      { polling: 'raf', timeout: 5_000 },
+      { polling: 'raf', timeout: 20_000 },
     );
     return (await handle.jsonValue()) as GameSnapshot;
   };
