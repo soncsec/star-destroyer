@@ -1,3 +1,4 @@
+import type { DropRules, PowerUpKind } from '../logic/drops';
 import type { MovePattern } from '../logic/enemyMoves';
 
 /** All gameplay numbers live here so they can be tuned in one place. */
@@ -8,12 +9,29 @@ export const GAME_HEIGHT = 320;
 export const DEPTH = {
   background: 0,
   asteroids: 8,
+  pickups: 12,
   enemies: 10,
   playerShots: 15,
   enemyShots: 25,
   player: 20,
   explosions: 30,
   hud: 100,
+} as const;
+
+/** Power-up drops and pickups (M3.1). */
+export const POWERUPS = {
+  /** Owner decisions: weapon common, shield uncommon, screen clear rare (never in boss fights). */
+  drops: { chance: 0.12, weights: { weapon: 6, shield: 3, clear: 1 } } satisfies DropRules,
+  /** Gem sprite for each kind. */
+  sprites: { weapon: 'gem-yellow', shield: 'gem-blue', clear: 'gem-pink' } satisfies Record<
+    PowerUpKind,
+    string
+  >,
+  /** Pixels per second, downward. */
+  fallSpeed: 40,
+  /** A little larger than the 12×12 gem, so pickups are easy to grab. */
+  hitbox: { w: 14, h: 14 },
+  poolSize: 8,
 } as const;
 
 /** Game-over panel (M2.7). */

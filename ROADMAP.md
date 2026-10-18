@@ -12,7 +12,7 @@
 | P1 Portal and production server | Done (2026-10-17) |
 | T1 Game template for parallel instances | Done (2026-10-17) |
 | M2 Core loop (level 1) | In progress |
-| M3 Power-ups | Not started |
+| M3 Power-ups | In progress |
 | C Controls and cheats (owner request) | Not started |
 | M4 Level system and first boss | Not started |
 | M5 Levels 2–4 | Not started |
@@ -116,7 +116,7 @@
 
 **Demonstrable result:** all three power-ups drop and work as specified in PROJECT.md section 4a.
 
-- [ ] M3.1 Drop system with per-type rarity (data-driven, seeded, unit tested); pickup icons from the gems pack
+- [x] M3.1 Drop system with per-type rarity (data-driven, seeded, unit tested); pickup icons from the gems pack: 12% of kills (enemies, large asteroids) drop a gem; weapon 6 : shield 3 : clear 1; clear never in boss fights; gems cut from the pack's gem sheet
 - [ ] M3.2 Weapon levels 1–3, shots growing bigger and stronger (owner request): small spark → double pulse → spread of three charged blasts (double damage); reset to level 1 on death; no time-out
 - [ ] M3.3 Shield: energy-shield effect, blocks all damage for 30 s, timer shown in the HUD
 - [ ] M3.4 Screen clear: destroys all on-screen enemies with a large explosion; rare; never dropped during boss fights

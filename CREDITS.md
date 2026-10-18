@@ -5,7 +5,7 @@
 All sprites in `public/assets/` come from the **Legacy Collection** by **Luis Zuno (Ansimuz)**, https://ansimuz.itch.io.
 License: **CC0 1.0** (public domain dedication). Attribution isn't required; we give it as thanks.
 
-Files are copied unchanged from the pack and renamed for consistency. Sizes are the full image in pixels, and frame sizes are recorded in the asset manifest (milestone M1.3).
+Files are copied unchanged from the pack and renamed for consistency, except the gem strips noted below. Sizes are the full image in pixels, and frame sizes are recorded in the asset manifest (milestone M1.3).
 
 | File | Size | Source in the pack |
 |---|---|---|
@@ -31,6 +31,10 @@ Files are copied unchanged from the pack and renamed for consistency. Sizes are 
 | `assets/backgrounds/stage-back.png` | 256×320 | `Warped/Environments/top-down-space-environment/PNG/layers/stage-back.png` |
 | `assets/backgrounds/stage-props.png` | 256×151 | `Warped/Environments/top-down-space-environment/PNG/layers/sprites.png` |
 | `assets/boss/bolt.png` | 16×8 | `Warped/Characters/top-down-boss/PNG/spritesheets/bolt.png` |
+| `assets/effects/energy-shield.png` | 408×47 | `Explosions and Magic/Grotto-escape-2-FX/spritesheets/energy-shield.png` |
+| `assets/pickups/gem-yellow.png` | 84×12 | `Misc/gems/spritesheets/gems-spritesheet.png`: the 7 yellow loose-gem frames (12×12 at x = 450 + 16n, y = 34), placed side by side, pixels unchanged |
+| `assets/pickups/gem-pink.png` | 84×12 | same sheet, the 7 pink frames (x = 578 + 16n, y = 34) |
+| `assets/pickups/gem-blue.png` | 84×12 | same sheet, the 7 blue frames (x = 706 + 16n, y = 34) |
 | `assets/boss/boss-thrust.png` | 256×48 | `Warped/Characters/top-down-boss/PNG/spritesheets/boss-thrust.png` |
 | `assets/boss/boss.png` | 960×144 | `Warped/Characters/top-down-boss/PNG/spritesheets/boss.png` |
 | `assets/boss/cannon-left.png` | 48×48 | `Warped/Characters/top-down-boss/PNG/spritesheets/cannon-left.png` |
