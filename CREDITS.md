@@ -43,6 +43,7 @@ Files are copied unchanged from the pack and renamed for consistency, except the
 | `assets/boss/cannon-right.png` | 48×48 | `Warped/Characters/top-down-boss/PNG/spritesheets/cannon-right.png` |
 | `assets/boss/helmet.png` | 64×56 | `Warped/Characters/top-down-boss/PNG/spritesheets/helmet.png` |
 | `assets/boss/rays.png` | 704×224 | `Warped/Characters/top-down-boss/PNG/spritesheets/rays.png` |
+| `assets/boss/spaceship-unit.png` | 848×77 | `Warped/Characters/spaceship-unit/Spritesheets/Spritesheet.png` |
 | `assets/enemies/enemy-01.png` | 240×48 | `Warped/Characters/top-down-shooter-enemies/spritesheets/enemy-01.png` |
 | `assets/enemies/enemy-02.png` | 192×48 | `Warped/Characters/top-down-shooter-enemies/spritesheets/enemy-02.png` |
 | `assets/enemies/enemy-03.png` | 192×48 | `Warped/Characters/top-down-shooter-enemies/spritesheets/enemy-03.png` |

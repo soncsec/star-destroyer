@@ -1,3 +1,4 @@
+import type { BossRules } from '../logic/boss';
 import type { Cheat } from '../logic/cheats';
 import type { DropRules, PowerUpKind } from '../logic/drops';
 import type { MovePattern } from '../logic/enemyMoves';
@@ -106,6 +107,10 @@ export const HUD = {
   /** Margin from the screen edges, pixels. */
   margin: 4,
   pip: { w: 6, h: 4, gap: 2, on: 0x2de2e6, off: 0x2b2160 },
+  /** The boss's health bar, centered under the score and lives (M4.3). */
+  bossBar: { w: 120, h: 4, y: 28, fill: 0xff4d6d, back: 0x2b2160 },
+  /** Seconds a boss flashes after a hit. */
+  bossHitFlash: 0.06,
 } as const;
 
 export const PLAYER = {
@@ -309,6 +314,74 @@ export const ASTEROIDS = {
 
 /** Anything a wave script can spawn. */
 export type SpawnKind = EnemyKind | 'asteroid';
+
+/** A defeated boss: explosions at these offsets from its center, under the big blast. */
+export const BOSS_DEFEAT = {
+  bursts: [
+    [0, 0],
+    [-22, -26],
+    [24, -12],
+    [-18, 22],
+    [20, 30],
+  ] as const,
+};
+
+/** Bosses, by the art they use (PROJECT.md 4a level plan). More arrive with each level. */
+export type BossKind = 'spaceship-unit';
+
+/**
+ * Bosses (M4.3). Each fights in phases: as its health falls it switches to
+ * harder attacks and sways faster. Fans are checked by unit tests to leave a
+ * gap the ship fits through at its starting height (PROJECT.md 4a).
+ */
+export const BOSSES: Record<
+  BossKind,
+  BossRules & {
+    sprite: string;
+    /** The side-view art faces right; this turns it to face down. */
+    angleDeg: number;
+    /** Collision box after turning (a little inside the hull). */
+    hitbox: { w: number; h: number };
+  }
+> = {
+  // Level 1: the Warped spaceship unit, 106×77, turned to face down (77 wide, 106 tall).
+  'spaceship-unit': {
+    sprite: 'boss-spaceship-unit',
+    angleDeg: 90,
+    hitbox: { w: 60, h: 84 },
+    hp: 150,
+    points: 5000,
+    entry: { startY: -60, hoverY: 70, speed: 40 },
+    swayAmplitude: 70,
+    muzzleOffsetY: 44,
+    shotSpeed: 120,
+    maxAimAngleDeg: 30,
+    phases: [
+      {
+        fromHp: 1,
+        attacks: [{ kind: 'aimed' }, { kind: 'fan', shots: 3, spreadDeg: 50 }],
+        cooldown: 1.4,
+        swayHz: 0.12,
+      },
+      {
+        fromHp: 0.6,
+        attacks: [{ kind: 'fan', shots: 5, spreadDeg: 70 }, { kind: 'aimed' }, { kind: 'aimed' }],
+        cooldown: 1.1,
+        swayHz: 0.18,
+      },
+      {
+        fromHp: 0.3,
+        attacks: [
+          { kind: 'fan', shots: 5, spreadDeg: 80 },
+          { kind: 'fan', shots: 4, spreadDeg: 60 },
+          { kind: 'aimed' },
+        ],
+        cooldown: 0.9,
+        swayHz: 0.24,
+      },
+    ],
+  },
+};
 
 /** Shared by every enemy type. */
 export const ENEMY_COMMON = {

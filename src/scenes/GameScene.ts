@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import {
   ASTEROIDS,
+  BOSS_DEFEAT,
   CHEATS,
   CONTROLS,
   DEFAULT_SEED,
@@ -16,9 +17,11 @@ import {
   SHIELD,
   WEAPON,
   WEAPON_LEVELS,
+  type BossKind,
   type EnemyKind,
 } from '../config/tuning';
 import { Asteroids, type RockSize, type RockSlot } from '../entities/Asteroids';
+import { Boss } from '../entities/Boss';
 import { Bullets } from '../entities/Bullets';
 import { ControlsOverlay } from '../entities/ControlsOverlay';
 import { EnemyBullets } from '../entities/EnemyBullets';
@@ -116,6 +119,8 @@ export interface GameSnapshot {
   sparks: number;
   /** Whether the screen clear's big blast is playing. */
   blast: boolean;
+  /** The boss, once it has appeared (null before). */
+  boss: ReturnType<Boss['read']>;
   /** Enemy shots in flight. */
   enemyShots: { x: number; y: number }[];
   health: Health & { gameOver: boolean };
@@ -154,8 +159,8 @@ export class GameScene extends Phaser.Scene {
   private pickups!: Pickups;
   /** Power-ups collected this game, by kind (their effects arrive in M3.2–M3.4). */
   private collected: Record<PowerUpKind, number> = { weapon: 0, shield: 0, clear: 0 };
-  /** True while a boss is on screen (M4): no screen-clear drops then. */
-  private bossFight = false;
+  /** The level's boss, once it has appeared (M4.3). */
+  private boss!: Boss;
   /** Drop chance override (tests force drops); null uses the tuning. */
   private dropChance: number | null = null;
   private gameOverPanel!: GameOverPanel;
@@ -215,7 +220,7 @@ export class GameScene extends Phaser.Scene {
     this.collected = { weapon: 0, shield: 0, clear: 0 };
     this.powerUps = startPowerUps();
     this.shieldBubble = new ShieldBubble(this);
-    this.bossFight = false;
+    this.boss = new Boss(this);
     this.dropChance = null;
     this.gameOverPanel = new GameOverPanel(this);
     this.gameOver = null;
@@ -348,6 +353,8 @@ export class GameScene extends Phaser.Scene {
     this.asteroids.update(dt);
     this.pickups.update(dt);
     this.enemiesFire(dt);
+    const boss = this.boss.update(dt, this.player.position);
+    for (const v of boss.shots) this.enemyBullets.fire(boss.from.x, boss.from.y, v);
     this.enemyBullets.update(dt);
     this.resolveShotHits();
 
@@ -443,7 +450,10 @@ export class GameScene extends Phaser.Scene {
     const shot = touching(ship, this.enemyBullets.active(), (b) => this.enemyBullets.hitbox(b));
     const enemy = touching(ship, this.enemies.active(), (e) => this.enemies.hitbox(e));
     const rock = touching(ship, this.asteroids.active(), (r) => this.asteroids.hitbox(r));
-    if (!shot && !enemy && !rock) return;
+    const bossBox = this.boss.hitbox();
+    // Flying into the boss costs a hit; the boss itself is unharmed.
+    const rammedBoss = bossBox !== null && firstHit(ship, [bossBox]) >= 0;
+    if (!shot && !enemy && !rock && !rammedBoss) return;
 
     const { health, result } = takeHit(this.health, PLAYER_HEALTH);
     this.health = health;
@@ -507,6 +517,7 @@ export class GameScene extends Phaser.Scene {
       explosions: this.explosions.activeCount(),
       sparks: this.sparks.playedCount(),
       blast: this.blast.activeCount() > 0,
+      boss: this.boss.read(),
       enemyShots: this.enemyBullets.active().map((sh) => ({ x: sh.sprite.x, y: sh.sprite.y })),
       health: { ...this.health, gameOver: isGameOver(this.health) },
       lastHit: this.lastHit,
@@ -574,9 +585,15 @@ export class GameScene extends Phaser.Scene {
   /** Removes all enemies and, unless `keepShots`, their shots (tests use this for a clean screen). */
   clearEnemies(keepShots = false): void {
     this.enemies.clear();
+    this.boss.clear();
     this.asteroids.clear();
     this.pickups.clear();
     if (!keepShots) this.enemyBullets.clear();
+  }
+
+  /** Brings in a boss: `kind`, or the level's own boss (tests, until M4.4 does it at the level's end). */
+  spawnBoss(kind: BossKind = this.level.boss): void {
+    this.boss.spawn(kind);
   }
 
   /**
@@ -594,15 +611,24 @@ export class GameScene extends Phaser.Scene {
   }
 
   /**
-   * Each shot hits at most one target and is used up: an enemy if it touches
-   * one, otherwise an asteroid.
+   * Each shot hits at most one target and is used up: the boss if it touches
+   * it, otherwise an enemy, otherwise an asteroid.
    */
   private resolveShotHits(): void {
     for (const shot of this.bullets.active()) {
       const box = this.bullets.hitbox(shot);
-      const enemy = touching(box, this.enemies.active(), (e) => this.enemies.hitbox(e));
       // The spark shows at the shot's nose, where it struck.
       const tip = { x: box.x, y: box.y - box.h / 2 };
+      const bossBox = this.boss.hitbox();
+      if (bossBox && firstHit(box, [bossBox]) >= 0) {
+        this.sparks.play(tip.x, tip.y);
+        this.bullets.release(shot);
+        const { x, y } = this.boss.position;
+        const points = this.boss.hit(shot.damage);
+        if (points > 0) this.bossDefeated(x, y, points);
+        continue;
+      }
+      const enemy = touching(box, this.enemies.active(), (e) => this.enemies.hitbox(e));
       if (enemy) {
         this.sparks.play(tip.x, tip.y);
         this.bullets.release(shot);
@@ -635,7 +661,7 @@ export class GameScene extends Phaser.Scene {
     if (!killCanDrop(cause)) return;
     const base = this.difficulty.drops;
     const rules = { ...base, chance: this.dropChance ?? base.chance };
-    const kind = rollDrop(this.rng, rules, { bossFight: this.bossFight });
+    const kind = rollDrop(this.rng, rules, { bossFight: this.boss.active });
     if (kind) this.pickups.spawn(kind, x, y);
   }
 
@@ -679,6 +705,13 @@ export class GameScene extends Phaser.Scene {
     const { x, y } = this.player.position;
     this.blast.play(x, y);
     this.cameras.main.flash(SCREEN_CLEAR.flashMs);
+  }
+
+  /** The boss goes up in a big blast with explosions around it, and scores its points. */
+  private bossDefeated(x: number, y: number, points: number): void {
+    this.score += points;
+    this.blast.play(x, y);
+    for (const [dx, dy] of BOSS_DEFEAT.bursts) this.explosions.play(x + dx, y + dy);
   }
 
   /** A destroyed or crashed rock explodes; a large one splits into small pieces. */
