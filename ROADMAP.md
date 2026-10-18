@@ -124,6 +124,7 @@
 - [x] M3.6 Unit tests for every power-up rule, including "lost on death" and "no screen clear during bosses". Rules that lived in the game scene (what each gem does, lost on death, only shot-down kills drop gems) moved to `src/logic/powerups.ts` with unit tests
 - [x] M3.7 Balance (owner request 2026-10-18, "too easy"): stronger weapon levels fire a little less often and fly a little slower (level 2: 5% down on both, level 3: 10%); player shots drawn 40% smaller with matching hitboxes; shield lasts 10 s instead of 30
 - [x] M3.8 Balance, round 2 (owner 2026-10-18, "still too easy"): every weapon level fires 15% less often and its shots fly 15% slower again (level 1: 4.25 shots/s at 289 px/s; level 3: 3.83 at 230); shots drawn at 45% of the art (was 60%), hitboxes to match
+- [x] M3.9 Level 1 tracer back to full size (owner 2026-10-18: "don't shrink the small weapon, only the larger weapon art"); its hitbox is its visible 4×10, so each level still hits a bigger area than the last
 
 **Acceptance criteria:** each power-up is visibly distinct and behaves as specified; rules are unit tested; frame rate holds with max weapon and a full wave.
 
