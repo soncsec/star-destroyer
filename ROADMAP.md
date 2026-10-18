@@ -17,7 +17,7 @@
 | M4 Level system and first boss | Built; waiting for the owner's play-test |
 | M5 Levels 2–4 | In progress |
 | M6 Levels 5–8 | Built; waiting for the owner's play-test |
-| M7 Polish and balance | Not started |
+| M7 Polish and balance | In progress |
 | M8 v1.0 release | Not started |
 
 ## Risks driving this order
@@ -183,7 +183,7 @@
 
 **Demonstrable result:** a release-candidate game.
 
-- [ ] M7.1 Title screen with a link back to the portal, and pause
+- [x] M7.1 Title screen with a link back to the portal, and pause: STAR DESTROYER over the drifting nebula with the ship; Space or Enter starts, Q goes straight back to the arcade, F toggles full screen. Pause was already built (P / Esc, ROADMAP C). The e2e build skips the title unless a test asks for it (`?title`)
 - [ ] M7.2 High score saved in localStorage, safe if storage is unavailable
 - [ ] M7.3 CC0 sound effects (sources recorded in the credits file) — *new assets need approval*
 - [ ] M7.4 Parallax props (asteroids, planets) per level

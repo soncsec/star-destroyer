@@ -31,10 +31,11 @@ export class PreloadScene extends Phaser.Scene {
         repeatDelay: asset.loop ? 0 : 400,
       });
     }
-    const next =
-      new URLSearchParams(window.location.search).get('scene') === 'preview'
-        ? 'AssetPreview'
-        : 'Game';
-    this.scene.start(next);
+    const params = new URLSearchParams(window.location.search);
+    // Players start at the title screen. The e2e build goes straight to the
+    // game so each test starts playing at once, unless it asks for the title
+    // (?title); Vite fixes MODE at build time.
+    const first = import.meta.env.MODE === 'e2e' && !params.has('title') ? 'Game' : 'Title';
+    this.scene.start(params.get('scene') === 'preview' ? 'AssetPreview' : first);
   }
 }
