@@ -150,11 +150,12 @@ export const PLAYER = {
 /** Shared weapon settings. */
 export const WEAPON = {
   /**
-   * Shots are drawn at this scale (owner request 2026-10-18: 40% smaller).
+   * Shots are drawn at this scale (owner requests 2026-10-18: first 40% smaller,
+   * then smaller again; now 45% of the art's size).
    * Not a whole number, an owner-approved exception to whole-pixel scaling;
    * the hitboxes below are already at this size.
    */
-  shotScale: 0.6,
+  shotScale: 0.45,
   /** Where shots appear, relative to the ship's center (negative = above). */
   muzzleOffsetY: -24,
   /** Most shots on screen at once (level 3 fires three per volley). */
@@ -172,25 +173,26 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
   /** Seconds between volleys while the fire key is held. */
   fireInterval: number;
 })[] = [
-  // Owner request 2026-10-18 (the game was too easy): stronger levels fire a
-  // little less often and their shots fly a little slower. Level 2 is 5% down
-  // on both, level 3 10%; hitboxes are 40% smaller to match the smaller shots.
+  // Owner requests 2026-10-18 (the game was too easy): stronger levels fire a
+  // little less often and their shots fly a little slower (level 2: 5% below
+  // level 1, level 3: 10%), and then every level 15% slower again on both.
+  // Hitboxes match the shots' drawn size (45% of the art).
   // 1: a single small orange tracer (space-marine bullet, visible 10×4).
   {
     sprite: 'shot-tracer',
     damage: 1,
-    speed: 340,
-    fireInterval: 0.2,
-    hitbox: { w: 4, h: 7 },
+    speed: 289,
+    fireInterval: 0.2 / 0.85,
+    hitbox: { w: 3, h: 5 },
     shots: [{ dx: 0, angleDeg: 0 }],
   },
   // 2: two ringed blue pulses side by side (visible about 50×25 each).
   {
     sprite: 'shot-pulse',
     damage: 1,
-    speed: 304,
-    fireInterval: 0.2 / 0.95,
-    hitbox: { w: 7, h: 17 },
+    speed: 258,
+    fireInterval: 0.2 / (0.95 * 0.85),
+    hitbox: { w: 5, h: 13 },
     shots: [
       { dx: -7, angleDeg: 0 },
       { dx: 7, angleDeg: 0 },
@@ -200,9 +202,9 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
   {
     sprite: 'shot-charged',
     damage: 2,
-    speed: 270,
-    fireInterval: 0.2 / 0.9,
-    hitbox: { w: 11, h: 19 },
+    speed: 230,
+    fireInterval: 0.2 / (0.9 * 0.85),
+    hitbox: { w: 8, h: 14 },
     shots: [
       { dx: -6, angleDeg: -12 },
       { dx: 0, angleDeg: 0 },
