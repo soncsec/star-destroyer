@@ -71,4 +71,4 @@ Read `PROJECT.md` (scope), `ARCHITECTURE.md` (decisions), and `ROADMAP.md` (curr
 ## Assets
 
 - Source pack: `legacy/` (Ansimuz Legacy Collection, CC0). Copy only the files used into `public/assets/` and list them in `CREDITS.md`.
-- Keep native pixel resolution. Render with `pixelArt: true` and integer scaling. Exception (owner, 2026-10-18): the player's shots are drawn at 60% (`WEAPON.shotScale`).
+- Keep native pixel resolution. Render with `pixelArt: true` and integer scaling. Exception (owner, 2026-10-18): the player's shots are drawn at 45% (`WEAPON.shotScale`).
