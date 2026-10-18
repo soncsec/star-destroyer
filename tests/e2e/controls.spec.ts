@@ -116,6 +116,30 @@ test('F switches to full screen and back', async ({ page }) => {
   await expect.poll(async () => (await snapshot(page)).fullscreen).toBe(false);
 });
 
+test('in full screen the game sits in the middle of the screen', async ({ page }) => {
+  await openGame(page);
+  await page.keyboard.press('f');
+  await expect.poll(async () => (await snapshot(page)).fullscreen).toBe(true);
+  // Measure once the canvas has settled at its full-screen size.
+  const gaps = async () =>
+    page.evaluate(() => {
+      const r = document.querySelector('canvas')?.getBoundingClientRect();
+      if (!r) return null;
+      return {
+        left: Math.round(r.left),
+        right: Math.round(window.innerWidth - r.right),
+        top: Math.round(r.top),
+        bottom: Math.round(window.innerHeight - r.bottom),
+      };
+    });
+  await expect
+    .poll(async () => {
+      const g = await gaps();
+      return !!g && Math.abs(g.left - g.right) <= 1 && Math.abs(g.top - g.bottom) <= 1;
+    })
+    .toBe(true);
+});
+
 test("pausing isn't possible after game over, but quitting is", async ({ page }) => {
   const s = await openGame(page);
   await page.evaluate(() => {
