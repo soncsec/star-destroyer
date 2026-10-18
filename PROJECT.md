@@ -60,7 +60,7 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 
 | Power-up | Effect | How often | Notes |
 |---|---|---|---|
-| Weapon | Raises the weapon one level (max 3). Shots start small and grow bigger and stronger: 1 single small streak (spark), 2 double ringed bolt (pulse), 3 spread of three big plasma blasts (charged, double damage) | Common | Never times out; lost on death (back to level 1) |
+| Weapon | Raises the weapon one level (max 3). Shots start small and grow bigger and stronger: 1 single small orange tracer (visible 10×4; the art pack's smallest player shot), 2 double ringed bolt (pulse), 3 spread of three big plasma blasts (charged, double damage) | Common | Never times out; lost on death (back to level 1) |
 | Shield | Blocks all damage for 30 seconds | Uncommon | Picking up another resets the timer to 30 s |
 | Screen clear | Destroys every enemy on screen, plus enemy shots | Rare | Never dropped during a boss fight |
 

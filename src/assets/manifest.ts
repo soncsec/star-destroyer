@@ -119,6 +119,7 @@ export const ASSETS: readonly Asset[] = [
   image('backgrounds', 'bg-prop-planet-big', 'prop-planet-big.png', 43, 43),
   image('backgrounds', 'bg-prop-planet-small', 'prop-planet-small.png', 16, 16),
 
+  sheet('weapons', 'shot-tracer', 'tracer.png', 10, 4, 2, 14, true),
   sheet('weapons', 'shot-bolt', 'bolt.png', 48, 32, 4, 14, true),
   sheet('weapons', 'shot-charged', 'charged.png', 63, 48, 6, 14, true),
   sheet('weapons', 'shot-crossed', 'crossed.png', 32, 32, 6, 14, true),

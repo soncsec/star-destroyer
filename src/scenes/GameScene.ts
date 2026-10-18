@@ -11,6 +11,7 @@ import {
   PLAYER_HEALTH,
   POWERUPS,
   WEAPON,
+  WEAPON_LEVELS,
   type EnemyKind,
 } from '../config/tuning';
 import { Asteroids, type RockSize, type RockSlot } from '../entities/Asteroids';
@@ -40,6 +41,7 @@ import type { Axis } from '../logic/player';
 import { createRng, type Rng } from '../logic/rng';
 import { startWaves, stepWaves, type WaveRunner } from '../logic/waves';
 import { stepFire, type FireState } from '../logic/weapon';
+import { levelUp, volley } from '../logic/weaponLevels';
 
 /** Read-only view of the game state, used by the e2e test hook. */
 export interface GameSnapshot {
@@ -63,9 +65,12 @@ export interface GameSnapshot {
   /** Pickups drifting down, and how many of each kind the ship has collected. */
   pickups: { kind: PowerUpKind; x: number; y: number }[];
   collected: Record<PowerUpKind, number>;
+  weaponLevel: number;
   /** The game-over panel, and whether a fresh key press will now restart. */
   gameOver: { visible: boolean; title: string; score: string; prompt: string; armed: boolean };
   shots: number;
+  /** Damage of each player shot in flight. */
+  shotDamage: number[];
   explosions: number;
   /** Enemy shots in flight. */
   enemyShots: { x: number; y: number }[];
@@ -85,6 +90,8 @@ export class GameScene extends Phaser.Scene {
   private player!: Player;
   private bullets!: Bullets;
   private fireState: FireState = { cooldown: 0 };
+  /** Current weapon level, 1 to WEAPON_LEVELS.length (owner rules: no time-out, reset on death). */
+  private weaponLevel = 1;
   private enemies!: Enemies;
   private enemyBullets!: EnemyBullets;
   private asteroids!: Asteroids;
@@ -135,6 +142,7 @@ export class GameScene extends Phaser.Scene {
     this.hud = new Hud(this, PLAYER_HEALTH.hitsPerLife);
     this.pickups = new Pickups(this);
     this.collected = { weapon: 0, shield: 0, clear: 0 };
+    this.weaponLevel = 1;
     this.bossFight = false;
     this.dropChance = null;
     this.gameOverPanel = new GameOverPanel(this);
@@ -174,10 +182,7 @@ export class GameScene extends Phaser.Scene {
 
     const shot = stepFire(this.fireState, alive && this.keys.fire.isDown, dt, WEAPON.fireInterval);
     this.fireState = shot.state;
-    if (shot.fire) {
-      const { x, y } = this.player.position;
-      this.bullets.fire(x, y + WEAPON.muzzleOffsetY);
-    }
+    if (shot.fire) this.fireVolley();
     this.bullets.update(dt);
 
     if (this.spawning && !this.gameOver) {
@@ -267,6 +272,7 @@ export class GameScene extends Phaser.Scene {
     if (result === 'lifeLost' || result === 'gameOver') {
       const { x, y } = this.player.position;
       this.explosions.play(x, y);
+      this.weaponLevel = 1; // owner rule: power-ups are lost on death
       if (result === 'lifeLost') this.player.reset();
     }
   }
@@ -289,10 +295,12 @@ export class GameScene extends Phaser.Scene {
       gameOver: { ...this.gameOverPanel.read(), armed: this.gameOver?.armed ?? false },
       pickups: this.pickups.active().map((p) => ({ kind: p.kind, x: p.sprite.x, y: p.sprite.y })),
       collected: { ...this.collected },
+      weaponLevel: this.weaponLevel,
       asteroids: this.asteroids
         .active()
         .map((r) => ({ size: r.size, x: r.rock.x, y: r.rock.y, hp: r.hp })),
       shots: this.bullets.active().length,
+      shotDamage: this.bullets.active().map((b) => b.damage),
       explosions: this.explosions.activeCount(),
       enemyShots: this.enemyBullets.active().map((sh) => ({ x: sh.sprite.x, y: sh.sprite.y })),
       health: { ...this.health, gameOver: isGameOver(this.health) },
@@ -315,15 +323,31 @@ export class GameScene extends Phaser.Scene {
     return this.asteroids.spawnLarge(x, this.rng, y);
   }
 
-  /** Fires exactly one player shot from the ship (tests; no keyboard timing involved). */
+  /** Fires one volley at the current weapon level from the ship (tests; no keyboard timing). */
   fireShot(): boolean {
-    const { x, y } = this.player.position;
-    return this.bullets.fire(x, y + WEAPON.muzzleOffsetY);
+    return this.fireVolley();
   }
 
-  /** Puts the ship on its last life with one hit left (tests reach game over quickly). */
-  oneHitLeft(): void {
-    this.health = { hits: PLAYER_HEALTH.hitsPerLife - 1, lives: 1, invulnerable: 0 };
+  /** Sets the weapon level directly (tests). */
+  setWeaponLevel(level: number): void {
+    this.weaponLevel = Math.min(WEAPON_LEVELS.length, Math.max(1, Math.round(level)));
+  }
+
+  /** One trigger pull: every shot of the current weapon level. False if the pool ran out. */
+  private fireVolley(): boolean {
+    const level = WEAPON_LEVELS[this.weaponLevel - 1];
+    if (!level) return false;
+    const { x, y } = this.player.position;
+    let all = true;
+    for (const shot of volley(level, x, y + WEAPON.muzzleOffsetY)) {
+      all = this.bullets.fire(shot, level.sprite, level.hitbox) && all;
+    }
+    return all;
+  }
+
+  /** Leaves the ship one hit from losing a life (tests); on its last life unless `lives` is given. */
+  oneHitLeft(lives = 1): void {
+    this.health = { hits: PLAYER_HEALTH.hitsPerLife - 1, lives, invulnerable: 0 };
   }
 
   /** Turns the wave script on or off (tests use this to control the screen). */
@@ -359,7 +383,7 @@ export class GameScene extends Phaser.Scene {
       if (enemy) {
         this.bullets.release(shot);
         const { x, y } = enemy.sprite;
-        if (this.enemies.hit(enemy, 1)) {
+        if (this.enemies.hit(enemy, shot.damage)) {
           this.explosions.play(x, y);
           this.score += ENEMY_TYPES[enemy.kind].points;
           this.maybeDrop(x, y);
@@ -369,7 +393,7 @@ export class GameScene extends Phaser.Scene {
       const rock = touching(box, this.asteroids.active(), (r) => this.asteroids.hitbox(r));
       if (rock) {
         this.bullets.release(shot);
-        if (this.asteroids.hit(rock, 1)) {
+        if (this.asteroids.hit(rock, shot.damage)) {
           this.score += ASTEROIDS[rock.size].points;
           if (rock.size === 'large') this.maybeDrop(rock.rock.x, rock.rock.y);
           this.shatter(rock);
@@ -394,6 +418,7 @@ export class GameScene extends Phaser.Scene {
       if (firstHit(ship, [this.pickups.hitbox(p)]) < 0) continue;
       this.pickups.release(p);
       this.collected[p.kind]++;
+      if (p.kind === 'weapon') this.weaponLevel = levelUp(this.weaponLevel, WEAPON_LEVELS.length);
     }
   }
 

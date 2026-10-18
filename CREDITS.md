@@ -32,6 +32,7 @@ Files are copied unchanged from the pack and renamed for consistency, except the
 | `assets/backgrounds/stage-props.png` | 256×151 | `Warped/Environments/top-down-space-environment/PNG/layers/sprites.png` |
 | `assets/boss/bolt.png` | 16×8 | `Warped/Characters/top-down-boss/PNG/spritesheets/bolt.png` |
 | `assets/effects/energy-shield.png` | 408×47 | `Explosions and Magic/Grotto-escape-2-FX/spritesheets/energy-shield.png` |
+| `assets/weapons/tracer.png` | 20×4 | `Warped/Characters/space-marine-lite/Sprites/Misc/bullet1.png` and `bullet2.png` (10×4 each) placed side by side as two frames, pixels unchanged |
 | `assets/pickups/gem-yellow.png` | 84×12 | `Misc/gems/spritesheets/gems-spritesheet.png`: the 7 yellow loose-gem frames (12×12 at x = 450 + 16n, y = 34), placed side by side, pixels unchanged |
 | `assets/pickups/gem-pink.png` | 84×12 | same sheet, the 7 pink frames (x = 578 + 16n, y = 34) |
 | `assets/pickups/gem-blue.png` | 84×12 | same sheet, the 7 blue frames (x = 706 + 16n, y = 34) |
