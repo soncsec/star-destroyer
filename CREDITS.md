@@ -5,7 +5,7 @@
 All sprites in `public/assets/` come from the **Legacy Collection** by **Luis Zuno (Ansimuz)**, https://ansimuz.itch.io.
 License: **CC0 1.0** (public domain dedication). Attribution isn't required; we give it as thanks.
 
-Files are copied unchanged from the pack and renamed for consistency, except the gem strips noted below. Sizes are the full image in pixels, and frame sizes are recorded in the asset manifest (milestone M1.3).
+Files are copied unchanged from the pack and renamed for consistency, except the gem strips and the station tunnel noted below. Sizes are the full image in pixels, and frame sizes are recorded in the asset manifest (milestone M1.3).
 
 | File | Size | Source in the pack |
 |---|---|---|
@@ -36,6 +36,7 @@ Files are copied unchanged from the pack and renamed for consistency, except the
 | `assets/backgrounds/red-far-planets.png` | 272×160 | `Warped/Environments/space_background_pack/Old Version/layers/parallax-space-far-planets.png` |
 | `assets/backgrounds/red-ring-planet.png` | 51×115 | `Warped/Environments/space_background_pack/Old Version/layers/parallax-space-ring-planet.png` |
 | `assets/backgrounds/red-stars.png` | 272×160 | `Warped/Environments/space_background_pack/Old Version/layers/parallax-space-stars.png` |
+| `assets/backgrounds/station-tunnel.png` | 256×288 | `Warped/Environments/Warped Zone 202/`: `back.png` and `back-2.png` (interior) with the wall rows of `previews/Zone-202.png`, laid out as one seamless stretch, turned upright and padded with the pack's dark blue; pixels unchanged. Rebuild with `tools/art/build_tunnel.py` |
 | `assets/boss/bolt.png` | 16×8 | `Warped/Characters/top-down-boss/PNG/spritesheets/bolt.png` |
 | `assets/effects/energy-shield.png` | 408×47 | `Explosions and Magic/Grotto-escape-2-FX/spritesheets/energy-shield.png` |
 | `assets/effects/hit-spark.png` | 160×32 | `Explosions and Magic/Warped shooting fx/hits/Hits-3/spritesheet.png` |
@@ -52,11 +53,15 @@ Files are copied unchanged from the pack and renamed for consistency, except the
 | `assets/boss/spaceship-unit.png` | 848×77 | `Warped/Characters/spaceship-unit/Spritesheets/Spritesheet.png` |
 | `assets/boss/vehicle-1.png` | 528×96 | `Warped/Characters/Warped Vehicles Files/vehicle 1/spritesheet.png` |
 | `assets/boss/vehicle-2.png` | 528×125 | `Warped/Characters/Warped Vehicles Files/vehicle 2/spritesheet.png` |
+| `assets/boss/vehicle-3.png` | 987×160 | `Warped/Characters/Warped Vehicles Files/vehicle 3/spritesheet.png` |
+| `assets/boss/fire-skull.png` | 768×112 | `Gothicvania/Characters/Fire-Skull-Files/Spritesheets/fire-skull.png` |
 | `assets/enemies/enemy-01.png` | 240×48 | `Warped/Characters/top-down-shooter-enemies/spritesheets/enemy-01.png` |
 | `assets/enemies/enemy-02.png` | 192×48 | `Warped/Characters/top-down-shooter-enemies/spritesheets/enemy-02.png` |
 | `assets/enemies/enemy-03.png` | 192×48 | `Warped/Characters/top-down-shooter-enemies/spritesheets/enemy-03.png` |
 | `assets/enemies/enemy-explosion.png` | 560×80 | `Warped/Characters/top-down-shooter-enemies/spritesheets/enemy-explosion.png` |
 | `assets/enemies/alien-flyer.png` | 664×64 | `Warped/Characters/alien-flying-enemy/spritesheet.png` |
+| `assets/enemies/flying-eye.png` | 384×48 | `Gothicvania/Characters/flying-eye-demon/Spritesheet.png` |
+| `assets/enemies/fire-skull.png` | 216×70 | `Gothicvania/Characters/Fire-Skull-Files/Spritesheets/fire-skull-no-fire.png` |
 | `assets/explosions/explosion-a.png` | 256×32 | `Explosions and Magic/Explosions pack/explosion-1-a/spritesheet.png` |
 | `assets/explosions/explosion-b.png` | 512×64 | `Explosions and Magic/Explosions pack/explosion-1-b/spritesheet.png` |
 | `assets/explosions/explosion-c.png` | 1280×80 | `Explosions and Magic/Explosions pack/explosion-1-c/spritesheet.png` |
@@ -84,7 +89,7 @@ Files are copied unchanged from the pack and renamed for consistency, except the
 
 ## Audio
 
-None yet. CC0 sound effects are added in milestone M5.3, with their sources listed here.
+None yet. CC0 sound effects are planned for milestone M7.3, with their sources listed here.
 
 ## Font
 

@@ -16,7 +16,7 @@
 | C Controls and cheats (owner request) | Built; waiting for merge and the owner's play-test |
 | M4 Level system and first boss | Built; waiting for the owner's play-test |
 | M5 Levels 2–4 | In progress |
-| M6 Levels 5–8 | Not started |
+| M6 Levels 5–8 | In progress |
 | M7 Polish and balance | Not started |
 | M8 v1.0 release | Not started |
 
@@ -171,7 +171,7 @@
 
 **Demonstrable result:** all 8 levels are playable, ending with the multi-part final boss.
 
-- [ ] M6.1 Import and slice the extra art for levels 5–8
+- [x] M6.1 Import and slice the extra art for levels 5–8: the Station Run tunnel (built from the Zone 202 corridor by `tools/art/build_tunnel.py`), Warped vehicle 3, the flying-eye demon and the fire skull (with and without flames). Levels 7 and 8 reuse art already in the game; the final boss art came in with M0.7
 - [ ] M6.2 Level 5 (Station Run) and its boss
 - [ ] M6.3 Level 6 (Demon Rift) and its boss
 - [ ] M6.4 Level 7 (Deep Dark) and its twin boss
