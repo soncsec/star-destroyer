@@ -23,7 +23,7 @@ Read `PROJECT.md` (scope), `ARCHITECTURE.md` (decisions), and `ROADMAP.md` (curr
 - Changing the architecture or any ADR, or adding a dependency not listed in ARCHITECTURE.md
 - Changing scope (adding or dropping features)
 - Destructive operations: deleting files or branches, force-pushing, rewriting history, deleting repos
-- Any production deployment, or any change on the production server or its Apache configuration
+- Any production deployment, or any change on the production server or its Apache configuration. **Standing approval (owner, 2026-10-18):** release Star Destroyer with `scripts/release.sh deploy` after each PR the owner merges to `main`, once that commit's CI checks and staging ZAP scan have passed, and report the result. This covers the game only, not the portal, and no other server changes.
 - Security decisions: CSP and header policy, HTTP vs HTTPS, SSH keys, secrets handling, permissions, CI tokens
 - Adding new third-party assets (art, audio, fonts)
 
