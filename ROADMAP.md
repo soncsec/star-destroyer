@@ -159,8 +159,8 @@
 - [x] M5.1 Import and slice the extra art for levels 2–4 (manifest and credits updated): level 2 purple asteroid field (asteroid-fighter pack); level 4 red parallax layers, big planet and ring planet (space background pack, original version); bosses Warped vehicle 1 and 2; alien flyer. Level 3 uses the blue space pack layers already bundled
 - [x] M5.2 Level 2 (Asteroid Belt) and its boss: purple asteroid field (drawn 2× so the 160-wide tile covers the screen), grunts, divers and heavy asteroids, boss Warped vehicle 1 (220 HP, 7,500 points, fans up to 6 shots)
 - [x] M5.3 Level 3 (Blue Expanse) and its boss: blue space pack layers, weavers, divers and the new alien flyer (5 HP, 250 points, wide slow sway, fires), boss Warped vehicle 2 (280 HP, 10,000 points, fans up to 7 shots)
-- [ ] M5.4 Level 4 (Red Giant) and its boss
-- [ ] M5.5 Automated check that every level's data is valid and within the difficulty limits
+- [x] M5.4 Level 4 (Red Giant) and its boss: red parallax layers (the sky still at 2×, since its light band doesn't repeat cleanly), the big red planet and ringed planet drifting past (new level `props`), alien flyers and divers, boss the upgraded spaceship unit (340 HP, 12,500 points, a fourth phase, fans up to 7 shots)
+- [x] M5.5 Automated check that every level's data is valid and within the difficulty limits (`tests/unit/levels.test.ts` runs every check on every level in `LEVELS`, including its `difficulty()` numbers and a tougher boss each level)
 
 **Acceptance criteria:** the owner plays through levels 1–4; each level looks distinct; all checks pass.
 

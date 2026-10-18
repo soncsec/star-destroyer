@@ -11,7 +11,10 @@ import type { WaveSpawn } from '../logic/waves';
 export interface BackgroundLayer {
   /** Texture key from the asset manifest. */
   texture: string;
-  /** Pixels per second; nearer layers move faster for depth. */
+  /**
+   * Pixels per second; nearer layers move faster for depth. 0 keeps a layer
+   * still (for art that doesn't repeat cleanly); only the back layer may.
+   */
   scrollSpeed: number;
   /** 1 = opaque. */
   alpha: number;

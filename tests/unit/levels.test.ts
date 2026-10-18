@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ASSETS } from '../../src/assets/manifest';
-import { BOSSES, ENEMY_TYPES, GAME_WIDTH } from '../../src/config/tuning';
+import { BOSSES, DIFFICULTY, ENEMY_TYPES, GAME_HEIGHT, GAME_WIDTH } from '../../src/config/tuning';
+import { levelDifficulty } from '../../src/levels/difficulty';
 import { LEVELS } from '../../src/levels';
 import {
   ASTEROID_LIMITS,
@@ -33,10 +34,22 @@ describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${le
         expect(asset, layer.texture).toBeDefined();
         expect(layer.alpha).toBeGreaterThan(0);
         expect(layer.alpha).toBeLessThanOrEqual(1);
-        expect(layer.scrollSpeed).toBeGreaterThan(0);
       }
       // The furthest-back layer is opaque, so nothing shows through it.
       expect(level.background[0]?.alpha).toBe(1);
+    });
+
+    it('scrolls every layer, except that the back layer may stay still if it fills the screen', () => {
+      level.background.forEach((layer, i) => {
+        if (i > 0) expect(layer.scrollSpeed, layer.texture).toBeGreaterThan(0);
+        expect(layer.scrollSpeed, layer.texture).toBeGreaterThanOrEqual(0);
+        if (layer.scrollSpeed === 0) {
+          // A still layer must cover the whole screen height on its own (no repeat).
+          const asset = ASSETS.find((a) => a.key === layer.texture);
+          const height = asset?.kind === 'image' ? asset.height : (asset?.frameHeight ?? 0);
+          expect(height * (layer.scale ?? 1), layer.texture).toBeGreaterThanOrEqual(GAME_HEIGHT);
+        }
+      });
     });
 
     it('covers the full screen width with every layer (no seam)', () => {
@@ -75,6 +88,23 @@ describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${le
       expect(level.waves.length).toBeGreaterThan(0);
       expect(checkWaves(level.waves, WAVE_LIMITS)).toEqual([]);
       expect(checkWaves(level.waves, ASTEROID_LIMITS)).toEqual([]);
+    });
+
+    it('has difficulty numbers within the PROJECT.md 4a limits (M5.5)', () => {
+      expect(level.number).toBeLessThanOrEqual(DIFFICULTY.lastLevel);
+      const d = levelDifficulty(level.number);
+      const first = levelDifficulty(1);
+      expect(first.fire.interval / d.fire.interval).toBeLessThanOrEqual(DIFFICULTY.fireRateAtLast);
+      expect(d.shotSpeed / first.shotSpeed).toBeLessThanOrEqual(DIFFICULTY.shotSpeedAtLast);
+      expect(d.fire.jitter).toBeLessThan(d.fire.interval);
+      expect(d.drops.chance).toBeLessThanOrEqual(1);
+    });
+
+    it('has a boss that exists and gets tougher level by level', () => {
+      const boss = BOSSES[level.boss];
+      expect(boss).toBeDefined();
+      const before = LEVELS[level.number - 2];
+      if (before) expect(boss.hp).toBeGreaterThan(BOSSES[before.boss].hp);
     });
 
     it('gives the player a breather before the boss', () => {

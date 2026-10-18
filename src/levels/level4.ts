@@ -12,8 +12,10 @@ export const LEVEL_4: Level = {
   number: 4,
   name: 'Red Giant',
   background: [
-    { texture: 'bg-red-back', scrollSpeed: 5, alpha: 1 },
-    { texture: 'bg-red-far-planets', scrollSpeed: 9, alpha: 1 },
+    // The red sky's light band doesn't repeat cleanly, so it stays still at 2×
+    // (exactly one screen tall); the far planets at 2× appear once per screen.
+    { texture: 'bg-red-back', scrollSpeed: 0, alpha: 1, scale: 2 },
+    { texture: 'bg-red-far-planets', scrollSpeed: 6, alpha: 1, scale: 2 },
     { texture: 'bg-red-stars', scrollSpeed: 28, alpha: 1 },
   ],
   props: [
