@@ -77,3 +77,25 @@ test('a moving ship can dodge a diver, which flies on off the screen', async ({ 
   await page.keyboard.up('ArrowRight');
   expect((await snapshot(page)).health.hits).toBe(0);
 });
+
+test('an alien flyer sways side to side and starts with five health', async ({ page }) => {
+  await page.goto('./');
+  await expect
+    .poll(() => page.evaluate(() => window.__starDestroyer?.scene() ?? null), { timeout: 15_000 })
+    .toBe('Game');
+  await page.evaluate(() => {
+    window.__starDestroyer?.setSpawning(false);
+    window.__starDestroyer?.clearEnemies();
+    window.__starDestroyer?.spawnEnemy(128, 60, 999, 'flyer');
+  });
+  const xs: number[] = [];
+  for (let i = 0; i < 12; i++) {
+    const s = await page.evaluate(() => window.__starDestroyer?.snapshot());
+    const flyer = s?.enemies.find((e) => e.kind === 'flyer');
+    if (flyer) xs.push(flyer.x);
+    await page.waitForTimeout(150);
+  }
+  expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(20);
+  const s = await page.evaluate(() => window.__starDestroyer?.snapshot());
+  expect(s?.enemies.find((e) => e.kind === 'flyer')?.hp).toBe(5);
+});

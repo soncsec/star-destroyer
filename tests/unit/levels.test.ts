@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { ASSETS } from '../../src/assets/manifest';
 import { ENEMY_TYPES, GAME_WIDTH } from '../../src/config/tuning';
 import { LEVELS } from '../../src/levels';
-import { ASTEROID_LIMITS, WAVE_LIMITS, screenTime } from '../../src/levels/limits';
+import {
+  ASTEROID_LIMITS,
+  WAVE_LIMITS,
+  frameHeight,
+  screenTime,
+  sheetFrameHeight,
+} from '../../src/levels/limits';
 import { LEVEL_1 } from '../../src/levels/level1';
 import { LEVEL_2 } from '../../src/levels/level2';
 import { checkWaves, mostAtOnce } from '../../src/logic/waves';
@@ -109,6 +115,13 @@ describe('level 1 waves', () => {
 });
 
 describe('wave limits', () => {
+  it("use each enemy kind's real frame height (the flyer is taller)", () => {
+    expect(frameHeight('grunt')).toBe(48);
+    expect(frameHeight('flyer')).toBe(64);
+    expect(() => sheetFrameHeight('no-such-sprite')).toThrow('no sprite sheet');
+    expect(() => sheetFrameHeight('bg-blue-back')).toThrow('no sprite sheet'); // an image, not a sheet
+  });
+
   it('keep weavers further from the edges than grunts (they sway)', () => {
     expect(WAVE_LIMITS.xRange['weaver']?.min).toBeGreaterThan(
       WAVE_LIMITS.xRange['grunt']?.min ?? 1,

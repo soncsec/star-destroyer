@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BOSSES } from '../../src/config/tuning';
+import { LEVELS } from '../../src/levels';
 import { LEVEL_2 } from '../../src/levels/level2';
 import type { GameSnapshot } from '../../src/scenes/GameScene';
 
@@ -82,27 +83,37 @@ test('the waves end, the boss comes in, and beating it completes level 1 and rea
     .toEqual(['grunt', 'grunt', 'grunt']);
 });
 
-test('after the last level, the panel says so and the next press starts a new game', async ({
+test('every level runs waves, boss and panel in turn; after the last, the next press starts a new game', async ({
   page,
 }) => {
   await openGame(page);
-  await beatTheBoss(page);
-  await expect
-    .poll(async () => (await snapshot(page)).flow.panel.visible, { timeout: 10_000 })
-    .toBe(true);
-  await page.keyboard.press('Space');
-  await expect.poll(async () => (await snapshot(page)).level.number, { timeout: 10_000 }).toBe(2);
-
-  await beatTheBoss(page);
-  await expect
-    .poll(async () => (await snapshot(page)).flow.panel.visible, { timeout: 10_000 })
-    .toBe(true);
-  expect((await snapshot(page)).flow.panel).toMatchObject({
-    title: 'LEVEL 2 COMPLETE',
-    next: 'ALL LEVELS COMPLETE',
-  });
-  await page.keyboard.press('Space');
-  await expect.poll(async () => (await snapshot(page)).level.number, { timeout: 10_000 }).toBe(1);
+  for (const level of LEVELS) {
+    expect((await snapshot(page)).level).toEqual({ number: level.number, name: level.name });
+    // Straight to this level's own boss, then defeat it (the real fight is tested above).
+    await page.evaluate(() => {
+      const h = window.__starDestroyer;
+      h?.clearEnemies();
+      h?.skipWaves();
+      h?.setShield(999);
+    });
+    await expect
+      .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 15_000 })
+      .toBe('fighting');
+    expect((await snapshot(page)).boss?.kind).toBe(level.boss);
+    await page.evaluate((hp) => window.__starDestroyer?.hurtBoss(hp), BOSSES[level.boss].hp);
+    await expect
+      .poll(async () => (await snapshot(page)).flow.panel.visible, { timeout: 10_000 })
+      .toBe(true);
+    const last = level.number === LEVELS.length;
+    expect((await snapshot(page)).flow.panel).toMatchObject({
+      title: `LEVEL ${level.number} COMPLETE`,
+      next: last ? 'ALL LEVELS COMPLETE' : `NEXT: LEVEL ${level.number + 1}`,
+    });
+    await page.keyboard.press('Space');
+    await expect
+      .poll(async () => (await snapshot(page)).level.number, { timeout: 10_000 })
+      .toBe(last ? 1 : level.number + 1);
+  }
   const fresh = await snapshot(page);
   expect(fresh.score).toBe(0);
   expect(fresh.weaponLevel).toBe(1);

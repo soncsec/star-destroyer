@@ -678,6 +678,13 @@ export class GameScene extends Phaser.Scene {
     if (!keepShots) this.enemyBullets.clear();
   }
 
+  /** Damages the boss (player shots, and tests); defeats it at 0 health. */
+  hurtBoss(amount: number): void {
+    const { x, y } = this.boss.position;
+    const points = this.boss.hit(amount);
+    if (points > 0) this.bossDefeated(x, y, points);
+  }
+
   /** Ends the level's waves at once, so the boss comes after the usual pause (tests). */
   skipWaves(): void {
     this.waves = { ...this.waves, next: this.level.waves.length };
@@ -715,9 +722,7 @@ export class GameScene extends Phaser.Scene {
       if (bossBox && firstHit(box, [bossBox]) >= 0) {
         this.sparks.play(tip.x, tip.y);
         this.bullets.release(shot);
-        const { x, y } = this.boss.position;
-        const points = this.boss.hit(shot.damage);
-        if (points > 0) this.bossDefeated(x, y, points);
+        this.hurtBoss(shot.damage);
         continue;
       }
       const enemy = touching(box, this.enemies.active(), (e) => this.enemies.hitbox(e));
