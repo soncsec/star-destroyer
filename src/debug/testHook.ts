@@ -26,6 +26,8 @@ export interface TestHook {
   setWeaponLevel(level: number): void;
   /** Leaves the ship one hit from losing a life; on its last life unless `lives` is given. */
   oneHitLeft(lives?: number): void;
+  /** Ends the level's waves at once, so its boss comes after the usual pause. */
+  skipWaves(): void;
   /** Brings in a boss: `kind`, or the level's own boss. */
   spawnBoss(kind?: BossKind): void;
   /** Spawns a large asteroid at x (top of the screen) or (x, y). */
@@ -58,6 +60,7 @@ export function installTestHook(game: Phaser.Game): void {
     clearEnemies: (keepShots) => required().clearEnemies(keepShots),
     spawnAsteroid: (x, y) => required().spawnAsteroid(x, y),
     spawnBoss: (kind) => required().spawnBoss(kind),
+    skipWaves: () => required().skipWaves(),
     oneHitLeft: (lives) => required().oneHitLeft(lives),
     fireShot: () => required().fireShot(),
     setWeaponLevel: (level) => required().setWeaponLevel(level),

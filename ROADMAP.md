@@ -146,8 +146,8 @@
 - [x] M4.1 Data-driven level format: background layers, enemy roster, wave script, boss, difficulty numbers (ADR-012). `src/levels/types.ts` (`Level`: number, name, background layers, roster, waves, boss, `bossAfter`), `LEVELS` list, level 1 converted; difficulty numbers come from `difficulty(level)` in M4.2; every level is checked by unit tests
 - [x] M4.2 Difficulty curve function with the limits in PROJECT.md section 4a (unit tested). `difficulty(level)` in `src/logic/difficulty.ts`, numbers in `DIFFICULTY`: fire rate ×2.5 by level 8 in equal steps (+13.98% per level), shot speed +30% by level 8, weapon and shield drops +25% by level 8 with the screen clear's chance unchanged
 - [x] M4.3 Boss framework: entry, health bar, phases, attack patterns, defeat. `src/logic/boss.ts` (enters from above untouchable, sways, phases by health, aimed and fan attacks, fans proven to leave a ship-wide gap, defeat), `BOSSES` tuning, `entities/Boss.ts` with a health bar; level 1's spaceship-unit boss (Warped art turned to face down) can be spawned via the test hook until M4.4 brings it in at the level's end
-- [ ] M4.4 Level 1 boss; level-complete screen; transition to the next level
-- [ ] M4.5 Playwright: complete level 1 via the test hook and reach level 2
+- [x] M4.4 Level 1 boss; level-complete screen; transition to the next level. Waves play once, the boss comes in after the level's pause, beating it shows LEVEL n COMPLETE (Space, or 8 s), then the next level; score, lives, health, weapon and the cheat flag carry over, the shield ends (owner decisions 2026-10-18). An early level 2 (Asteroid Belt: grunts, divers, heavy asteroids) borrows level 1's backdrop and boss until M5. After the last level the panel says ALL LEVELS COMPLETE and the next press starts a new game
+- [x] M4.5 Playwright: complete level 1 via the test hook and reach level 2 (`tests/e2e/levels.spec.ts`)
 
 **Acceptance criteria:** the owner beats the level 1 boss and reaches level 2; difficulty limits are enforced by tests.
 
@@ -156,7 +156,7 @@
 **Demonstrable result:** levels 1–4 are playable start to finish, each with its own look and boss.
 
 - [ ] M5.1 Import and slice the extra art for levels 2–4 (manifest and credits updated)
-- [ ] M5.2 Level 2 (Asteroid Belt) and its boss
+- [ ] M5.2 Level 2 (Asteroid Belt) and its boss (an early version from M4.4 is playable, with level 1's backdrop and boss)
 - [ ] M5.3 Level 3 (Blue Expanse) and its boss
 - [ ] M5.4 Level 4 (Red Giant) and its boss
 - [ ] M5.5 Automated check that every level's data is valid and within the difficulty limits
