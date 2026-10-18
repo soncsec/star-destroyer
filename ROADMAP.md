@@ -78,6 +78,7 @@
 - [x] P1.7 DNS `A` record for `games.soncrant.com` and port 80 forwarding (owner). Resolves inside and outside the network
 - [x] P1.8 Release scripts for portal and game (atomic symlink switch, rollback command). Game: star-destroyer #18; portal: games-portal #6 (single `_portal` switch)
 - [x] P1.9 First production release; ZAP scan and smoke test from outside the network. Approved by the owner; released 2026-10-17 (game `20261017T172140Z-5c2b2e72`, portal `20261017T174255Z-6f2e61df`). Outside check by the games-portal `Production check` workflow: smoke tests passed with headers required; ZAP: 0 high (remaining: server version banner, COEP, cache info)
+- [x] P1.10 Leave the asset preview (`?scene=preview`, a developer tool) out of the production build (owner 2026-10-18); the release script refuses a build that contains it
 - [x] P1.11 E2E tests tolerate a busy machine (a release was refused 2026-10-18 when the load average hit 31 on 6 cores): waits for game-time events allow 20 s, default poll wait 15 s, test limit 60 s; the checks themselves are unchanged
 
 **Acceptance criteria:** the portal and game load at the production URL from an outside network; the security headers are present; the ZAP scan has no high-severity findings; a rollback has been rehearsed; the other sites on the server still work.
@@ -125,6 +126,7 @@
 - [x] M3.6 Unit tests for every power-up rule, including "lost on death" and "no screen clear during bosses". Rules that lived in the game scene (what each gem does, lost on death, only shot-down kills drop gems) moved to `src/logic/powerups.ts` with unit tests
 - [x] M3.7 Balance (owner request 2026-10-18, "too easy"): stronger weapon levels fire a little less often and fly a little slower (level 2: 5% down on both, level 3: 10%); player shots drawn 40% smaller with matching hitboxes; shield lasts 10 s instead of 30
 - [x] M3.8 Balance, round 2 (owner 2026-10-18, "still too easy"): every weapon level fires 15% less often and its shots fly 15% slower again (level 1: 4.25 shots/s at 289 px/s; level 3: 3.83 at 230); shots drawn at 45% of the art (was 60%), hitboxes to match
+- [x] M3.9 Level 1 tracer back to full size (owner 2026-10-18: "don't shrink the small weapon, only the larger weapon art"); its hitbox is its visible 4×10, so each level still hits a bigger area than the last
 
 **Acceptance criteria:** each power-up is visibly distinct and behaves as specified; rules are unit tested; frame rate holds with max weapon and a full wave.
 
@@ -159,9 +161,9 @@
 
 - [x] M5.1 Import and slice the extra art for levels 2–4 (manifest and credits updated): level 2 purple asteroid field (asteroid-fighter pack); level 4 red parallax layers, big planet and ring planet (space background pack, original version); bosses Warped vehicle 1 and 2; alien flyer. Level 3 uses the blue space pack layers already bundled
 - [x] M5.2 Level 2 (Asteroid Belt) and its boss: purple asteroid field (drawn 2× so the 160-wide tile covers the screen), grunts, divers and heavy asteroids, boss Warped vehicle 1 (220 HP, 7,500 points, fans up to 6 shots)
-- [ ] M5.3 Level 3 (Blue Expanse) and its boss
-- [ ] M5.4 Level 4 (Red Giant) and its boss
-- [ ] M5.5 Automated check that every level's data is valid and within the difficulty limits
+- [x] M5.3 Level 3 (Blue Expanse) and its boss: blue space pack layers, weavers, divers and the new alien flyer (5 HP, 250 points, wide slow sway, fires), boss Warped vehicle 2 (280 HP, 10,000 points, fans up to 7 shots)
+- [x] M5.4 Level 4 (Red Giant) and its boss: red parallax layers (the sky still at 2×, since its light band doesn't repeat cleanly), the big red planet and ringed planet drifting past (new level `props`), alien flyers and divers, boss the upgraded spaceship unit (340 HP, 12,500 points, a fourth phase, fans up to 7 shots)
+- [x] M5.5 Automated check that every level's data is valid and within the difficulty limits (`tests/unit/levels.test.ts` runs every check on every level in `LEVELS`, including its `difficulty()` numbers and a tougher boss each level)
 
 **Acceptance criteria:** the owner plays through levels 1–4; each level looks distinct; all checks pass.
 

@@ -1,10 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { ASSETS } from '../../src/assets/manifest';
-import { ENEMY_TYPES, GAME_WIDTH } from '../../src/config/tuning';
+import { BOSSES, DIFFICULTY, ENEMY_TYPES, GAME_HEIGHT, GAME_WIDTH } from '../../src/config/tuning';
+import { levelDifficulty } from '../../src/levels/difficulty';
 import { LEVELS } from '../../src/levels';
-import { ASTEROID_LIMITS, WAVE_LIMITS, screenTime } from '../../src/levels/limits';
+import {
+  ASTEROID_LIMITS,
+  WAVE_LIMITS,
+  frameHeight,
+  screenTime,
+  sheetFrameHeight,
+} from '../../src/levels/limits';
 import { LEVEL_1 } from '../../src/levels/level1';
 import { LEVEL_2 } from '../../src/levels/level2';
+import { LEVEL_3 } from '../../src/levels/level3';
+import { LEVEL_4 } from '../../src/levels/level4';
 import { checkWaves, mostAtOnce } from '../../src/logic/waves';
 
 describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${level.name})` })))(
@@ -25,10 +34,22 @@ describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${le
         expect(asset, layer.texture).toBeDefined();
         expect(layer.alpha).toBeGreaterThan(0);
         expect(layer.alpha).toBeLessThanOrEqual(1);
-        expect(layer.scrollSpeed).toBeGreaterThan(0);
       }
       // The furthest-back layer is opaque, so nothing shows through it.
       expect(level.background[0]?.alpha).toBe(1);
+    });
+
+    it('scrolls every layer, except that the back layer may stay still if it fills the screen', () => {
+      level.background.forEach((layer, i) => {
+        if (i > 0) expect(layer.scrollSpeed, layer.texture).toBeGreaterThan(0);
+        expect(layer.scrollSpeed, layer.texture).toBeGreaterThanOrEqual(0);
+        if (layer.scrollSpeed === 0) {
+          // A still layer must cover the whole screen height on its own (no repeat).
+          const asset = ASSETS.find((a) => a.key === layer.texture);
+          const height = asset?.kind === 'image' ? asset.height : (asset?.frameHeight ?? 0);
+          expect(height * (layer.scale ?? 1), layer.texture).toBeGreaterThanOrEqual(GAME_HEIGHT);
+        }
+      });
     });
 
     it('covers the full screen width with every layer (no seam)', () => {
@@ -36,6 +57,18 @@ describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${le
         const asset = ASSETS.find((a) => a.key === layer.texture);
         const width = asset?.kind === 'image' ? asset.width : (asset?.frameWidth ?? 0);
         expect(width * (layer.scale ?? 1), layer.texture).toBeGreaterThanOrEqual(GAME_WIDTH);
+      }
+    });
+
+    it('draws its props from images, on screen sideways, drifting slower than the nearest layer', () => {
+      const nearest = Math.max(...level.background.map((l) => l.scrollSpeed));
+      for (const prop of level.props ?? []) {
+        expect(ASSETS.find((a) => a.key === prop.texture)?.kind, prop.texture).toBe('image');
+        expect(prop.x).toBeGreaterThanOrEqual(0);
+        expect(prop.x).toBeLessThanOrEqual(1);
+        expect(prop.scrollSpeed).toBeGreaterThan(0);
+        expect(prop.scrollSpeed).toBeLessThan(nearest);
+        expect(prop.gap).toBeGreaterThanOrEqual(0);
       }
     });
 
@@ -57,6 +90,23 @@ describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${le
       expect(checkWaves(level.waves, ASTEROID_LIMITS)).toEqual([]);
     });
 
+    it('has difficulty numbers within the PROJECT.md 4a limits (M5.5)', () => {
+      expect(level.number).toBeLessThanOrEqual(DIFFICULTY.lastLevel);
+      const d = levelDifficulty(level.number);
+      const first = levelDifficulty(1);
+      expect(first.fire.interval / d.fire.interval).toBeLessThanOrEqual(DIFFICULTY.fireRateAtLast);
+      expect(d.shotSpeed / first.shotSpeed).toBeLessThanOrEqual(DIFFICULTY.shotSpeedAtLast);
+      expect(d.fire.jitter).toBeLessThan(d.fire.interval);
+      expect(d.drops.chance).toBeLessThanOrEqual(1);
+    });
+
+    it('has a boss that exists and gets tougher level by level', () => {
+      const boss = BOSSES[level.boss];
+      expect(boss).toBeDefined();
+      const before = LEVELS[level.number - 2];
+      if (before) expect(boss.hp).toBeGreaterThan(BOSSES[before.boss].hp);
+    });
+
     it('gives the player a breather before the boss', () => {
       expect(level.bossAfter).toBeGreaterThanOrEqual(2);
     });
@@ -75,6 +125,45 @@ describe('level 2 (M4.4, own art and boss M5.2)', () => {
     const rocks = (waves: typeof LEVEL_1.waves): number =>
       waves.filter((s) => s.kind === 'asteroid').length;
     expect(rocks(LEVEL_2.waves)).toBeGreaterThan(2 * rocks(LEVEL_1.waves));
+  });
+});
+
+describe('level 3 (M5.3)', () => {
+  it('matches the approved plan: Blue Expanse, enemy types 2 and 3 plus alien flyers, vehicle-2 boss', () => {
+    expect(LEVEL_3).toMatchObject({ number: 3, name: 'Blue Expanse', boss: 'vehicle-2' });
+    expect(LEVEL_3.roster).toEqual(['weaver', 'diver', 'flyer']);
+    expect(LEVEL_3.background[0]?.texture).toBe('bg-blue-back');
+    expect(LEVELS[2]).toBe(LEVEL_3);
+  });
+
+  it('uses every enemy in its roster', () => {
+    expect(new Set(LEVEL_3.waves.map((s) => s.kind))).toEqual(
+      new Set([...LEVEL_3.roster, 'asteroid']),
+    );
+  });
+});
+
+describe('level 4 (M5.4)', () => {
+  it('matches the approved plan: Red Giant, alien flyers and enemy type 3, upgraded spaceship unit', () => {
+    expect(LEVEL_4).toMatchObject({ number: 4, name: 'Red Giant', boss: 'spaceship-unit-mk2' });
+    expect(LEVEL_4.roster).toEqual(['diver', 'flyer']);
+    expect(LEVEL_4.background.map((l) => l.texture)).toContain('bg-red-back');
+    expect(LEVEL_4.props?.map((p) => p.texture)).toEqual([
+      'bg-red-big-planet',
+      'bg-red-ring-planet',
+    ]);
+    expect(LEVELS[3]).toBe(LEVEL_4);
+  });
+
+  it("has a boss with upgraded attacks: level 1's ship, tougher, with an extra phase and wider fans", () => {
+    const one = BOSSES['spaceship-unit'];
+    const four = BOSSES['spaceship-unit-mk2'];
+    expect(four.sprite).toBe(one.sprite);
+    expect(four.hp).toBeGreaterThan(one.hp);
+    expect(four.phases.length).toBeGreaterThan(one.phases.length);
+    const widest = (b: typeof one): number =>
+      Math.max(...b.phases.flatMap((p) => p.attacks.map((a) => (a.kind === 'fan' ? a.shots : 1))));
+    expect(widest(four)).toBeGreaterThan(widest(one));
   });
 });
 
@@ -109,6 +198,13 @@ describe('level 1 waves', () => {
 });
 
 describe('wave limits', () => {
+  it("use each enemy kind's real frame height (the flyer is taller)", () => {
+    expect(frameHeight('grunt')).toBe(48);
+    expect(frameHeight('flyer')).toBe(64);
+    expect(() => sheetFrameHeight('no-such-sprite')).toThrow('no sprite sheet');
+    expect(() => sheetFrameHeight('bg-blue-back')).toThrow('no sprite sheet'); // an image, not a sheet
+  });
+
   it('keep weavers further from the edges than grunts (they sway)', () => {
     expect(WAVE_LIMITS.xRange['weaver']?.min).toBeGreaterThan(
       WAVE_LIMITS.xRange['grunt']?.min ?? 1,

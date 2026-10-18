@@ -149,13 +149,6 @@ export const PLAYER = {
 
 /** Shared weapon settings. */
 export const WEAPON = {
-  /**
-   * Shots are drawn at this scale (owner requests 2026-10-18: first 40% smaller,
-   * then smaller again; now 45% of the art's size).
-   * Not a whole number, an owner-approved exception to whole-pixel scaling;
-   * the hitboxes below are already at this size.
-   */
-  shotScale: 0.45,
   /** Where shots appear, relative to the ship's center (negative = above). */
   muzzleOffsetY: -24,
   /** Most shots on screen at once (level 3 fires three per volley). */
@@ -172,18 +165,27 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
   hitbox: { w: number; h: number };
   /** Seconds between volleys while the fire key is held. */
   fireInterval: number;
+  /**
+   * Drawn at this scale. Owner 2026-10-18: the larger shots are drawn at 45%
+   * (not a whole number: an owner-approved exception to whole-pixel scaling);
+   * the small level-1 tracer stays full size so it can be seen. Hitboxes match.
+   */
+  scale: number;
 })[] = [
   // Owner requests 2026-10-18 (the game was too easy): stronger levels fire a
   // little less often and their shots fly a little slower (level 2: 5% below
   // level 1, level 3: 10%), and then every level 15% slower again on both.
-  // Hitboxes match the shots' drawn size (45% of the art).
+  // Hitboxes match the shots' drawn size.
   // 1: a single small orange tracer (space-marine bullet, visible 10×4).
   {
     sprite: 'shot-tracer',
     damage: 1,
     speed: 289,
     fireInterval: 0.2 / 0.85,
-    hitbox: { w: 3, h: 5 },
+    scale: 1,
+    // Exactly the tracer's visible size (10×4, turned to point up), so each
+    // level still hits a bigger area than the last.
+    hitbox: { w: 4, h: 10 },
     shots: [{ dx: 0, angleDeg: 0 }],
   },
   // 2: two ringed blue pulses side by side (visible about 50×25 each).
@@ -192,6 +194,7 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
     damage: 1,
     speed: 258,
     fireInterval: 0.2 / (0.95 * 0.85),
+    scale: 0.45,
     hitbox: { w: 5, h: 13 },
     shots: [
       { dx: -7, angleDeg: 0 },
@@ -204,6 +207,7 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
     damage: 2,
     speed: 230,
     fireInterval: 0.2 / (0.9 * 0.85),
+    scale: 0.45,
     hitbox: { w: 8, h: 14 },
     shots: [
       { dx: -6, angleDeg: -12 },
@@ -251,7 +255,7 @@ export const ENEMY_FIRE = {
 } as const;
 
 /** The three enemy types (M2.3). Hitboxes are about 80% of each sprite's visible body. */
-export type EnemyKind = 'grunt' | 'weaver' | 'diver';
+export type EnemyKind = 'grunt' | 'weaver' | 'diver' | 'flyer';
 
 export interface EnemyType {
   /** Texture key (see the asset manifest). */
@@ -293,6 +297,19 @@ export const ENEMY_TYPES: Readonly<Record<EnemyKind, EnemyType>> = {
     fires: false,
     hitbox: { w: 34, h: 28, offsetY: 0 },
     move: { kind: 'dive', enterSpeed: 70, hoverY: 70, hoverTime: 0.9, diveSpeed: 170 },
+  },
+  /**
+   * Alien flyer (levels 3 and 4, M5.3): a winged bug, bigger and tougher, that
+   * sways wide and slow while it shoots. Frame 83×64; the hitbox covers the
+   * body, not the wingtips.
+   */
+  flyer: {
+    sprite: 'enemy-alien-flyer',
+    hp: 5,
+    points: 250,
+    fires: true,
+    hitbox: { w: 40, h: 34, offsetY: 4 },
+    move: { kind: 'weave', speed: 30, amplitude: 48, period: 3.2 },
   },
 };
 
@@ -339,7 +356,7 @@ export const BOSS_DEFEAT = {
 };
 
 /** Bosses, by the art they use (PROJECT.md 4a level plan). More arrive with each level. */
-export type BossKind = 'spaceship-unit' | 'vehicle-1';
+export type BossKind = 'spaceship-unit' | 'vehicle-1' | 'vehicle-2' | 'spaceship-unit-mk2';
 
 /**
  * Bosses (M4.3). Each fights in phases: as its health falls it switches to
@@ -433,6 +450,108 @@ export const BOSSES: Record<
         ],
         cooldown: 0.85,
         swayHz: 0.2,
+      },
+    ],
+  },
+  // Level 3: Warped vehicle 2, 176×125, turned to face down (125 wide, 176 tall).
+  // Tougher again: more health, fans up to 7 shots, a faster tempo.
+  'vehicle-2': {
+    sprite: 'boss-vehicle-2',
+    angleDeg: 90,
+    hitbox: { w: 84, h: 150 },
+    hp: 280,
+    points: 10000,
+    entry: { startY: -90, hoverY: 80, speed: 40 },
+    swayAmplitude: 50,
+    muzzleOffsetY: 82,
+    shotSpeed: 130,
+    maxAimAngleDeg: 30,
+    phases: [
+      {
+        fromHp: 1,
+        attacks: [
+          { kind: 'fan', shots: 5, spreadDeg: 70 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 4, spreadDeg: 50 },
+        ],
+        cooldown: 1.2,
+        swayHz: 0.1,
+      },
+      {
+        fromHp: 0.6,
+        attacks: [
+          { kind: 'fan', shots: 6, spreadDeg: 90 },
+          { kind: 'aimed' },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 5, spreadDeg: 60 },
+        ],
+        cooldown: 0.95,
+        swayHz: 0.14,
+      },
+      {
+        fromHp: 0.3,
+        attacks: [
+          { kind: 'fan', shots: 7, spreadDeg: 100 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 6, spreadDeg: 80 },
+          { kind: 'aimed' },
+        ],
+        cooldown: 0.8,
+        swayHz: 0.18,
+      },
+    ],
+  },
+  // Level 4: the spaceship unit again, upgraded (PROJECT.md 4a: "upgraded
+  // attacks"): more health, a fourth phase, wider fans, faster sway.
+  'spaceship-unit-mk2': {
+    sprite: 'boss-spaceship-unit',
+    angleDeg: 90,
+    hitbox: { w: 60, h: 84 },
+    hp: 340,
+    points: 12500,
+    entry: { startY: -60, hoverY: 70, speed: 45 },
+    swayAmplitude: 85,
+    muzzleOffsetY: 44,
+    shotSpeed: 135,
+    maxAimAngleDeg: 30,
+    phases: [
+      {
+        fromHp: 1,
+        attacks: [{ kind: 'fan', shots: 5, spreadDeg: 70 }, { kind: 'aimed' }, { kind: 'aimed' }],
+        cooldown: 1.1,
+        swayHz: 0.15,
+      },
+      {
+        fromHp: 0.7,
+        attacks: [
+          { kind: 'fan', shots: 6, spreadDeg: 90 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 4, spreadDeg: 50 },
+        ],
+        cooldown: 0.95,
+        swayHz: 0.2,
+      },
+      {
+        fromHp: 0.4,
+        attacks: [
+          { kind: 'fan', shots: 7, spreadDeg: 100 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 5, spreadDeg: 60 },
+          { kind: 'aimed' },
+        ],
+        cooldown: 0.8,
+        swayHz: 0.26,
+      },
+      {
+        fromHp: 0.15,
+        attacks: [
+          { kind: 'fan', shots: 7, spreadDeg: 110 },
+          { kind: 'fan', shots: 6, spreadDeg: 90 },
+          { kind: 'aimed' },
+          { kind: 'aimed' },
+        ],
+        cooldown: 0.7,
+        swayHz: 0.32,
       },
     ],
   },

@@ -2,6 +2,7 @@
  * Limits every level's wave data must respect, worked out from the tuning
  * (no Phaser, so level data can be checked in unit tests).
  */
+import { ASSETS } from '../assets/manifest';
 import {
   ASTEROIDS,
   ENEMY_COMMON,
@@ -13,22 +14,35 @@ import {
 import { spawnMargin, type MovePattern } from '../logic/enemyMoves';
 import type { WaveLimits } from '../logic/waves';
 
-/** Height of every enemy frame; they spawn just above the screen. */
+/** The standard enemy frame height; they spawn just above the screen. */
 const FRAME = 48;
 
-/** Rough seconds an enemy of this pattern spends on screen if nobody shoots it. */
-export function screenTime(move: MovePattern): number {
-  const path = GAME_HEIGHT + FRAME;
+/**
+ * Rough seconds an enemy of this pattern spends on screen if nobody shoots it,
+ * for a sprite `frame` pixels tall.
+ */
+export function screenTime(move: MovePattern, frame = FRAME): number {
+  const path = GAME_HEIGHT + frame;
   switch (move.kind) {
     case 'straight':
     case 'weave':
       return path / move.speed;
     case 'dive':
-      return (move.hoverY + FRAME / 2) / move.enterSpeed + move.hoverTime + path / move.diveSpeed;
+      return (move.hoverY + frame / 2) / move.enterSpeed + move.hoverTime + path / move.diveSpeed;
   }
 }
 
 const kinds = Object.keys(ENEMY_TYPES) as EnemyKind[];
+
+/** A sprite sheet's frame height, from the asset manifest. */
+export function sheetFrameHeight(sprite: string): number {
+  const asset = ASSETS.find((a) => a.key === sprite);
+  if (asset?.kind !== 'sheet') throw new Error(`no sprite sheet called ${sprite}`);
+  return asset.frameHeight;
+}
+
+/** An enemy kind's frame height. */
+export const frameHeight = (kind: EnemyKind): number => sheetFrameHeight(ENEMY_TYPES[kind].sprite);
 
 const asteroidMargin = (ASTEROIDS.large.hitbox.w / 2 + 4) / GAME_WIDTH;
 /** A large rock's time on screen at its drift speed (it spawns with its full height above). */
@@ -47,7 +61,7 @@ export const WAVE_LIMITS: WaveLimits = {
     asteroid: { min: asteroidMargin, max: 1 - asteroidMargin },
   },
   screenTime: {
-    ...Object.fromEntries(kinds.map((k) => [k, screenTime(ENEMY_TYPES[k].move)])),
+    ...Object.fromEntries(kinds.map((k) => [k, screenTime(ENEMY_TYPES[k].move, frameHeight(k))])),
     asteroid: ASTEROID_SCREEN_TIME,
   },
   maxAtOnce: ENEMY_COMMON.poolSize,

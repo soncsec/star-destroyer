@@ -11,7 +11,10 @@ import type { WaveSpawn } from '../logic/waves';
 export interface BackgroundLayer {
   /** Texture key from the asset manifest. */
   texture: string;
-  /** Pixels per second; nearer layers move faster for depth. */
+  /**
+   * Pixels per second; nearer layers move faster for depth. 0 keeps a layer
+   * still (for art that doesn't repeat cleanly); only the back layer may.
+   */
   scrollSpeed: number;
   /** 1 = opaque. */
   alpha: number;
@@ -23,12 +26,28 @@ export interface BackgroundLayer {
   scale?: 1 | 2;
 }
 
+/** A single image (a planet, say) drifting down behind the action and coming round again. */
+export interface BackgroundProp {
+  /** Texture key of an image in the asset manifest. */
+  texture: string;
+  /** Horizontal center as a fraction of the screen width. */
+  x: number;
+  /** Center y at the level's start, in pixels (negative = above the screen). */
+  y: number;
+  /** Pixels per second. */
+  scrollSpeed: number;
+  /** Pixels of empty sky after it leaves the bottom before it comes back at the top. */
+  gap: number;
+}
+
 export interface Level {
   /** 1-based; level 8 is the last. */
   number: number;
   /** What the player sees, e.g. on the level-complete screen. */
   name: string;
   background: readonly BackgroundLayer[];
+  /** Drawn over the background layers, behind everything else. */
+  props?: readonly BackgroundProp[];
   /** The enemy types this level uses (the approved plan). */
   roster: readonly EnemyKind[];
   /** Enemies and asteroids, in time order (seconds from the level start). */

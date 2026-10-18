@@ -48,7 +48,8 @@ import { rollDrop, type PowerUpKind } from '../logic/drops';
 import { panelShown, startGameOver, stepGameOver, type GameOverState } from '../logic/gameOver';
 import { LEVELS } from '../levels';
 import { levelDifficulty } from '../levels/difficulty';
-import type { Level } from '../levels/types';
+import type { BackgroundProp, Level } from '../levels/types';
+import { driftY } from '../logic/backdrop';
 import type { Difficulty } from '../logic/difficulty';
 import { aimDown, firstShotDelay, nextShotDelay, stepEnemyFire } from '../logic/enemyFire';
 import {
@@ -150,6 +151,8 @@ export class GameScene extends Phaser.Scene {
   private difficulty!: Difficulty;
   /** The level's scrolling background layers, furthest back first. */
   private backdrop: { sprite: Phaser.GameObjects.TileSprite; scrollSpeed: number }[] = [];
+  /** The level's drifting planets and the like (M5.4). */
+  private props: { sprite: Phaser.GameObjects.Image; prop: BackgroundProp }[] = [];
   private player!: Player;
   private bullets!: Bullets;
   private fireState: FireState = { cooldown: 0 };
@@ -222,6 +225,10 @@ export class GameScene extends Phaser.Scene {
         .setAlpha(layer.alpha)
         .setTileScale(layer.scale ?? 1),
       scrollSpeed: layer.scrollSpeed,
+    }));
+    this.props = (level.props ?? []).map((prop) => ({
+      sprite: this.add.image(prop.x * GAME_WIDTH, prop.y, prop.texture).setDepth(DEPTH.background),
+      prop,
     }));
     // Each level gets its own repeatable random sequence.
     this.rng = createRng(seedFromUrl() + level.number - 1);
@@ -359,6 +366,9 @@ export class GameScene extends Phaser.Scene {
     }
     // Moving the texture down makes the ship appear to fly up.
     for (const layer of this.backdrop) layer.sprite.tilePositionY -= layer.scrollSpeed * dt;
+    for (const { sprite, prop } of this.props) {
+      sprite.y = driftY(sprite.y, prop.scrollSpeed * dt, sprite.height, GAME_HEIGHT, prop.gap);
+    }
     const alive = !isGameOver(this.health);
     if (alive) this.player.update(this.readAxis(), dt);
 
@@ -654,7 +664,7 @@ export class GameScene extends Phaser.Scene {
     const { x, y } = this.player.position;
     let all = true;
     for (const shot of volley(level, x, y + WEAPON.muzzleOffsetY)) {
-      all = this.bullets.fire(shot, level.sprite, level.hitbox) && all;
+      all = this.bullets.fire(shot, level.sprite, level.hitbox, level.scale) && all;
     }
     return all;
   }
@@ -676,6 +686,13 @@ export class GameScene extends Phaser.Scene {
     this.asteroids.clear();
     this.pickups.clear();
     if (!keepShots) this.enemyBullets.clear();
+  }
+
+  /** Damages the boss (player shots, and tests); defeats it at 0 health. */
+  hurtBoss(amount: number): void {
+    const { x, y } = this.boss.position;
+    const points = this.boss.hit(amount);
+    if (points > 0) this.bossDefeated(x, y, points);
   }
 
   /** Ends the level's waves at once, so the boss comes after the usual pause (tests). */
@@ -715,9 +732,7 @@ export class GameScene extends Phaser.Scene {
       if (bossBox && firstHit(box, [bossBox]) >= 0) {
         this.sparks.play(tip.x, tip.y);
         this.bullets.release(shot);
-        const { x, y } = this.boss.position;
-        const points = this.boss.hit(shot.damage);
-        if (points > 0) this.bossDefeated(x, y, points);
+        this.hurtBoss(shot.damage);
         continue;
       }
       const enemy = touching(box, this.enemies.active(), (e) => this.enemies.hitbox(e));
