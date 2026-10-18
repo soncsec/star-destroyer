@@ -36,6 +36,23 @@ export const POWERUPS = {
   poolSize: 8,
 } as const;
 
+/** The shield power-up (M3.3; owner decisions: 30 s, a new pickup resets to 30 s). */
+export const SHIELD = {
+  duration: 30,
+  /** The bubble blinks this many times a second during the last `warnAt` seconds. */
+  warnAt: 3,
+  blinkHz: 6,
+  sprite: 'energy-shield',
+  /** The bubble is about 26 px across in the art; 2× (whole-number) puts it around the ship. */
+  scale: 2,
+  /** Frames 0, 1, 3 loop while it's up (2 is a solid disc that would hide the ship); 4–7 break it. */
+  loopFrames: [0, 1, 3],
+  breakFrames: [4, 5, 6, 7],
+  frameRate: 8,
+  /** What touches the bubble: enemy shots are absorbed, rammers destroyed. */
+  hitbox: { w: 44, h: 44 },
+} as const;
+
 /** Pause, quit and the controls legend (owner request 2026-10-17, PROJECT.md 4b). */
 export const CONTROLS = {
   /** The legend shows this long at the start of a game, then hides (H brings it back). */

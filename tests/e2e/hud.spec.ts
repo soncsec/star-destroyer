@@ -45,6 +45,7 @@ test('the HUD starts with score 0, 3 lives and 5 health pips, in the pixel font'
     score: 'SCORE 000000',
     lives: 'LIVES 3',
     pips: [true, true, true, true, true],
+    shield: '', // no shield countdown until a shield is collected
   });
   expect(await page.evaluate(() => document.fonts.check('8px "Press Start 2P"'))).toBe(true);
 });

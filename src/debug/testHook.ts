@@ -14,6 +14,8 @@ export interface TestHook {
   setSpawning(on: boolean): void;
   /** Removes all enemies, asteroids and pickups and, unless `keepShots`, enemy shots. */
   clearEnemies(keepShots?: boolean): void;
+  /** Sets the seconds of shield left. */
+  setShield(seconds: number): void;
   /** Overrides the drop chance (1 = every kill drops); null restores the tuning. */
   setDropChance(chance: number | null): void;
   /** Drops a pickup of `kind` at (x, y). */
@@ -58,6 +60,7 @@ export function installTestHook(game: Phaser.Game): void {
     setWeaponLevel: (level) => required().setWeaponLevel(level),
     spawnPickup: (kind, x, y) => required().spawnPickup(kind, x, y),
     setDropChance: (chance) => required().setDropChance(chance),
+    setShield: (seconds) => required().setShield(seconds),
     spawnEnemy: (x, y, firstShot, kind) => required().spawnEnemy(x, y, firstShot, kind),
   };
 }

@@ -12,6 +12,7 @@ import {
   GAME_WIDTH,
   PLAYER_HEALTH,
   POWERUPS,
+  SHIELD,
   WEAPON,
   WEAPON_LEVELS,
   type EnemyKind,
@@ -25,6 +26,7 @@ import { Explosions } from '../entities/Explosions';
 import { GameOverPanel } from '../entities/GameOverPanel';
 import { Hud } from '../entities/Hud';
 import { Pickups } from '../entities/Pickups';
+import { ShieldBubble } from '../entities/ShieldBubble';
 import { Player } from '../entities/Player';
 import { typeLetter, type Cheat } from '../logic/cheats';
 import { firstHit, type Box } from '../logic/collision';
@@ -51,6 +53,7 @@ import {
 } from '../logic/health';
 import type { Axis } from '../logic/player';
 import { createRng, type Rng } from '../logic/rng';
+import { collectShield, shieldSeconds, shieldUp, tickShield, type Shield } from '../logic/shield';
 import { startWaves, stepWaves, type WaveRunner } from '../logic/waves';
 import { stepFire, type FireState } from '../logic/weapon';
 import { levelUp, volley } from '../logic/weaponLevels';
@@ -73,7 +76,9 @@ export interface GameSnapshot {
   waves: WaveRunner;
   asteroids: { size: RockSize; x: number; y: number; hp: number }[];
   /** What the HUD shows. */
-  hud: { score: string; lives: string; pips: boolean[] };
+  hud: { score: string; lives: string; pips: boolean[]; shield: string };
+  /** Seconds of shield left, and whether the bubble is drawn this frame. */
+  shield: { timeLeft: number; bubbleVisible: boolean };
   /** Pause / quit / legend state and what the overlay shows; mute and full screen. */
   controls: { mode: string; legend: boolean; overlay: ReturnType<ControlsOverlay['read']> };
   muted: boolean;
@@ -110,6 +115,9 @@ export class GameScene extends Phaser.Scene {
   private fireState: FireState = { cooldown: 0 };
   /** Current weapon level, 1 to WEAPON_LEVELS.length (owner rules: no time-out, reset on death). */
   private weaponLevel = 1;
+  /** Seconds of shield left (M3.3); 0 = none. */
+  private shield: Shield = 0;
+  private shieldBubble!: ShieldBubble;
   private enemies!: Enemies;
   private enemyBullets!: EnemyBullets;
   private asteroids!: Asteroids;
@@ -170,6 +178,8 @@ export class GameScene extends Phaser.Scene {
     this.pickups = new Pickups(this);
     this.collected = { weapon: 0, shield: 0, clear: 0 };
     this.weaponLevel = 1;
+    this.shield = 0;
+    this.shieldBubble = new ShieldBubble(this);
     this.bossFight = false;
     this.dropChance = null;
     this.gameOverPanel = new GameOverPanel(this);
@@ -301,10 +311,13 @@ export class GameScene extends Phaser.Scene {
     this.health = tickHealth(this.health, dt);
     this.resolvePlayerHits();
     this.collectPickups();
+    this.shield = tickShield(this.shield, dt);
+    const { x: sx, y: sy } = this.player.position;
+    this.shieldBubble.update(sx, sy, this.shield);
     this.player.setVisible(
       !isGameOver(this.health) && shipVisible(this.health, PLAYER_HEALTH.flashHz),
     );
-    this.hud.update(this.score, this.health.hits, this.health.lives);
+    this.hud.update(this.score, this.health.hits, this.health.lives, shieldSeconds(this.shield));
     this.updateGameOver(dt);
   }
 
@@ -343,12 +356,39 @@ export class GameScene extends Phaser.Scene {
   }
 
   /**
+   * While the shield is up nothing hurts the ship: enemy shots touching the
+   * bubble are absorbed, and enemies or rocks that ram it are destroyed (no points).
+   */
+  private shieldBlocks(): void {
+    const { x, y } = this.player.position;
+    const bubble = { x, y, ...SHIELD.hitbox };
+    for (const b of this.enemyBullets.active()) {
+      if (firstHit(bubble, [this.enemyBullets.hitbox(b)]) >= 0) this.enemyBullets.release(b);
+    }
+    for (const e of this.enemies.active()) {
+      if (firstHit(bubble, [this.enemies.hitbox(e)]) < 0) continue;
+      this.explosions.play(e.sprite.x, e.sprite.y);
+      this.enemies.destroy(e);
+    }
+    for (const r of this.asteroids.active()) {
+      if (firstHit(bubble, [this.asteroids.hitbox(r)]) < 0) continue;
+      this.asteroids.destroy(r);
+      this.shatter(r);
+    }
+  }
+
+  /**
    * An enemy shot, an enemy or an asteroid touching the ship costs one hit.
    * The shot is used up; a crashing enemy is destroyed and a crashing rock
    * shatters (no points either way).
    */
   private resolvePlayerHits(): void {
-    if (isGameOver(this.health) || this.health.invulnerable > 0 || this.invincible) return;
+    if (isGameOver(this.health)) return;
+    if (shieldUp(this.shield)) {
+      this.shieldBlocks();
+      return;
+    }
+    if (this.health.invulnerable > 0 || this.invincible) return;
     const ship = this.player.hitbox();
     const shot = touching(ship, this.enemyBullets.active(), (b) => this.enemyBullets.hitbox(b));
     const enemy = touching(ship, this.enemies.active(), (e) => this.enemies.hitbox(e));
@@ -371,6 +411,8 @@ export class GameScene extends Phaser.Scene {
       const { x, y } = this.player.position;
       this.explosions.play(x, y);
       this.weaponLevel = 1; // owner rule: power-ups are lost on death
+      this.shield = 0;
+      this.shieldBubble.reset();
       if (result === 'lifeLost') this.player.reset();
     }
   }
@@ -390,6 +432,7 @@ export class GameScene extends Phaser.Scene {
       })),
       waves: { ...this.waves },
       hud: this.hud.read(),
+      shield: { timeLeft: this.shield, bubbleVisible: this.shieldBubble.visible },
       controls: {
         mode: this.controls.mode,
         legend: this.controls.legend,
@@ -415,6 +458,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   /** Spawns a large asteroid at `x`: at the top of the screen, or at `y` if given (tests). */
+  /** Sets the seconds of shield left (tests reach the end of a shield quickly). */
+  setShield(seconds: number): void {
+    this.shield = Math.max(0, seconds);
+  }
+
   /** Overrides the drop chance (tests: 1 = every kill drops); null restores the tuning. */
   setDropChance(chance: number | null): void {
     this.dropChance = chance;
@@ -524,6 +572,7 @@ export class GameScene extends Phaser.Scene {
       if (firstHit(ship, [this.pickups.hitbox(p)]) < 0) continue;
       this.pickups.release(p);
       this.collected[p.kind]++;
+      if (p.kind === 'shield') this.shield = collectShield(this.shield, SHIELD);
       if (p.kind === 'weapon') this.weaponLevel = levelUp(this.weaponLevel, WEAPON_LEVELS.length);
     }
   }

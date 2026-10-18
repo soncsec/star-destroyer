@@ -6,6 +6,7 @@ import { formatScore, healthPips } from '../logic/hud';
 export class Hud {
   private readonly score: Phaser.GameObjects.Text;
   private readonly lives: Phaser.GameObjects.Text;
+  private readonly shield: Phaser.GameObjects.Text;
   private readonly pips: Phaser.GameObjects.Rectangle[] = [];
 
   constructor(scene: Phaser.Scene, hitsPerLife: number) {
@@ -24,6 +25,12 @@ export class Hud {
       .setOrigin(1, 0)
       .setShadow(1, 1, HUD.shadow, 0, false, true)
       .setDepth(DEPTH.hud);
+    // Shield countdown under the lives, only while the shield is up (M3.3).
+    this.shield = scene.add
+      .text(GAME_WIDTH - m, m + HUD.fontSize + 3, '', { ...style, color: '#2de2e6' })
+      .setOrigin(1, 0)
+      .setShadow(1, 1, HUD.shadow, 0, false, true)
+      .setDepth(DEPTH.hud);
     const { w, h, gap } = HUD.pip;
     for (let i = 0; i < hitsPerLife; i++) {
       this.pips.push(
@@ -35,8 +42,10 @@ export class Hud {
     }
   }
 
-  update(score: number, hits: number, lives: number): void {
+  /** `shieldSeconds` 0 hides the shield countdown. */
+  update(score: number, hits: number, lives: number, shieldSeconds = 0): void {
     this.score.setText(`SCORE ${formatScore(score)}`);
+    this.shield.setText(shieldSeconds > 0 ? `SHIELD ${shieldSeconds}` : '');
     this.lives.setText(`LIVES ${lives}`);
     healthPips(hits, this.pips.length, lives).forEach((on, i) =>
       this.pips[i]?.setFillStyle(on ? HUD.pip.on : HUD.pip.off),
@@ -44,10 +53,11 @@ export class Hud {
   }
 
   /** What is on screen, for the e2e test hook. */
-  read(): { score: string; lives: string; pips: boolean[] } {
+  read(): { score: string; lives: string; pips: boolean[]; shield: string } {
     return {
       score: this.score.text,
       lives: this.lives.text,
+      shield: this.shield.text,
       pips: this.pips.map((p) => p.fillColor === HUD.pip.on),
     };
   }
