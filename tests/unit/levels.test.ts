@@ -11,6 +11,7 @@ import {
 } from '../../src/levels/limits';
 import { LEVEL_1 } from '../../src/levels/level1';
 import { LEVEL_2 } from '../../src/levels/level2';
+import { LEVEL_3 } from '../../src/levels/level3';
 import { checkWaves, mostAtOnce } from '../../src/logic/waves';
 
 describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${level.name})` })))(
@@ -81,6 +82,21 @@ describe('level 2 (M4.4, own art and boss M5.2)', () => {
     const rocks = (waves: typeof LEVEL_1.waves): number =>
       waves.filter((s) => s.kind === 'asteroid').length;
     expect(rocks(LEVEL_2.waves)).toBeGreaterThan(2 * rocks(LEVEL_1.waves));
+  });
+});
+
+describe('level 3 (M5.3)', () => {
+  it('matches the approved plan: Blue Expanse, enemy types 2 and 3 plus alien flyers, vehicle-2 boss', () => {
+    expect(LEVEL_3).toMatchObject({ number: 3, name: 'Blue Expanse', boss: 'vehicle-2' });
+    expect(LEVEL_3.roster).toEqual(['weaver', 'diver', 'flyer']);
+    expect(LEVEL_3.background[0]?.texture).toBe('bg-blue-back');
+    expect(LEVELS[2]).toBe(LEVEL_3);
+  });
+
+  it('uses every enemy in its roster', () => {
+    expect(new Set(LEVEL_3.waves.map((s) => s.kind))).toEqual(
+      new Set([...LEVEL_3.roster, 'asteroid']),
+    );
   });
 });
 
