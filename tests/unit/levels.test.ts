@@ -4,6 +4,7 @@ import { ENEMY_TYPES } from '../../src/config/tuning';
 import { LEVELS } from '../../src/levels';
 import { ASTEROID_LIMITS, WAVE_LIMITS, screenTime } from '../../src/levels/limits';
 import { LEVEL_1 } from '../../src/levels/level1';
+import { LEVEL_2 } from '../../src/levels/level2';
 import { checkWaves, mostAtOnce } from '../../src/logic/waves';
 
 describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${level.name})` })))(
@@ -53,6 +54,20 @@ describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${le
     });
   },
 );
+
+describe('level 2 (early version, M4.4)', () => {
+  it('matches the approved plan: Asteroid Belt, grunts and divers', () => {
+    expect(LEVEL_2).toMatchObject({ number: 2, name: 'Asteroid Belt' });
+    expect(LEVEL_2.roster).toEqual(['grunt', 'diver']);
+    expect(LEVELS[1]).toBe(LEVEL_2);
+  });
+
+  it('has more asteroids than level 1 (a heavy asteroid level)', () => {
+    const rocks = (waves: typeof LEVEL_1.waves): number =>
+      waves.filter((s) => s.kind === 'asteroid').length;
+    expect(rocks(LEVEL_2.waves)).toBeGreaterThan(2 * rocks(LEVEL_1.waves));
+  });
+});
 
 describe('level 1 waves', () => {
   it('match the approved plan: Teal Nebula, grunts and weavers, spaceship-unit boss', () => {

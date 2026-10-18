@@ -8,6 +8,7 @@ import {
   DEPTH,
   GAME_OVER,
   HIT_SPARK,
+  LEVEL_COMPLETE,
   ENEMY_FIRE,
   ENEMY_TYPES,
   GAME_HEIGHT,
@@ -28,6 +29,7 @@ import { EnemyBullets } from '../entities/EnemyBullets';
 import { Enemies } from '../entities/Enemies';
 import { Explosions } from '../entities/Explosions';
 import { GameOverPanel } from '../entities/GameOverPanel';
+import { LevelCompletePanel, type LevelCompleteInfo } from '../entities/LevelCompletePanel';
 import { Hud } from '../entities/Hud';
 import { Pickups } from '../entities/Pickups';
 import { ShieldBubble } from '../entities/ShieldBubble';
@@ -59,6 +61,12 @@ import {
   type HitResult,
 } from '../logic/health';
 import type { Axis } from '../logic/player';
+import {
+  panelShown as flowPanelShown,
+  startFlow,
+  stepFlow,
+  type FlowState,
+} from '../logic/levelFlow';
 import { createRng, type Rng } from '../logic/rng';
 import { screenClear } from '../logic/screenClear';
 import {
@@ -121,6 +129,8 @@ export interface GameSnapshot {
   blast: boolean;
   /** The boss, once it has appeared (null before). */
   boss: ReturnType<Boss['read']>;
+  /** Where the level is (waves, boss, complete) and the level-complete panel. */
+  flow: { stage: FlowState['stage']; panel: ReturnType<LevelCompletePanel['read']> };
   /** Enemy shots in flight. */
   enemyShots: { x: number; y: number }[];
   health: Health & { gameOver: boolean };
@@ -161,6 +171,11 @@ export class GameScene extends Phaser.Scene {
   private collected: Record<PowerUpKind, number> = { weapon: 0, shield: 0, clear: 0 };
   /** The level's boss, once it has appeared (M4.3). */
   private boss!: Boss;
+  /** Which level to play and what carried over (set by `init`). */
+  private start: GameStart = {};
+  /** Waves, boss, level complete (M4.4). */
+  private flow: FlowState = startFlow();
+  private levelPanel!: LevelCompletePanel;
   /** Drop chance override (tests force drops); null uses the tuning. */
   private dropChance: number | null = null;
   private gameOverPanel!: GameOverPanel;
@@ -189,10 +204,16 @@ export class GameScene extends Phaser.Scene {
     super('Game');
   }
 
+  /** Which level to play, and what carries over from the last one (M4.4). */
+  init(data: GameStart): void {
+    this.start = data;
+  }
+
   create(): void {
-    const level = LEVELS[0];
-    if (!level) throw new Error('no levels');
+    const level = LEVELS[(this.start.level ?? 1) - 1];
+    if (!level) throw new Error(`no level ${this.start.level}`);
     this.level = level;
+    const carry = this.start.carry;
     this.difficulty = levelDifficulty(level.number);
     this.backdrop = level.background.map((layer) => ({
       sprite: this.add
@@ -201,11 +222,15 @@ export class GameScene extends Phaser.Scene {
         .setAlpha(layer.alpha),
       scrollSpeed: layer.scrollSpeed,
     }));
-    this.rng = createRng(seedFromUrl());
+    // Each level gets its own repeatable random sequence.
+    this.rng = createRng(seedFromUrl() + level.number - 1);
+    this.flow = startFlow();
     this.waves = startWaves();
-    this.score = 0;
+    this.score = carry?.score ?? 0;
     this.spawning = true;
-    this.health = newHealth(PLAYER_HEALTH);
+    this.health = carry
+      ? { ...newHealth(PLAYER_HEALTH), hits: carry.hits, lives: carry.lives }
+      : newHealth(PLAYER_HEALTH);
     this.lastHit = null;
     this.asteroids = new Asteroids(this);
     this.enemies = new Enemies(this);
@@ -218,11 +243,13 @@ export class GameScene extends Phaser.Scene {
     this.hud = new Hud(this, PLAYER_HEALTH.hitsPerLife);
     this.pickups = new Pickups(this);
     this.collected = { weapon: 0, shield: 0, clear: 0 };
-    this.powerUps = startPowerUps();
+    // The weapon carries into the next level; a shield doesn't.
+    this.powerUps = { ...startPowerUps(), weaponLevel: carry?.weaponLevel ?? 1 };
     this.shieldBubble = new ShieldBubble(this);
     this.boss = new Boss(this);
     this.dropChance = null;
     this.gameOverPanel = new GameOverPanel(this);
+    this.levelPanel = new LevelCompletePanel(this);
     this.gameOver = null;
 
     const kb = this.input.keyboard;
@@ -245,8 +272,9 @@ export class GameScene extends Phaser.Scene {
     // flips a toggle straight back. Auto-repeat is ignored. Movement and fire
     // still use Phaser's held-key state.
     this.restartPressed = false;
-    this.controls = startControls(true);
-    this.introLegend = 0;
+    // The controls legend shows at the start of a game, not at each new level.
+    this.controls = startControls(!carry);
+    this.introLegend = carry ? -1 : 0;
     this.controlsOverlay = new ControlsOverlay(this);
     const actions: Record<string, () => void> = {
       Space: () => (this.restartPressed = true),
@@ -273,8 +301,8 @@ export class GameScene extends Phaser.Scene {
 
     // Hidden cheats: secret words typed during play.
     this.cheatBuffer = '';
-    this.invincible = false;
-    this.cheated = false;
+    this.invincible = carry?.invincible ?? false;
+    this.cheated = carry?.cheated ?? false;
     // The browser's own keydown, not Phaser's general key event: Phaser's can
     // deliver a typed letter more than once and out of order, which breaks words.
     const onType = (e: KeyboardEvent): void => {
@@ -339,10 +367,9 @@ export class GameScene extends Phaser.Scene {
     if (shot.fire) this.fireVolley();
     this.bullets.update(dt);
 
-    if (this.spawning && !this.gameOver) {
-      // Until the boss arrives (M4.4) the wave script loops, with the boss's
-      // quiet gap between loops.
-      const step = stepWaves(this.waves, this.level.waves, dt, this.level.bossAfter);
+    if (this.spawning && !this.gameOver && this.flow.stage === 'waves') {
+      // The wave script plays once (an endless gap means it never loops).
+      const step = stepWaves(this.waves, this.level.waves, dt, Infinity);
       this.waves = step.runner;
       for (const sp of step.spawns) {
         if (sp.kind === 'asteroid') this.asteroids.spawnLarge(sp.x * GAME_WIDTH, this.rng);
@@ -373,13 +400,71 @@ export class GameScene extends Phaser.Scene {
       this.health.lives,
       shieldSeconds(this.powerUps.shield),
     );
-    this.updateGameOver(dt);
+    const pressed = this.restartPressed;
+    this.restartPressed = false;
+    this.updateFlow(dt, pressed);
+    this.updateGameOver(dt, pressed);
   }
 
   /** After the last life: show the panel, then restart on a fresh Space or Enter press. */
-  private updateGameOver(dt: number): void {
-    const pressed = this.restartPressed;
-    this.restartPressed = false;
+  /**
+   * Waves, then the boss, then the level-complete panel and the next level
+   * (M4.4). Stops while the game is over.
+   */
+  private updateFlow(dt: number, pressed: boolean): void {
+    if (this.gameOver) return;
+    const held = this.keys.fire.isDown || this.keys.enter.isDown;
+    const step = stepFlow(
+      this.flow,
+      dt,
+      {
+        wavesDone: this.spawning && this.waves.next >= this.level.waves.length,
+        bossDefeated: this.boss.read()?.mode === 'defeated',
+        key: { held, pressed },
+      },
+      { ...LEVEL_COMPLETE, bossAfter: this.level.bossAfter },
+    );
+    this.flow = step.state;
+    if (step.startBoss) this.boss.spawn(this.level.boss);
+    if (flowPanelShown(this.flow, { ...LEVEL_COMPLETE, bossAfter: this.level.bossAfter })) {
+      this.levelPanel.show(this.levelInfo(), this.flow.t - LEVEL_COMPLETE.completeAfter);
+    }
+    if (step.next) this.goToNextLevel();
+  }
+
+  /** The finished level and the one after it, for the panel. */
+  private levelInfo(): LevelCompleteInfo {
+    const next = LEVELS[this.level.number];
+    return {
+      number: this.level.number,
+      name: this.level.name,
+      score: this.score,
+      next: next ? { number: next.number, name: next.name } : null,
+    };
+  }
+
+  /** On to the next level, carrying score, lives, health and weapon; or, after the last, a new game. */
+  private goToNextLevel(): void {
+    const next = LEVELS[this.level.number];
+    if (!next) {
+      this.scene.restart({});
+      return;
+    }
+    const start: GameStart = {
+      level: next.number,
+      carry: {
+        score: this.score,
+        lives: this.health.lives,
+        hits: this.health.hits,
+        weaponLevel: this.powerUps.weaponLevel,
+        cheated: this.cheated,
+        invincible: this.invincible,
+      },
+    };
+    this.scene.restart(start);
+  }
+
+  private updateGameOver(dt: number, pressed: boolean): void {
     if (!this.gameOver) {
       if (isGameOver(this.health)) this.gameOver = startGameOver();
       return;
@@ -389,7 +474,7 @@ export class GameScene extends Phaser.Scene {
     this.gameOver = step.state;
     const shown = panelShown(this.gameOver, GAME_OVER);
     this.gameOverPanel.show(shown, this.score, this.gameOver.t - GAME_OVER.showAfter);
-    if (step.restart) this.scene.restart();
+    if (step.restart) this.scene.restart({});
   }
 
   /** Each enemy on screen shoots on its own timer, aimed (within limits) at the ship. */
@@ -518,6 +603,7 @@ export class GameScene extends Phaser.Scene {
       sparks: this.sparks.playedCount(),
       blast: this.blast.activeCount() > 0,
       boss: this.boss.read(),
+      flow: { stage: this.flow.stage, panel: this.levelPanel.read() },
       enemyShots: this.enemyBullets.active().map((sh) => ({ x: sh.sprite.x, y: sh.sprite.y })),
       health: { ...this.health, gameOver: isGameOver(this.health) },
       lastHit: this.lastHit,
@@ -589,6 +675,11 @@ export class GameScene extends Phaser.Scene {
     this.asteroids.clear();
     this.pickups.clear();
     if (!keepShots) this.enemyBullets.clear();
+  }
+
+  /** Ends the level's waves at once, so the boss comes after the usual pause (tests). */
+  skipWaves(): void {
+    this.waves = { ...this.waves, next: this.level.waves.length };
   }
 
   /** Brings in a boss: `kind`, or the level's own boss (tests, until M4.4 does it at the level's end). */
@@ -738,6 +829,19 @@ function seedFromUrl(): number {
   const raw = new URLSearchParams(window.location.search).get('seed');
   const n = raw === null ? Number.NaN : Number.parseInt(raw, 10);
   return Number.isFinite(n) ? n : DEFAULT_SEED;
+}
+
+/** What the scene starts with: a level (default 1) and, after level 1, what carried over. */
+export interface GameStart {
+  level?: number;
+  carry?: {
+    score: number;
+    lives: number;
+    hits: number;
+    weaponLevel: number;
+    cheated: boolean;
+    invincible: boolean;
+  };
 }
 
 /** The first item whose hitbox overlaps `box`, if any. */

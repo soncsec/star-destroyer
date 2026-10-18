@@ -97,6 +97,18 @@ export const GAME_OVER = {
   titleColor: '#ff3ea5',
 } as const;
 
+/** Level flow (M4.4): boss after the waves, then the level-complete panel. */
+export const LEVEL_COMPLETE = {
+  /** Seconds from the boss's defeat to the panel (lets the blast play). */
+  completeAfter: 2,
+  /** Seconds the panel stays before the next level starts by itself. */
+  autoNext: 8,
+  /** The "press Space" prompt blinks this many times a second. */
+  blinkHz: 2,
+  backdrop: { color: 0x05070f, alpha: 0.75 },
+  titleColor: '#2de2e6',
+} as const;
+
 /** Score, health pips and lives across the top of the screen (M2.6). */
 export const HUD = {
   /** CSS font family; Press Start 2P is drawn at 8 px, its native size. */
