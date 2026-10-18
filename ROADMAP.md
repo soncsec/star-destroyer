@@ -192,6 +192,7 @@
 - [ ] M7.5 Difficulty balance pass across all 8 levels from the owner's play-tests
 - [ ] M7.6 Cross-browser check: Chrome, Firefox, Safari, Edge
 - [ ] M7.7 Final card screenshot for the portal
+- [x] M7.9 Play-test level skip (owner 2026-10-18, product review): `?level=n` starts at level n on every build and counts as a cheat (no high score). Built first, so the owner can play-test levels 6–8 and the final boss on any device. Only a plain number from 1 to the number of levels is accepted; anything else starts level 1 as a normal run
 
 **Acceptance criteria:** the owner signs off on game feel and difficulty; no console errors in a full playthrough on all four browsers.
 
