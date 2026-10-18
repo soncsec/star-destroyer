@@ -185,7 +185,7 @@
 
 - [x] M7.1 Title screen with a link back to the portal, and pause: STAR DESTROYER over the drifting nebula with the ship; Space or Enter starts, Q goes straight back to the arcade, F toggles full screen. Pause was already built (P / Esc, ROADMAP C). The e2e build skips the title unless a test asks for it (`?title`)
 - [x] M7.2 High score saved in localStorage, safe if storage is unavailable: only the number is stored (key `star-destroyer.highScore`); a stored value that isn't plain digits counts as none; every storage call is wrapped, so a blocked or full storage just means no high score. Runs that used a cheat never set it. Shown on the title screen and on the game-over and victory panels ("NEW HIGH SCORE!" when beaten)
-- [ ] M7.3 CC0 sound effects (sources recorded in the credits file) — *new assets need approval*
+- [x] M7.3 Sound effects, made in code (owner 2026-10-18, instead of CC0 files): twelve short recipes (shots, explosions, hits, pickups, the beam's charge and fire, jingles for level complete, game over and victory) rendered into Web Audio buffers once; no sound files, so no third-party assets. M mutes them. Without Web Audio the game plays on silently
 - [x] M7.4 Parallax props (asteroids, planets) per level: planets drift behind levels 1, 2, 3 and 8 (level 4 has had its own since M5.4). None inside the station (5), in the stars-only Deep Dark (7), or in Demon Rift (6, whose darkened layers the bright planets would clash with). Every prop starts wholly on screen sideways (unit test)
 - [ ] M7.5 Difficulty balance pass across all 8 levels from the owner's play-tests
 - [ ] M7.6 Cross-browser check: Chrome, Firefox, Safari, Edge

@@ -89,7 +89,7 @@ Files are copied unchanged from the pack and renamed for consistency, except the
 
 ## Audio
 
-None yet. CC0 sound effects are planned for milestone M7.3, with their sources listed here.
+No audio files. Every sound is made in code at run time from short recipes (`SFX` in `src/config/tuning.ts`, rendered by `src/logic/sfx.ts`), so there is nothing third-party to credit (owner's choice, 2026-10-18).
 
 ## Font
 

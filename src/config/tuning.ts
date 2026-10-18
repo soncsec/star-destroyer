@@ -2,6 +2,7 @@ import type { BossRules } from '../logic/boss';
 import type { Cheat } from '../logic/cheats';
 import type { DropRules, PowerUpKind } from '../logic/drops';
 import type { FinalBossRules, FinalPart } from '../logic/finalBoss';
+import type { SoundRecipe } from '../logic/sfx';
 import type { MovePattern } from '../logic/enemyMoves';
 import type { WeaponLevel } from '../logic/weaponLevels';
 
@@ -122,6 +123,85 @@ export const VICTORY = {
   /** Fireworks go off within this band of the screen (y, pixels). */
   fireworksY: { min: 24, max: 120 },
 } as const;
+
+/** Every sound the game makes (M7.3). */
+export type SfxName =
+  | 'shot'
+  | 'enemyDown'
+  | 'bossDown'
+  | 'hurt'
+  | 'weaponUp'
+  | 'shieldUp'
+  | 'screenClear'
+  | 'beamWarn'
+  | 'beam'
+  | 'levelComplete'
+  | 'gameOver'
+  | 'victory';
+
+/**
+ * Sound effects, made in code from these recipes (M7.3, owner 2026-10-18: no
+ * sound files). Pitches in Hz; `steps` multiply the pitch for little tunes
+ * (1.26 ≈ a major third, 1.5 a fifth, 2 an octave).
+ */
+export const SFX: { volume: number; sounds: Readonly<Record<SfxName, SoundRecipe>> } = {
+  /** Master volume, under the browser's own. */
+  volume: 0.5,
+  sounds: {
+    shot: { wave: 'square', seconds: 0.07, from: 900, to: 450, attack: 0.002, volume: 0.15 },
+    enemyDown: { wave: 'noise', seconds: 0.3, from: 3000, to: 400, attack: 0.002, volume: 0.45 },
+    bossDown: { wave: 'noise', seconds: 1.2, from: 1500, to: 80, attack: 0.005, volume: 0.7 },
+    hurt: { wave: 'sawtooth', seconds: 0.25, from: 300, to: 90, attack: 0.003, volume: 0.4 },
+    weaponUp: {
+      wave: 'triangle',
+      seconds: 0.24,
+      from: 660,
+      to: 660,
+      attack: 0.005,
+      volume: 0.4,
+      steps: [1, 1.26, 1.5],
+    },
+    shieldUp: {
+      wave: 'sine',
+      seconds: 0.3,
+      from: 440,
+      to: 880,
+      attack: 0.01,
+      volume: 0.4,
+      steps: [1, 1.5],
+    },
+    screenClear: { wave: 'noise', seconds: 0.7, from: 200, to: 2500, attack: 0.05, volume: 0.5 },
+    beamWarn: { wave: 'sine', seconds: 1.2, from: 200, to: 900, attack: 0.2, volume: 0.3 },
+    beam: { wave: 'sawtooth', seconds: 1.4, from: 110, to: 95, attack: 0.02, volume: 0.25 },
+    levelComplete: {
+      wave: 'square',
+      seconds: 0.6,
+      from: 523,
+      to: 523,
+      attack: 0.005,
+      volume: 0.2,
+      steps: [1, 1.26, 1.5, 2],
+    },
+    gameOver: {
+      wave: 'triangle',
+      seconds: 1,
+      from: 440,
+      to: 440,
+      attack: 0.01,
+      volume: 0.35,
+      steps: [1, 0.84, 0.67, 0.5],
+    },
+    victory: {
+      wave: 'square',
+      seconds: 1.5,
+      from: 523,
+      to: 523,
+      attack: 0.005,
+      volume: 0.2,
+      steps: [1, 1.26, 1.5, 2, 1.5, 2],
+    },
+  },
+};
 
 /** The high score (M7.2): the only thing kept in the browser. */
 export const HIGH_SCORE = {

@@ -43,7 +43,7 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 | Screens | Title, game, pause, game over, victory |
 | Navigation | A link back to the games portal from the title screen |
 | Visuals | Layered scrolling space backgrounds; explosion effects |
-| Audio | CC0 sound effects (sourced separately; the art pack has no audio) |
+| Audio | Retro sound effects made in code (owner 2026-10-18): no sound files and no third-party audio |
 | Display | 256×320 portrait game area at native pixel size, scaled to fit the window with sharp pixels |
 
 ### Out of scope (v1)
@@ -151,7 +151,7 @@ Source: `legacy/` (Ansimuz Legacy Collection). **License: CC0**, so commercial u
 | Q | Asks "QUIT TO ARCADE? Y / N"; Y returns to the arcade portal, N resumes |
 | H | Shows or hides the controls legend (also shown briefly at the start) |
 | F | Full screen on / off (whole-number pixel scaling kept) |
-| M | Mute / unmute (takes effect once sound arrives, M7.3) |
+| M | Mute / unmute |
 
 **Hidden cheats** (owner decision: secret words typed during play; never shown in the game):
 - One word gives **+5 lives**; another toggles **invincibility**.
