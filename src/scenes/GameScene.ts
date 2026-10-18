@@ -328,7 +328,8 @@ export class GameScene extends Phaser.Scene {
     const alive = !isGameOver(this.health);
     if (alive) this.player.update(this.readAxis(), dt);
 
-    const shot = stepFire(this.fireState, alive && this.keys.fire.isDown, dt, WEAPON.fireInterval);
+    const firing = alive && this.keys.fire.isDown;
+    const shot = stepFire(this.fireState, firing, dt, this.gun().fireInterval);
     this.fireState = shot.state;
     if (shot.fire) this.fireVolley();
     this.bullets.update(dt);
@@ -542,10 +543,16 @@ export class GameScene extends Phaser.Scene {
     this.powerUps.weaponLevel = Math.min(WEAPON_LEVELS.length, Math.max(1, Math.round(level)));
   }
 
+  /** The current weapon level's settings. */
+  private gun(): (typeof WEAPON_LEVELS)[number] {
+    const level = WEAPON_LEVELS[this.powerUps.weaponLevel - 1];
+    if (!level) throw new Error(`no weapon level ${this.powerUps.weaponLevel}`);
+    return level;
+  }
+
   /** One trigger pull: every shot of the current weapon level. False if the pool ran out. */
   private fireVolley(): boolean {
-    const level = WEAPON_LEVELS[this.powerUps.weaponLevel - 1];
-    if (!level) return false;
+    const level = this.gun();
     const { x, y } = this.player.position;
     let all = true;
     for (const shot of volley(level, x, y + WEAPON.muzzleOffsetY)) {

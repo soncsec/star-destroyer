@@ -36,7 +36,7 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 | Difficulty | Enemy fire gets gradually more frequent from level 1 to 8. **Level 8 must be hard but beatable** (limits in section 4a) |
 | Obstacles | Destructible asteroids; **large asteroids split into small ones** |
 | Weapons | Weapon power-up drops raise the weapon level (3 levels, using the Warped shooting effects). Weapon upgrades **never time out**, but **losing a life drops you back to the basic weapon** (owner decisions 2026-10-17) |
-| Shield | Power-up: a shield that blocks all damage for **30 seconds** |
+| Shield | Power-up: a shield that blocks all damage for **10 seconds** (owner change 2026-10-18; was 30) |
 | Screen clear | **Rare** power-up that destroys every enemy on screen. **Never appears during a boss fight** |
 | Bosses | One boss per level, each with its own attack patterns. The multi-part top-down boss (body, cannons, helmet, beam) is the final boss |
 | Scoring | Score display; high score saved in the browser (localStorage) |
@@ -60,8 +60,8 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 
 | Power-up | Effect | How often | Notes |
 |---|---|---|---|
-| Weapon | Raises the weapon one level (max 3). Shots start small and grow bigger and stronger: 1 single small orange tracer (visible 10×4; the art pack's smallest player shot), 2 double ringed bolt (pulse), 3 spread of three big plasma blasts (charged, double damage) | Common | Never times out; lost on death (back to level 1) |
-| Shield | Blocks all damage for 30 seconds | Uncommon | Picking up another resets the timer to 30 s |
+| Weapon | Raises the weapon one level (max 3). Shots start small and grow bigger and stronger: 1 single small orange tracer (visible 10×4; the art pack's smallest player shot), 2 double ringed bolt (pulse), 3 spread of three big plasma blasts (charged, double damage) | Common | Never times out; lost on death (back to level 1). Owner change 2026-10-18: shots drawn 40% smaller; stronger levels fire slightly less often and fly slightly slower (level 3: 10% on both) |
+| Shield | Blocks all damage for 10 seconds (owner change 2026-10-18; was 30) | Uncommon | Picking up another resets the timer to 10 s |
 | Screen clear | Destroys every enemy on screen, plus enemy shots | Rare | Never dropped during a boss fight |
 
 ### Level plan (approved by owner 2026-10-17)

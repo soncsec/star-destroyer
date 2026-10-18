@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WEAPON_LEVELS } from '../../src/config/tuning';
+import { WEAPON, WEAPON_LEVELS } from '../../src/config/tuning';
 import { levelUp, shotAngle, volley, type WeaponLevel } from '../../src/logic/weaponLevels';
 
 describe('volley', () => {
@@ -70,6 +70,34 @@ describe('the tuned weapon levels (owner request: small to big and strong)', () 
     const area = WEAPON_LEVELS.map((l) => l.hitbox.w * l.hitbox.h);
     expect(area[1]).toBeGreaterThan(area[0] ?? 0);
     expect(area[2]).toBeGreaterThan(area[1] ?? 0);
+  });
+
+  it('stronger levels fire a little less often and fly a little slower (owner, 2026-10-18)', () => {
+    const [one, two, three] = WEAPON_LEVELS;
+    if (!one || !two || !three) throw new Error('three levels expected');
+    const rate = (l: { fireInterval: number }): number => 1 / l.fireInterval;
+    expect(rate(one)).toBeCloseTo(5);
+    expect(rate(two) / rate(one)).toBeCloseTo(0.95);
+    expect(rate(three) / rate(one)).toBeCloseTo(0.9);
+    expect(two.speed).toBeCloseTo(320 * 0.95);
+    expect(three.speed).toBeCloseTo(300 * 0.9);
+    expect(two.speed).toBeLessThan(one.speed);
+    expect(three.speed).toBeLessThan(two.speed);
+  });
+
+  it('shots are drawn 40% smaller, with hitboxes to match (owner, 2026-10-18)', () => {
+    expect(WEAPON.shotScale).toBe(0.6);
+    const before = [
+      { w: 6, h: 12 },
+      { w: 12, h: 28 },
+      { w: 18, h: 32 },
+    ];
+    WEAPON_LEVELS.forEach((l, i) => {
+      const old = before[i];
+      if (!old) throw new Error('missing level');
+      expect(Math.abs(l.hitbox.w - old.w * 0.6)).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(l.hitbox.h - old.h * 0.6)).toBeLessThanOrEqual(0.5);
+    });
   });
 
   it('level 3 spreads left and right, level 1 fires straight', () => {
