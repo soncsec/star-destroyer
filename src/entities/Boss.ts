@@ -76,7 +76,7 @@ export class Boss {
   hitbox(): Box | null {
     if (!this.kind || this.state?.mode !== 'fighting') return null;
     const h = BOSSES[this.kind].hitbox;
-    return { x: this.state.x, y: this.state.y, w: h.w, h: h.h };
+    return { x: this.state.x, y: this.state.y + h.offsetY, w: h.w, h: h.h };
   }
 
   /** Damages it. Returns the points scored if this hit defeated it, else 0. */

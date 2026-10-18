@@ -352,7 +352,8 @@ export const BOSS_DEFEAT = {
 };
 
 /** Bosses, by the art they use (PROJECT.md 4a level plan). More arrive with each level. */
-export type BossKind = 'spaceship-unit' | 'vehicle-1' | 'vehicle-2' | 'spaceship-unit-mk2';
+export type BossKind =
+  'spaceship-unit' | 'vehicle-1' | 'vehicle-2' | 'spaceship-unit-mk2' | 'vehicle-3';
 
 /**
  * Bosses (M4.3). Each fights in phases: as its health falls it switches to
@@ -365,15 +366,18 @@ export const BOSSES: Record<
     sprite: string;
     /** The side-view art faces right; this turns it to face down. */
     angleDeg: number;
-    /** Collision box after turning (a little inside the hull). */
-    hitbox: { w: number; h: number };
+    /**
+     * Collision box after turning (a little inside the hull). offsetY moves it
+     * down from the sprite's centre, for a boss too long to show whole.
+     */
+    hitbox: { w: number; h: number; offsetY: number };
   }
 > = {
   // Level 1: the Warped spaceship unit, 106×77, turned to face down (77 wide, 106 tall).
   'spaceship-unit': {
     sprite: 'boss-spaceship-unit',
     angleDeg: 90,
-    hitbox: { w: 60, h: 84 },
+    hitbox: { w: 60, h: 84, offsetY: 0 },
     hp: 150,
     points: 5000,
     entry: { startY: -60, hoverY: 70, speed: 40 },
@@ -411,7 +415,7 @@ export const BOSSES: Record<
   'vehicle-1': {
     sprite: 'boss-vehicle-1',
     angleDeg: 90,
-    hitbox: { w: 64, h: 150 },
+    hitbox: { w: 64, h: 150, offsetY: 0 },
     hp: 220,
     points: 7500,
     entry: { startY: -90, hoverY: 80, speed: 40 },
@@ -454,7 +458,7 @@ export const BOSSES: Record<
   'vehicle-2': {
     sprite: 'boss-vehicle-2',
     angleDeg: 90,
-    hitbox: { w: 84, h: 150 },
+    hitbox: { w: 84, h: 150, offsetY: 0 },
     hp: 280,
     points: 10000,
     entry: { startY: -90, hoverY: 80, speed: 40 },
@@ -502,7 +506,7 @@ export const BOSSES: Record<
   'spaceship-unit-mk2': {
     sprite: 'boss-spaceship-unit',
     angleDeg: 90,
-    hitbox: { w: 60, h: 84 },
+    hitbox: { w: 60, h: 84, offsetY: 0 },
     hp: 340,
     points: 12500,
     entry: { startY: -60, hoverY: 70, speed: 45 },
@@ -548,6 +552,53 @@ export const BOSSES: Record<
         ],
         cooldown: 0.7,
         swayHz: 0.32,
+      },
+    ],
+  },
+  // Level 5: Warped vehicle 3, 329×160, turned to face down (160 wide, 329
+  // tall: longer than the screen). It hangs down from the top with only its
+  // front half showing, so its hitbox covers just that half. Its nose is close
+  // to the ship, so it fires a little slower, in wide fans with few shots.
+  'vehicle-3': {
+    sprite: 'boss-vehicle-3',
+    angleDeg: 90,
+    hitbox: { w: 100, h: 140, offsetY: 94 },
+    hp: 400,
+    points: 15000,
+    entry: { startY: -170, hoverY: -14, speed: 40 },
+    swayAmplitude: 48,
+    muzzleOffsetY: 160,
+    shotSpeed: 115,
+    maxAimAngleDeg: 35,
+    phases: [
+      {
+        fromHp: 1,
+        attacks: [{ kind: 'fan', shots: 4, spreadDeg: 75 }, { kind: 'aimed' }, { kind: 'aimed' }],
+        cooldown: 1.2,
+        swayHz: 0.08,
+      },
+      {
+        fromHp: 0.6,
+        attacks: [
+          { kind: 'fan', shots: 5, spreadDeg: 90 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 4, spreadDeg: 60 },
+          { kind: 'aimed' },
+        ],
+        cooldown: 1,
+        swayHz: 0.11,
+      },
+      {
+        fromHp: 0.3,
+        attacks: [
+          { kind: 'fan', shots: 6, spreadDeg: 100 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 5, spreadDeg: 80 },
+          { kind: 'aimed' },
+          { kind: 'aimed' },
+        ],
+        cooldown: 0.85,
+        swayHz: 0.14,
       },
     ],
   },
