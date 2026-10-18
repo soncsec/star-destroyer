@@ -654,7 +654,7 @@ export class GameScene extends Phaser.Scene {
     const { x, y } = this.player.position;
     let all = true;
     for (const shot of volley(level, x, y + WEAPON.muzzleOffsetY)) {
-      all = this.bullets.fire(shot, level.sprite, level.hitbox) && all;
+      all = this.bullets.fire(shot, level.sprite, level.hitbox, level.scale) && all;
     }
     return all;
   }
