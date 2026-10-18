@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import type { EnemyKind } from '../config/tuning';
+import type { BossKind, EnemyKind } from '../config/tuning';
 import type { PowerUpKind } from '../logic/drops';
 import type { GameScene, GameSnapshot } from '../scenes/GameScene';
 
@@ -26,6 +26,8 @@ export interface TestHook {
   setWeaponLevel(level: number): void;
   /** Leaves the ship one hit from losing a life; on its last life unless `lives` is given. */
   oneHitLeft(lives?: number): void;
+  /** Brings in a boss: `kind`, or the level's own boss. */
+  spawnBoss(kind?: BossKind): void;
   /** Spawns a large asteroid at x (top of the screen) or (x, y). */
   spawnAsteroid(x: number, y?: number): boolean;
   /** Spawns an enemy (default grunt) at x (top of the screen) or (x, y); optionally set its first shot. */
@@ -55,6 +57,7 @@ export function installTestHook(game: Phaser.Game): void {
     setSpawning: (on) => required().setSpawning(on),
     clearEnemies: (keepShots) => required().clearEnemies(keepShots),
     spawnAsteroid: (x, y) => required().spawnAsteroid(x, y),
+    spawnBoss: (kind) => required().spawnBoss(kind),
     oneHitLeft: (lives) => required().oneHitLeft(lives),
     fireShot: () => required().fireShot(),
     setWeaponLevel: (level) => required().setWeaponLevel(level),

@@ -4,7 +4,7 @@
  * come from `difficulty(level)` (M4.2), not from here, so their limits are
  * checked in one place.
  */
-import type { EnemyKind, SpawnKind } from '../config/tuning';
+import type { BossKind, EnemyKind, SpawnKind } from '../config/tuning';
 import type { WaveSpawn } from '../logic/waves';
 
 /** One scrolling background layer, drawn in list order (first = furthest back). */
@@ -16,9 +16,6 @@ export interface BackgroundLayer {
   /** 1 = opaque. */
   alpha: number;
 }
-
-/** Bosses, by the art they use (PROJECT.md 4a level plan). More arrive with each level. */
-export type BossKind = 'spaceship-unit';
 
 export interface Level {
   /** 1-based; level 8 is the last. */

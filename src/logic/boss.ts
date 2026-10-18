@@ -1,0 +1,184 @@
+/**
+ * Boss rules (M4.3). Plain TypeScript, no Phaser (ADR-006).
+ *
+ * A boss flies in from above to its hover height (it can't be hurt while
+ * entering), then sways from side to side and attacks. Its health decides its
+ * phase: each phase has its own attacks and pace, so it gets harder as it
+ * weakens. At 0 health it is defeated.
+ */
+import { aimDown, type Vec } from './enemyFire';
+
+export type BossAttack =
+  /** One shot at the ship (turned at most `maxAimAngleDeg` from straight down). */
+  | { kind: 'aimed' }
+  /** `shots` shots spread evenly over `spreadDeg`, centered on straight down. */
+  | { kind: 'fan'; shots: number; spreadDeg: number };
+
+export interface BossPhase {
+  /** This phase starts once health falls to this fraction (the first phase: 1). */
+  fromHp: number;
+  /** Attacks used in turn, one per `cooldown` seconds. */
+  attacks: readonly BossAttack[];
+  cooldown: number;
+  /** Side-to-side sways per second. */
+  swayHz: number;
+}
+
+export interface BossRules {
+  hp: number;
+  points: number;
+  /** Flies in from `startY` to `hoverY` at `speed` pixels per second. */
+  entry: { startY: number; hoverY: number; speed: number };
+  /** How far it sways either side of the screen's center, in pixels. */
+  swayAmplitude: number;
+  phases: readonly BossPhase[];
+  /** Shots leave from this far below the boss's center. */
+  muzzleOffsetY: number;
+  shotSpeed: number;
+  maxAimAngleDeg: number;
+}
+
+export type BossMode = 'entering' | 'fighting' | 'defeated';
+
+export interface BossState {
+  mode: BossMode;
+  x: number;
+  y: number;
+  hp: number;
+  phase: number;
+  /** Seconds spent fighting (drives the sway). */
+  t: number;
+  /** Seconds until the next attack. */
+  cooldown: number;
+  /** Which of the phase's attacks comes next. */
+  next: number;
+}
+
+/** A boss appearing above the screen, centered on `centerX`. */
+export function startBoss(rules: BossRules, centerX: number): BossState {
+  if (rules.hp <= 0) throw new RangeError('hp must be positive');
+  if (rules.phases[0]?.fromHp !== 1)
+    throw new RangeError('the first phase must start at full health');
+  return {
+    mode: 'entering',
+    x: centerX,
+    y: rules.entry.startY,
+    hp: rules.hp,
+    phase: 0,
+    t: 0,
+    cooldown: rules.phases[0].cooldown,
+    next: 0,
+  };
+}
+
+/** The phase that applies at this health: the last one whose threshold has been reached. */
+function phaseAt(hp: number, rules: BossRules): { index: number; cooldown: number } {
+  const fraction = hp / rules.hp;
+  let found = { index: 0, cooldown: 0 };
+  rules.phases.forEach((p, i) => {
+    if (fraction <= p.fromHp) found = { index: i, cooldown: p.cooldown };
+  });
+  return found;
+}
+
+/** Which phase applies at this health (0 = the first). */
+export const phaseFor = (hp: number, rules: BossRules): number => phaseAt(hp, rules).index;
+
+/** Shot velocities for one attack, fired from `from` with the ship at `target`. */
+export function attackShots(attack: BossAttack, rules: BossRules, from: Vec, target: Vec): Vec[] {
+  if (attack.kind === 'aimed') {
+    return [aimDown(from, target, rules.shotSpeed, rules.maxAimAngleDeg)];
+  }
+  if (attack.shots < 1) throw new RangeError('a fan needs at least one shot');
+  // One shot goes straight down; more are spread evenly across the fan.
+  const step = attack.shots > 1 ? attack.spreadDeg / (attack.shots - 1) : 0;
+  const first = attack.shots > 1 ? -attack.spreadDeg / 2 : 0;
+  return Array.from({ length: attack.shots }, (_, i) => {
+    const rad = ((first + i * step) * Math.PI) / 180;
+    return { x: Math.sin(rad) * rules.shotSpeed, y: Math.cos(rad) * rules.shotSpeed };
+  });
+}
+
+/**
+ * Smallest horizontal space between neighbouring shots of a fan, `distance`
+ * pixels below where they were fired, minus the shots' own width.
+ * Infinity for a single shot (nothing to squeeze between).
+ */
+export function fanGap(
+  attack: Extract<BossAttack, { kind: 'fan' }>,
+  distance: number,
+  shotWidth: number,
+): number {
+  if (attack.shots < 2) return Infinity;
+  const step = attack.spreadDeg / (attack.shots - 1);
+  let gap = Infinity;
+  for (let i = 0; i < attack.shots - 1; i++) {
+    const a = ((-attack.spreadDeg / 2 + i * step) * Math.PI) / 180;
+    const b = a + (step * Math.PI) / 180;
+    gap = Math.min(gap, distance * (Math.tan(b) - Math.tan(a)) - shotWidth);
+  }
+  return gap;
+}
+
+/**
+ * Advances the boss by `dt` seconds. Returns its new state and the velocities
+ * of any shots it fires this step (from its muzzle).
+ */
+export function stepBoss(
+  s: BossState,
+  rules: BossRules,
+  dt: number,
+  target: Vec,
+  centerX: number,
+): { state: BossState; shots: Vec[] } {
+  if (dt < 0) throw new RangeError('dt must not be negative');
+  if (s.mode === 'defeated') return { state: s, shots: [] };
+  if (s.mode === 'entering') {
+    const y = Math.min(rules.entry.hoverY, s.y + rules.entry.speed * dt);
+    const mode: BossMode = y >= rules.entry.hoverY ? 'fighting' : 'entering';
+    return { state: { ...s, y, mode }, shots: [] };
+  }
+  const phase = rules.phases[s.phase];
+  if (!phase) throw new RangeError(`no phase ${s.phase}`);
+  const t = s.t + dt;
+  const x = centerX + Math.sin(t * phase.swayHz * 2 * Math.PI) * rules.swayAmplitude;
+  let cooldown = s.cooldown - dt;
+  let next = s.next;
+  let shots: Vec[] = [];
+  if (cooldown <= 0) {
+    const attack = phase.attacks[next % phase.attacks.length];
+    if (attack) {
+      const from = { x, y: s.y + rules.muzzleOffsetY };
+      shots = attackShots(attack, rules, from, target);
+    }
+    next = (next + 1) % Math.max(1, phase.attacks.length);
+    // Carry the overshoot so attacks keep their rhythm whatever the frame rate.
+    cooldown += phase.cooldown;
+  }
+  return { state: { ...s, t, x, cooldown, next }, shots };
+}
+
+/**
+ * The boss takes `amount` damage. Nothing happens while it is entering or
+ * already defeated. A new phase starts with its first attack after a full
+ * cooldown.
+ */
+export function damageBoss(
+  s: BossState,
+  rules: BossRules,
+  amount: number,
+): { state: BossState; defeated: boolean } {
+  if (amount < 0) throw new RangeError('damage must not be negative');
+  if (s.mode !== 'fighting') return { state: s, defeated: false };
+  const hp = Math.max(0, s.hp - amount);
+  if (hp === 0) return { state: { ...s, hp, mode: 'defeated' }, defeated: true };
+  const phase = phaseAt(hp, rules);
+  if (phase.index === s.phase) return { state: { ...s, hp }, defeated: false };
+  return {
+    state: { ...s, hp, phase: phase.index, next: 0, cooldown: phase.cooldown },
+    defeated: false,
+  };
+}
+
+/** The health bar's fill, 0 to 1. */
+export const bossHealth = (s: BossState, rules: BossRules): number => s.hp / rules.hp;
