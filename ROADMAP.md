@@ -13,7 +13,7 @@
 | T1 Game template for parallel instances | Done (2026-10-17) |
 | M2 Core loop (level 1) | In progress |
 | M3 Power-ups | In progress |
-| C Controls and cheats (owner request) | In progress |
+| C Controls and cheats (owner request) | Built; waiting for merge and the owner's play-test |
 | M4 Level system and first boss | Not started |
 | M5 Levels 2–4 | Not started |
 | M6 Levels 5–8 | Not started |
@@ -133,8 +133,8 @@
 - [x] C2 Q asks "QUIT TO ARCADE? Y / N"; Y returns to the portal, N resumes
 - [x] C3 Controls legend: H toggles it; shown on the pause screen and for a few seconds at the start; lists every control except the cheats
 - [x] C4 F toggles full screen; M toggles mute (effective once sound arrives in M7.3)
-- [ ] C5 Hidden cheats typed during play: +5 lives, and invincibility on/off; not shown anywhere in the game; a cheat run can't set the high score
-- [ ] C6 Playwright: pause freezes the game, quit confirmation (Y and N), legend, cheats
+- [x] C5 Hidden cheats typed during play: +5 lives, and invincibility on/off; not shown anywhere in the game; a cheat run can't set the high score
+- [x] C6 Playwright: pause freezes the game, quit confirmation (Y and N), legend, cheats
 
 **Acceptance criteria:** every control works as listed in PROJECT.md 4b; cheats work and appear nowhere in the game's text; tests pass.
 

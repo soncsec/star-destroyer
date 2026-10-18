@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import {
   BACKGROUND,
   ASTEROIDS,
+  CHEATS,
   CONTROLS,
   DEFAULT_SEED,
   GAME_OVER,
@@ -25,6 +26,7 @@ import { GameOverPanel } from '../entities/GameOverPanel';
 import { Hud } from '../entities/Hud';
 import { Pickups } from '../entities/Pickups';
 import { Player } from '../entities/Player';
+import { typeLetter, type Cheat } from '../logic/cheats';
 import { firstHit, type Box } from '../logic/collision';
 import {
   pressKey,
@@ -75,6 +77,8 @@ export interface GameSnapshot {
   /** Pause / quit / legend state and what the overlay shows; mute and full screen. */
   controls: { mode: string; legend: boolean; overlay: ReturnType<ControlsOverlay['read']> };
   muted: boolean;
+  /** Test hook only; the game itself never shows these. */
+  cheats: { invincible: boolean; used: boolean };
   fullscreen: boolean;
   /** Pickups drifting down, and how many of each kind the ship has collected. */
   pickups: { kind: PowerUpKind; x: number; y: number }[];
@@ -127,6 +131,11 @@ export class GameScene extends Phaser.Scene {
   private controlsOverlay!: ControlsOverlay;
   /** Seconds the start-of-game legend has shown; -1 once it's done or H was pressed. */
   private introLegend = 0;
+  /** Hidden cheats (never shown in the game). */
+  private cheatBuffer = '';
+  private invincible = false;
+  /** True once any cheat was used this game: the run can't set the high score (M7.2). */
+  private cheated = false;
   private rng!: Rng;
   private waves: WaveRunner = startWaves();
   private score = 0;
@@ -211,6 +220,31 @@ export class GameScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
       window.removeEventListener('keydown', onKey),
     );
+
+    // Hidden cheats: secret words typed during play.
+    this.cheatBuffer = '';
+    this.invincible = false;
+    this.cheated = false;
+    // The browser's own keydown, not Phaser's general key event: Phaser's can
+    // deliver a typed letter more than once and out of order, which breaks words.
+    const onType = (e: KeyboardEvent): void => {
+      if (e.repeat || !running(this.controls) || isGameOver(this.health)) return;
+      const letter = e.key.length === 1 ? e.key.toUpperCase() : e.key;
+      const typed = typeLetter(this.cheatBuffer, letter, CHEATS.words);
+      this.cheatBuffer = typed.buffer;
+      if (typed.cheat) this.applyCheat(typed.cheat);
+    };
+    window.addEventListener('keydown', onType);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
+      window.removeEventListener('keydown', onType),
+    );
+  }
+
+  private applyCheat(cheat: Cheat): void {
+    this.cheated = true;
+    if (cheat === 'lives')
+      this.health = { ...this.health, lives: this.health.lives + CHEATS.extraLives };
+    else this.invincible = !this.invincible;
   }
 
   /** Applies a pause/quit/legend key, freezing or resuming animations to match. */
@@ -320,7 +354,7 @@ export class GameScene extends Phaser.Scene {
    * shatters (no points either way).
    */
   private resolvePlayerHits(): void {
-    if (isGameOver(this.health) || this.health.invulnerable > 0) return;
+    if (isGameOver(this.health) || this.health.invulnerable > 0 || this.invincible) return;
     const ship = this.player.hitbox();
     const shot = touching(ship, this.enemyBullets.active(), (b) => this.enemyBullets.hitbox(b));
     const enemy = touching(ship, this.enemies.active(), (e) => this.enemies.hitbox(e));
@@ -368,6 +402,7 @@ export class GameScene extends Phaser.Scene {
         overlay: this.controlsOverlay.read(),
       },
       muted: this.sound.mute,
+      cheats: { invincible: this.invincible, used: this.cheated },
       fullscreen: this.scale.isFullscreen,
       gameOver: { ...this.gameOverPanel.read(), armed: this.gameOver?.armed ?? false },
       pickups: this.pickups.active().map((p) => ({ kind: p.kind, x: p.sprite.x, y: p.sprite.y })),

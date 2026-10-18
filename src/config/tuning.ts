@@ -1,3 +1,4 @@
+import type { Cheat } from '../logic/cheats';
 import type { DropRules, PowerUpKind } from '../logic/drops';
 import type { MovePattern } from '../logic/enemyMoves';
 import type { WeaponLevel } from '../logic/weaponLevels';
@@ -51,6 +52,16 @@ export const CONTROLS = {
     ['F', 'FULL SCREEN'],
     ['M', 'MUTE'],
   ],
+} as const;
+
+/**
+ * Hidden cheats (owner request): typed during play, never shown in the game.
+ * The words avoid every hotkey letter (checked by tests/unit/cheats.test.ts).
+ */
+export const CHEATS = {
+  words: { lives: 'LIVELONG', invincible: 'IRONBELT' } satisfies Record<Cheat, string>,
+  /** Lives the "lives" cheat adds. */
+  extraLives: 5,
 } as const;
 
 /** Game-over panel (M2.7). */
