@@ -35,6 +35,24 @@ export const POWERUPS = {
   poolSize: 8,
 } as const;
 
+/** Pause, quit and the controls legend (owner request 2026-10-17, PROJECT.md 4b). */
+export const CONTROLS = {
+  /** The legend shows this long at the start of a game, then hides (H brings it back). */
+  introLegendSeconds: 4,
+  /** Where Q then Y goes: the arcade portal, one folder up from the game. */
+  quitUrl: '../',
+  /** The legend, as shown on screen. The hidden cheats are deliberately not listed. */
+  legend: [
+    ['ARROWS/WASD', 'MOVE'],
+    ['SPACE', 'FIRE'],
+    ['P / ESC', 'PAUSE'],
+    ['Q', 'QUIT'],
+    ['H', 'CONTROLS'],
+    ['F', 'FULL SCREEN'],
+    ['M', 'MUTE'],
+  ],
+} as const;
+
 /** Game-over panel (M2.7). */
 export const GAME_OVER = {
   /** Seconds from the last hit to the panel appearing (lets the explosion play). */
