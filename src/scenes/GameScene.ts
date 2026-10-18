@@ -199,33 +199,37 @@ export class GameScene extends Phaser.Scene {
       fire: 'SPACE',
       enter: 'ENTER',
     }) as Keys;
-    // The 'down' event fires once per real press (not for key-repeat), even if
-    // the key is released again before the next frame.
+    // One-shot keys (restart, pause, quit, legend, full screen, mute) are read
+    // from the browser's own keydown: it fires exactly once per press, while
+    // Phaser's key events can occasionally deliver the same press twice, which
+    // flips a toggle straight back. Auto-repeat is ignored. Movement and fire
+    // still use Phaser's held-key state.
     this.restartPressed = false;
-    const onPress = (): void => {
-      this.restartPressed = true;
-    };
-    this.keys.fire.on('down', onPress);
-    this.keys.enter.on('down', onPress);
-
-    // Pause, quit, legend, full screen and mute (PROJECT.md 4b).
     this.controls = startControls(true);
     this.introLegend = 0;
     this.controlsOverlay = new ControlsOverlay(this);
-    const bind = (code: string, action: () => void): void => {
-      kb.addKey(code).on('down', action);
+    const actions: Record<string, () => void> = {
+      Space: () => (this.restartPressed = true),
+      Enter: () => (this.restartPressed = true),
+      NumpadEnter: () => (this.restartPressed = true),
+      KeyP: () => this.onControl('pause'),
+      Escape: () => this.onControl('escape'),
+      KeyQ: () => this.onControl('quit'),
+      KeyY: () => this.onControl('yes'),
+      KeyN: () => this.onControl('no'),
+      KeyH: () => this.onControl('help'),
+      KeyF: () => this.scale.toggleFullscreen(),
+      KeyM: () => {
+        this.sound.mute = !this.sound.mute;
+      },
     };
-    const control = (key: ControlKey) => (): void => this.onControl(key);
-    bind('P', control('pause'));
-    bind('ESC', control('escape'));
-    bind('Q', control('quit'));
-    bind('Y', control('yes'));
-    bind('N', control('no'));
-    bind('H', control('help'));
-    bind('F', () => this.scale.toggleFullscreen());
-    bind('M', () => {
-      this.sound.mute = !this.sound.mute;
-    });
+    const onKey = (e: KeyboardEvent): void => {
+      if (!e.repeat) actions[e.code]?.();
+    };
+    window.addEventListener('keydown', onKey);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
+      window.removeEventListener('keydown', onKey),
+    );
 
     // Hidden cheats: secret words typed during play.
     this.cheatBuffer = '';
