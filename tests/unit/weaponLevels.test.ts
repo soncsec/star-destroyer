@@ -72,21 +72,23 @@ describe('the tuned weapon levels (owner request: small to big and strong)', () 
     expect(area[2]).toBeGreaterThan(area[1] ?? 0);
   });
 
-  it('stronger levels fire a little less often and fly a little slower (owner, 2026-10-18)', () => {
+  it('stronger levels fire a little less often and fly a little slower, all 15% slower again (owner, 2026-10-18)', () => {
     const [one, two, three] = WEAPON_LEVELS;
     if (!one || !two || !three) throw new Error('three levels expected');
     const rate = (l: { fireInterval: number }): number => 1 / l.fireInterval;
-    expect(rate(one)).toBeCloseTo(5);
+    expect(rate(one)).toBeCloseTo(5 * 0.85);
     expect(rate(two) / rate(one)).toBeCloseTo(0.95);
     expect(rate(three) / rate(one)).toBeCloseTo(0.9);
-    expect(two.speed).toBeCloseTo(320 * 0.95);
-    expect(three.speed).toBeCloseTo(300 * 0.9);
+    // The first rebalance's speeds (340, 304, 270), 15% slower again.
+    expect(Math.abs(one.speed - 340 * 0.85)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(two.speed - 304 * 0.85)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(three.speed - 270 * 0.85)).toBeLessThanOrEqual(0.5);
     expect(two.speed).toBeLessThan(one.speed);
     expect(three.speed).toBeLessThan(two.speed);
   });
 
-  it('shots are drawn 40% smaller, with hitboxes to match (owner, 2026-10-18)', () => {
-    expect(WEAPON.shotScale).toBe(0.6);
+  it('shots are drawn at 45% of the art, with hitboxes to match (owner, 2026-10-18)', () => {
+    expect(WEAPON.shotScale).toBe(0.45);
     const before = [
       { w: 6, h: 12 },
       { w: 12, h: 28 },
@@ -95,8 +97,8 @@ describe('the tuned weapon levels (owner request: small to big and strong)', () 
     WEAPON_LEVELS.forEach((l, i) => {
       const old = before[i];
       if (!old) throw new Error('missing level');
-      expect(Math.abs(l.hitbox.w - old.w * 0.6)).toBeLessThanOrEqual(0.5);
-      expect(Math.abs(l.hitbox.h - old.h * 0.6)).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(l.hitbox.w - old.w * WEAPON.shotScale)).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(l.hitbox.h - old.h * WEAPON.shotScale)).toBeLessThanOrEqual(0.5);
     });
   });
 
