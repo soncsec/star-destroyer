@@ -184,7 +184,7 @@
 **Demonstrable result:** a release-candidate game.
 
 - [x] M7.1 Title screen with a link back to the portal, and pause: STAR DESTROYER over the drifting nebula with the ship; Space or Enter starts, Q goes straight back to the arcade, F toggles full screen. Pause was already built (P / Esc, ROADMAP C). The e2e build skips the title unless a test asks for it (`?title`)
-- [ ] M7.2 High score saved in localStorage, safe if storage is unavailable
+- [x] M7.2 High score saved in localStorage, safe if storage is unavailable: only the number is stored (key `star-destroyer.highScore`); a stored value that isn't plain digits counts as none; every storage call is wrapped, so a blocked or full storage just means no high score. Runs that used a cheat never set it. Shown on the title screen and on the game-over and victory panels ("NEW HIGH SCORE!" when beaten)
 - [ ] M7.3 CC0 sound effects (sources recorded in the credits file) — *new assets need approval*
 - [ ] M7.4 Parallax props (asteroids, planets) per level
 - [ ] M7.5 Difficulty balance pass across all 8 levels from the owner's play-tests

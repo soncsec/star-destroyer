@@ -41,6 +41,8 @@ export interface TestHook {
    * Phaser's frame rate (M6.7). `reset` clears the record first.
    */
   frameTimes(reset?: boolean): { workMs: number[]; fps: number };
+  /** The visible text in the running scenes (for screens without a snapshot, like the title). */
+  sceneTexts(): string[];
 }
 
 /** Frames kept for `frameTimes` (about 30 s at 60 fps). */
@@ -90,6 +92,13 @@ export function installTestHook(game: Phaser.Game): void {
     setDropChance: (chance) => required().setDropChance(chance),
     setShield: (seconds) => required().setShield(seconds),
     spawnEnemy: (x, y, firstShot, kind) => required().spawnEnemy(x, y, firstShot, kind),
+    sceneTexts: () =>
+      game.scene
+        .getScenes(true)
+        .flatMap((s) => s.children.list)
+        .filter((o): o is Phaser.GameObjects.Text => o.type === 'Text')
+        .filter((t) => t.visible)
+        .map((t) => t.text),
     frameTimes: (reset) => {
       if (reset) work.length = 0;
       return { workMs: [...work], fps: game.loop.actualFps };

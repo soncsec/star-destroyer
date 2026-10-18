@@ -8,6 +8,7 @@ import {
   DEPTH,
   GAME_OVER,
   HIT_SPARK,
+  HIGH_SCORE,
   LEVEL_COMPLETE,
   VICTORY,
   ENEMY_FIRE,
@@ -72,7 +73,9 @@ import {
   type FlowRules,
   type FlowState,
 } from '../logic/levelFlow';
+import { isNewHighScore, loadHighScore, saveHighScore } from '../logic/highScore';
 import { createRng, type Rng } from '../logic/rng';
+import { browserStore } from '../platform/storage';
 import { screenClear } from '../logic/screenClear';
 import {
   collectPowerUp,
@@ -118,6 +121,8 @@ export interface GameSnapshot {
   /** Pause / quit / legend state and what the overlay shows; mute and full screen. */
   controls: { mode: string; legend: boolean; overlay: ReturnType<ControlsOverlay['read']> };
   muted: boolean;
+  /** The best score so far, and whether this run set it (M7.2). */
+  highScore: { best: number; isNew: boolean };
   /** Test hook only; the game itself never shows these. */
   cheats: { invincible: boolean; used: boolean };
   fullscreen: boolean;
@@ -126,7 +131,7 @@ export interface GameSnapshot {
   collected: Record<PowerUpKind, number>;
   weaponLevel: number;
   /** The game-over panel, and whether a fresh key press will now restart. */
-  gameOver: { visible: boolean; title: string; score: string; prompt: string; armed: boolean };
+  gameOver: ReturnType<GameOverPanel['read']> & { armed: boolean };
   shots: number;
   /** Damage of each player shot in flight. */
   shotDamage: number[];
@@ -216,6 +221,10 @@ export class GameScene extends Phaser.Scene {
   private invincible = false;
   /** True once any cheat was used this game: the run can't set the high score (M7.2). */
   private cheated = false;
+  /** The best score so far (M7.2), and whether this run has set a new one. */
+  private highScore = { best: 0, isNew: false };
+  /** The run's score has been checked against the high score (once, at its end). */
+  private scoreRecorded = false;
   private rng!: Rng;
   private waves: WaveRunner = startWaves();
   private score = 0;
@@ -339,6 +348,8 @@ export class GameScene extends Phaser.Scene {
     this.cheatBuffer = '';
     this.invincible = carry?.invincible ?? false;
     this.cheated = carry?.cheated ?? false;
+    this.highScore = { best: loadHighScore(browserStore(), HIGH_SCORE.storageKey), isNew: false };
+    this.scoreRecorded = false;
     // The browser's own keydown, not Phaser's general key event: Phaser's can
     // deliver a typed letter more than once and out of order, which breaks words.
     const onType = (e: KeyboardEvent): void => {
@@ -487,9 +498,25 @@ export class GameScene extends Phaser.Scene {
     };
   }
 
+  /**
+   * At the end of a run (game over or victory), once: a higher score without
+   * cheats becomes the new high score and is saved (M7.2).
+   */
+  private recordScore(): void {
+    if (this.scoreRecorded) return;
+    this.scoreRecorded = true;
+    if (!isNewHighScore(this.score, this.highScore.best, this.cheated)) return;
+    this.highScore = { best: this.score, isNew: true };
+    saveHighScore(browserStore(), HIGH_SCORE.storageKey, this.score);
+  }
+
   /** The victory screen, with fireworks going off behind it. */
   private celebrate(dt: number, t: number): void {
-    this.victoryPanel.show({ score: this.score, lives: this.health.lives }, t);
+    this.recordScore();
+    this.victoryPanel.show(
+      { score: this.score, lives: this.health.lives, high: this.highScore },
+      t,
+    );
     this.fireworks -= dt;
     if (this.fireworks > 0) return;
     this.fireworks += VICTORY.fireworksEvery;
@@ -531,14 +558,22 @@ export class GameScene extends Phaser.Scene {
 
   private updateGameOver(dt: number, pressed: boolean): void {
     if (!this.gameOver) {
-      if (isGameOver(this.health)) this.gameOver = startGameOver();
+      if (isGameOver(this.health)) {
+        this.gameOver = startGameOver();
+        this.recordScore();
+      }
       return;
     }
     const held = this.keys.fire.isDown || this.keys.enter.isDown;
     const step = stepGameOver(this.gameOver, dt, { held, pressed }, GAME_OVER);
     this.gameOver = step.state;
     const shown = panelShown(this.gameOver, GAME_OVER);
-    this.gameOverPanel.show(shown, this.score, this.gameOver.t - GAME_OVER.showAfter);
+    this.gameOverPanel.show(
+      shown,
+      this.score,
+      this.gameOver.t - GAME_OVER.showAfter,
+      this.highScore,
+    );
     if (step.restart) this.scene.restart({});
   }
 
@@ -667,6 +702,7 @@ export class GameScene extends Phaser.Scene {
       },
       muted: this.sound.mute,
       cheats: { invincible: this.invincible, used: this.cheated },
+      highScore: { ...this.highScore },
       fullscreen: this.scale.isFullscreen,
       gameOver: { ...this.gameOverPanel.read(), armed: this.gameOver?.armed ?? false },
       pickups: this.pickups.active().map((p) => ({ kind: p.kind, x: p.sprite.x, y: p.sprite.y })),
