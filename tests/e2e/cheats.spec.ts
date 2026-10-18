@@ -30,8 +30,11 @@ test('typing the lives word adds 5 lives, with nothing on screen saying why', as
   await openQuietGame(page);
   await page.keyboard.type(CHEATS.words.lives.toLowerCase());
   await expect.poll(async () => (await snapshot(page)).health.lives).toBe(3 + CHEATS.extraLives);
+  // The cheat lands between frames; the HUD redraws on the next one.
+  await expect
+    .poll(async () => (await snapshot(page)).hud.lives)
+    .toBe(`LIVES ${3 + CHEATS.extraLives}`);
   const s = await snapshot(page);
-  expect(s.hud.lives).toBe(`LIVES ${3 + CHEATS.extraLives}`);
   expect(s.cheats.used).toBe(true);
   const text = await visibleText(page);
   for (const w of [...Object.values(CHEATS.words), 'CHEAT', 'INVINCIBLE'])
