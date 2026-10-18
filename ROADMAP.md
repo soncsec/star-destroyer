@@ -117,7 +117,7 @@
 **Demonstrable result:** all three power-ups drop and work as specified in PROJECT.md section 4a.
 
 - [x] M3.1 Drop system with per-type rarity (data-driven, seeded, unit tested); pickup icons from the gems pack: 12% of kills (enemies, large asteroids) drop a gem; weapon 6 : shield 3 : clear 1; clear never in boss fights; gems cut from the pack's gem sheet
-- [ ] M3.2 Weapon levels 1–3, shots growing bigger and stronger (owner request): small spark → double pulse → spread of three charged blasts (double damage); reset to level 1 on death; no time-out
+- [x] M3.2 Weapon levels 1–3, shots growing bigger and stronger (owner request): small spark → double pulse → spread of three charged blasts (double damage); reset to level 1 on death; no time-out. Level 1 is the space-marine tracer (visible 10×4), then pulse ×2, then charged ×3 spread at 2 damage
 - [ ] M3.3 Shield: energy-shield effect, blocks all damage for 30 s, timer shown in the HUD
 - [ ] M3.4 Screen clear: destroys all on-screen enemies with a large explosion; rare; never dropped during boss fights
 - [ ] M3.5 Hit-spark effects on impact

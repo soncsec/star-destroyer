@@ -18,10 +18,12 @@ export interface TestHook {
   setDropChance(chance: number | null): void;
   /** Drops a pickup of `kind` at (x, y). */
   spawnPickup(kind: PowerUpKind, x: number, y: number): boolean;
-  /** Fires exactly one player shot from the ship. */
+  /** Fires one volley at the current weapon level. */
   fireShot(): boolean;
-  /** Puts the ship on its last life with one hit left. */
-  oneHitLeft(): void;
+  /** Sets the weapon level (1–3). */
+  setWeaponLevel(level: number): void;
+  /** Leaves the ship one hit from losing a life; on its last life unless `lives` is given. */
+  oneHitLeft(lives?: number): void;
   /** Spawns a large asteroid at x (top of the screen) or (x, y). */
   spawnAsteroid(x: number, y?: number): boolean;
   /** Spawns an enemy (default grunt) at x (top of the screen) or (x, y); optionally set its first shot. */
@@ -51,8 +53,9 @@ export function installTestHook(game: Phaser.Game): void {
     setSpawning: (on) => required().setSpawning(on),
     clearEnemies: (keepShots) => required().clearEnemies(keepShots),
     spawnAsteroid: (x, y) => required().spawnAsteroid(x, y),
-    oneHitLeft: () => required().oneHitLeft(),
+    oneHitLeft: (lives) => required().oneHitLeft(lives),
     fireShot: () => required().fireShot(),
+    setWeaponLevel: (level) => required().setWeaponLevel(level),
     spawnPickup: (kind, x, y) => required().spawnPickup(kind, x, y),
     setDropChance: (chance) => required().setDropChance(chance),
     spawnEnemy: (x, y, firstShot, kind) => required().spawnEnemy(x, y, firstShot, kind),

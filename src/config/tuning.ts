@@ -1,5 +1,6 @@
 import type { DropRules, PowerUpKind } from '../logic/drops';
 import type { MovePattern } from '../logic/enemyMoves';
+import type { WeaponLevel } from '../logic/weaponLevels';
 
 /** All gameplay numbers live here so they can be tuned in one place. */
 export const GAME_WIDTH = 256;
@@ -85,20 +86,57 @@ export const PLAYER = {
   startY: 0.85,
 } as const;
 
+/** Shared weapon settings. */
 export const WEAPON = {
-  /** Effect sprite for the basic shot. The art points right, so it's rotated to fire upward. */
-  sprite: 'shot-bolt',
-  /** Seconds between shots while the fire key is held. */
+  /** Seconds between volleys while the fire key is held. */
   fireInterval: 0.2,
-  /** Pixels per second, upward. */
-  bulletSpeed: 320,
   /** Where shots appear, relative to the ship's center (negative = above). */
   muzzleOffsetY: -24,
-  /** Collision box in screen pixels after rotation (narrower than the art's glow). */
-  hitbox: { w: 10, h: 26 },
-  /** Most shots on screen at once; extra shots wait for a free slot. */
-  poolSize: 16,
+  /** Most shots on screen at once (level 3 fires three per volley). */
+  poolSize: 48,
 } as const;
+
+/**
+ * Weapon levels 1–3 (owner request: shots start small and grow bigger and
+ * stronger). Sprites point right and are turned to face their direction of
+ * travel; hitboxes are in screen pixels after that turn (narrower than the glow).
+ */
+export const WEAPON_LEVELS: readonly (WeaponLevel & {
+  sprite: string;
+  hitbox: { w: number; h: number };
+})[] = [
+  // 1: a single small orange tracer (space-marine bullet, visible 10×4).
+  {
+    sprite: 'shot-tracer',
+    damage: 1,
+    speed: 340,
+    hitbox: { w: 6, h: 12 },
+    shots: [{ dx: 0, angleDeg: 0 }],
+  },
+  // 2: two ringed blue pulses side by side (visible about 50×25 each).
+  {
+    sprite: 'shot-pulse',
+    damage: 1,
+    speed: 320,
+    hitbox: { w: 12, h: 28 },
+    shots: [
+      { dx: -7, angleDeg: 0 },
+      { dx: 7, angleDeg: 0 },
+    ],
+  },
+  // 3: a spread of three big charged blasts, double damage (visible about 55×30 each).
+  {
+    sprite: 'shot-charged',
+    damage: 2,
+    speed: 300,
+    hitbox: { w: 18, h: 32 },
+    shots: [
+      { dx: -6, angleDeg: -12 },
+      { dx: 0, angleDeg: 0 },
+      { dx: 6, angleDeg: 12 },
+    ],
+  },
+];
 
 /** The basic enemy (M1.7). More types and wave scripts arrive in M2. */
 /** Health and lives (owner decisions: 5 hits per life, 3 lives). */
