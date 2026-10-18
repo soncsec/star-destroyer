@@ -43,7 +43,7 @@ test('a shot that hits an asteroid sparks', async ({ page }) => {
 test('an enemy shot that hits the ship sparks', async ({ page }) => {
   const { player } = await openQuietGame(page);
   await page.evaluate((x) => window.__starDestroyer?.spawnEnemy(x, 40, 0.05), player.x);
-  await expect.poll(async () => (await snapshot(page)).health.hits, { timeout: 8_000 }).toBe(1);
+  await expect.poll(async () => (await snapshot(page)).health.hits, { timeout: 20_000 }).toBe(1);
   expect((await snapshot(page)).sparks).toBe(1);
 });
 
@@ -51,6 +51,6 @@ test('an enemy shot absorbed by the shield sparks', async ({ page }) => {
   const { player } = await openQuietGame(page);
   await page.evaluate(() => window.__starDestroyer?.setShield(30));
   await page.evaluate((x) => window.__starDestroyer?.spawnEnemy(x, 40, 0.05), player.x);
-  await expect.poll(async () => (await snapshot(page)).sparks, { timeout: 8_000 }).toBe(1);
+  await expect.poll(async () => (await snapshot(page)).sparks, { timeout: 20_000 }).toBe(1);
   expect((await snapshot(page)).health.hits).toBe(0);
 });

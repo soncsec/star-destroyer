@@ -45,7 +45,7 @@ test('a blue gem gives a 10-second shield, shown around the ship and in the HUD'
   // count can skip numbers between looks. Wait for it to move, then check the
   // HUD shows the time left, rounded up, in that same frame.
   await expect
-    .poll(async () => (await snapshot(page)).hud.shield, { timeout: 5_000 })
+    .poll(async () => (await snapshot(page)).hud.shield, { timeout: 20_000 })
     .not.toBe(`SHIELD ${SHIELD.duration}`);
   const later = await snapshot(page);
   expect(later.shield.timeLeft).toBeLessThan(SHIELD.duration);

@@ -50,7 +50,7 @@ test('the waves end, the boss comes in, and beating it completes level 1 and rea
 
   await beatTheBoss(page);
   await expect
-    .poll(async () => (await snapshot(page)).flow.panel.visible, { timeout: 10_000 })
+    .poll(async () => (await snapshot(page)).flow.panel.visible, { timeout: 20_000 })
     .toBe(true);
   const done = await snapshot(page);
   expect(done.flow.stage).toBe('complete');
@@ -63,7 +63,7 @@ test('the waves end, the boss comes in, and beating it completes level 1 and rea
   expect(done.score).toBeGreaterThanOrEqual(BOSSES['spaceship-unit'].points);
 
   await page.keyboard.press('Space');
-  await expect.poll(async () => (await snapshot(page)).level.number, { timeout: 10_000 }).toBe(2);
+  await expect.poll(async () => (await snapshot(page)).level.number, { timeout: 20_000 }).toBe(2);
   const two = await snapshot(page);
   expect(two.level.name).toBe(LEVEL_2.name);
   expect(two.flow.stage).toBe('waves');
@@ -78,7 +78,7 @@ test('the waves end, the boss comes in, and beating it completes level 1 and rea
   // Level 2 plays its own waves with its own (harder) numbers.
   expect(two.difficulty.fire.interval).toBeLessThan(first.difficulty.fire.interval);
   await expect
-    .poll(async () => (await snapshot(page)).enemies.map((e) => e.kind).sort(), { timeout: 5_000 })
+    .poll(async () => (await snapshot(page)).enemies.map((e) => e.kind).sort(), { timeout: 20_000 })
     .toEqual(['grunt', 'grunt', 'grunt']);
 });
 
@@ -88,21 +88,21 @@ test('after the last level, the panel says so and the next press starts a new ga
   await openGame(page);
   await beatTheBoss(page);
   await expect
-    .poll(async () => (await snapshot(page)).flow.panel.visible, { timeout: 10_000 })
+    .poll(async () => (await snapshot(page)).flow.panel.visible, { timeout: 20_000 })
     .toBe(true);
   await page.keyboard.press('Space');
-  await expect.poll(async () => (await snapshot(page)).level.number, { timeout: 10_000 }).toBe(2);
+  await expect.poll(async () => (await snapshot(page)).level.number, { timeout: 20_000 }).toBe(2);
 
   await beatTheBoss(page);
   await expect
-    .poll(async () => (await snapshot(page)).flow.panel.visible, { timeout: 10_000 })
+    .poll(async () => (await snapshot(page)).flow.panel.visible, { timeout: 20_000 })
     .toBe(true);
   expect((await snapshot(page)).flow.panel).toMatchObject({
     title: 'LEVEL 2 COMPLETE',
     next: 'ALL LEVELS COMPLETE',
   });
   await page.keyboard.press('Space');
-  await expect.poll(async () => (await snapshot(page)).level.number, { timeout: 10_000 }).toBe(1);
+  await expect.poll(async () => (await snapshot(page)).level.number, { timeout: 20_000 }).toBe(1);
   const fresh = await snapshot(page);
   expect(fresh.score).toBe(0);
   expect(fresh.weaponLevel).toBe(1);

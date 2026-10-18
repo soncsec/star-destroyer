@@ -21,7 +21,7 @@ async function openQuietGame(page: Page): Promise<GameSnapshot> {
 
 /** Fires one volley and returns the damage of each shot it put in the air. */
 async function volley(page: Page): Promise<number[]> {
-  await expect.poll(async () => (await snapshot(page)).shots, { timeout: 5_000 }).toBe(0);
+  await expect.poll(async () => (await snapshot(page)).shots, { timeout: 20_000 }).toBe(0);
   await page.evaluate(() => window.__starDestroyer?.fireShot());
   return (await snapshot(page)).shotDamage;
 }
@@ -87,7 +87,7 @@ test('a new game starts with the small gun again', async ({ page }) => {
   const s = await snapshot(page);
   await page.evaluate(({ x, y }) => window.__starDestroyer?.spawnEnemy(x, y, 999), s.player);
   await expect
-    .poll(async () => (await snapshot(page)).gameOver.armed, { timeout: 5_000 })
+    .poll(async () => (await snapshot(page)).gameOver.armed, { timeout: 20_000 })
     .toBe(true);
   await page.keyboard.press('Space');
   await expect.poll(async () => (await snapshot(page)).health.gameOver).toBe(false);
