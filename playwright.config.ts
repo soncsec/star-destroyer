@@ -26,6 +26,9 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /touch\.spec\.ts/ },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testIgnore: /touch\.spec\.ts/ },
+    // Safari's engine (M7.6, owner 2026-10-18). Linux WebKit, so it checks the
+    // game's behaviour in WebKit, not Safari's macOS graphics.
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: /touch\.spec\.ts/ },
     // A phone (owner request 2026-10-18): touch play, on Chromium's phone emulation.
     { name: 'phone', use: { ...devices['Pixel 7'] }, testMatch: /touch\.spec\.ts/ },
   ],

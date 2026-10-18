@@ -29,19 +29,27 @@ test('the game plays level 1 from its wave script', async ({ page }) => {
     opening.map((s) => ({ kind: s.kind, x: s.x * WIDTH })),
   );
 
-  // The next scripted spawn (a weaver at t=4) arrives on time, give or take a frame or two.
+  // The next scripted spawn (a weaver at t=4) arrives on time: on the first
+  // frame whose wave time reaches it. Watching every frame, the frame seen
+  // just before the spawn must still be short of its time. (This holds however
+  // long each frame takes on a busy machine.)
   const next = LEVEL_1.waves[opening.length];
   if (!next) throw new Error('script too short');
   const handle = await page.waitForFunction(
     (count) => {
+      const w = window as unknown as { __lastWaveTime?: number };
       const s = window.__starDestroyer?.snapshot();
-      return s && s.waves.next > count ? s : null;
+      if (!s) return null;
+      if (s.waves.next > count) return { s, before: w.__lastWaveTime ?? -1 };
+      w.__lastWaveTime = s.waves.time;
+      return null;
     },
     opening.length,
     { polling: 'raf', timeout: 20_000 },
   );
-  const later = (await handle.jsonValue()) as GameSnapshot;
+  const { s: later, before } = (await handle.jsonValue()) as { s: GameSnapshot; before: number };
+  expect(before).toBeGreaterThanOrEqual(0);
+  expect(before).toBeLessThan(next.t);
   expect(later.waves.time).toBeGreaterThanOrEqual(next.t);
-  expect(later.waves.time).toBeLessThan(next.t + 0.1);
   expect(later.enemies.some((e) => e.kind === next.kind && e.spawnX === next.x * WIDTH)).toBe(true);
 });
