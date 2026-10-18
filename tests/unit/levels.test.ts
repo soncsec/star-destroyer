@@ -279,6 +279,24 @@ describe('level 8 (M6.5)', () => {
   });
 });
 
+describe('parallax props (M7.4)', () => {
+  it('drift behind the levels out in open space; none inside the station or in the stars-only Deep Dark', () => {
+    const withProps = LEVELS.filter((l) => (l.props ?? []).length > 0).map((l) => l.number);
+    expect(withProps).toEqual([1, 2, 3, 4, 8]);
+  });
+
+  it('start on screen sideways, wholly', () => {
+    for (const level of LEVELS) {
+      for (const prop of level.props ?? []) {
+        const art = ASSETS.find((a) => a.key === prop.texture);
+        const w = art?.kind === 'image' ? art.width : Infinity;
+        expect(prop.x * GAME_WIDTH - w / 2, prop.texture).toBeGreaterThanOrEqual(0);
+        expect(prop.x * GAME_WIDTH + w / 2, prop.texture).toBeLessThanOrEqual(GAME_WIDTH);
+      }
+    }
+  });
+});
+
 describe('level 1 waves', () => {
   it('match the approved plan: Teal Nebula, grunts and weavers, spaceship-unit boss', () => {
     expect(LEVEL_1).toMatchObject({ number: 1, name: 'Teal Nebula', boss: 'spaceship-unit' });

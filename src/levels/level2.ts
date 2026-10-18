@@ -15,6 +15,8 @@ export const LEVEL_2: Level = {
     { texture: 'bg-asteroid-field', scrollSpeed: 7, alpha: 1, scale: 2 },
     { texture: 'bg-blue-stars', scrollSpeed: 36, alpha: 0.6 },
   ],
+  // M7.4: a big purple planet, matching the field, drifts slowly past.
+  props: [{ texture: 'bg-planet-large', x: 0.76, y: -40, scrollSpeed: 4, gap: 260 }],
   roster: ['grunt', 'diver'],
   waves: script<SpawnKind>(
     line(0, 'grunt', [0.25, 0.5, 0.75]),
