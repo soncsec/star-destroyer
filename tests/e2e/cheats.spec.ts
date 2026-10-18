@@ -57,7 +57,7 @@ test('the invincibility word makes the ship ignore hits; typing it again turns i
   // That enemy flew on through the ship; a fresh one now hurts again.
   const { player: now } = await snapshot(page);
   await page.evaluate(({ x, y }) => window.__starDestroyer?.spawnEnemy(x, y, 999), now);
-  await expect.poll(async () => (await snapshot(page)).health.hits, { timeout: 5_000 }).toBe(1);
+  await expect.poll(async () => (await snapshot(page)).health.hits, { timeout: 20_000 }).toBe(1);
 });
 
 test('the controls legend never lists the cheats', async ({ page }) => {

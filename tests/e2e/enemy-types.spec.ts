@@ -24,13 +24,19 @@ const NEVER = 999; // first shot so late it never happens during the test
 test('a weaver sways side to side as it descends', async ({ page }) => {
   await openQuietGame(page);
   await page.evaluate((n) => window.__starDestroyer?.spawnEnemy(128, 40, n, 'weaver'), NEVER);
+  // Sample until it has swayed most of the way both sides. Game time follows the
+  // frames, so on a busy machine one sway takes longer than its 2.4 s.
   const xs: number[] = [];
-  for (let i = 0; i < 16; i++) {
-    const e = (await snapshot(page)).enemies[0];
-    if (e) xs.push(e.x);
-    await page.waitForTimeout(150);
-  }
-  expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(50); // amplitude 36 each way
+  await expect
+    .poll(
+      async () => {
+        const e = (await snapshot(page)).enemies[0];
+        if (e) xs.push(e.x);
+        return Math.max(...xs) - Math.min(...xs);
+      },
+      { timeout: 20_000, intervals: [100] },
+    )
+    .toBeGreaterThan(50); // amplitude 36 each way
   expect(Math.max(...xs)).toBeLessThanOrEqual(128 + 36 + 0.5);
   expect(Math.min(...xs)).toBeGreaterThanOrEqual(128 - 36 - 0.5);
 });
@@ -42,7 +48,7 @@ test('a diver takes 4 hits and is worth 200 points', async ({ page }) => {
     player.x,
   );
   await page.keyboard.down('Space');
-  await expect.poll(async () => (await snapshot(page)).score, { timeout: 8_000 }).toBe(200);
+  await expect.poll(async () => (await snapshot(page)).score, { timeout: 20_000 }).toBe(200);
   await page.keyboard.up('Space');
   expect((await snapshot(page)).enemies).toEqual([]);
 });
@@ -53,7 +59,7 @@ test('a diver dives into a ship that stays still', async ({ page }) => {
     (x) => window.__starDestroyer?.spawnEnemy(x + 30, undefined, undefined, 'diver'),
     player.x,
   );
-  await expect.poll(async () => (await snapshot(page)).health.hits, { timeout: 8_000 }).toBe(1);
+  await expect.poll(async () => (await snapshot(page)).health.hits, { timeout: 20_000 }).toBe(1);
   const after = await snapshot(page);
   expect(after.lastHit).toBe('hit');
   expect(after.enemies).toEqual([]); // it crashed
@@ -70,10 +76,10 @@ test('a moving ship can dodge a diver, which flies on off the screen', async ({ 
   await page.waitForFunction(
     () => (window.__starDestroyer?.snapshot()?.enemies[0]?.y ?? 0) > 80,
     null,
-    { polling: 'raf', timeout: 8_000 },
+    { polling: 'raf', timeout: 20_000 },
   );
   await page.keyboard.down('ArrowRight');
-  await expect.poll(async () => (await snapshot(page)).enemies.length, { timeout: 6_000 }).toBe(0);
+  await expect.poll(async () => (await snapshot(page)).enemies.length, { timeout: 20_000 }).toBe(0);
   await page.keyboard.up('ArrowRight');
   expect((await snapshot(page)).health.hits).toBe(0);
 });

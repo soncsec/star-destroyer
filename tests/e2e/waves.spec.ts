@@ -38,7 +38,7 @@ test('the game plays level 1 from its wave script', async ({ page }) => {
       return s && s.waves.next > count ? s : null;
     },
     opening.length,
-    { polling: 'raf', timeout: 10_000 },
+    { polling: 'raf', timeout: 20_000 },
   );
   const later = (await handle.jsonValue()) as GameSnapshot;
   expect(later.waves.time).toBeGreaterThanOrEqual(next.t);

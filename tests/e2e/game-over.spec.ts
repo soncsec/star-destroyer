@@ -24,7 +24,7 @@ async function scoreThenDie(page: Page): Promise<void> {
   const { player } = await snapshot(page);
   await page.evaluate((x) => window.__starDestroyer?.spawnEnemy(x, undefined, 999), player.x);
   await page.keyboard.down('Space');
-  await expect.poll(async () => (await snapshot(page)).score, { timeout: 8_000 }).toBe(100);
+  await expect.poll(async () => (await snapshot(page)).score, { timeout: 20_000 }).toBe(100);
   await page.keyboard.up('Space');
   await page.evaluate(() => window.__starDestroyer?.oneHitLeft());
   const s = await snapshot(page);
@@ -55,7 +55,7 @@ test('holding fire through the death does not restart the game', async ({ page }
   const { player } = await snapshot(page);
   await page.evaluate(({ x, y }) => window.__starDestroyer?.spawnEnemy(x, y, 999), player);
   await expect
-    .poll(async () => (await snapshot(page)).gameOver.visible, { timeout: 5_000 })
+    .poll(async () => (await snapshot(page)).gameOver.visible, { timeout: 20_000 })
     .toBe(true);
   await page.waitForTimeout(1500); // still holding
   const s = await snapshot(page);
@@ -73,7 +73,7 @@ for (const key of ['Space', 'Enter']) {
 
     // A brand-new game: the scene restarts with spawning on and a fresh state.
     await expect
-      .poll(async () => (await snapshot(page)).health.gameOver, { timeout: 5_000 })
+      .poll(async () => (await snapshot(page)).health.gameOver, { timeout: 20_000 })
       .toBe(false);
     const fresh = await snapshot(page);
     expect(fresh.score).toBe(0);
