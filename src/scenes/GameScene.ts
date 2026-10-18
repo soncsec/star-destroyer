@@ -7,6 +7,7 @@ import {
   DEFAULT_SEED,
   DEPTH,
   GAME_OVER,
+  HIT_SPARK,
   ENEMY_FIRE,
   ENEMY_TYPES,
   GAME_HEIGHT,
@@ -98,6 +99,8 @@ export interface GameSnapshot {
   /** Damage of each player shot in flight. */
   shotDamage: number[];
   explosions: number;
+  /** How many hit sparks have been shown this game. */
+  sparks: number;
   /** Whether the screen clear's big blast is playing. */
   blast: boolean;
   /** Enemy shots in flight. */
@@ -127,6 +130,8 @@ export class GameScene extends Phaser.Scene {
   private enemyBullets!: EnemyBullets;
   private asteroids!: Asteroids;
   private explosions!: Explosions;
+  /** Hit sparks where shots land (M3.5). */
+  private sparks!: Explosions;
   /** The screen clear's big blast (one at a time). */
   private blast!: Explosions;
   private hud!: Hud;
@@ -181,6 +186,7 @@ export class GameScene extends Phaser.Scene {
     this.bullets = new Bullets(this);
     this.player = new Player(this);
     this.explosions = new Explosions(this);
+    this.sparks = new Explosions(this, HIT_SPARK.sprite, HIT_SPARK.poolSize, DEPTH.sparks);
     this.blast = new Explosions(this, SCREEN_CLEAR.blast, 1, DEPTH.blast);
     this.hud = new Hud(this, PLAYER_HEALTH.hitsPerLife);
     this.pickups = new Pickups(this);
@@ -377,7 +383,9 @@ export class GameScene extends Phaser.Scene {
     const { x, y } = this.player.position;
     const bubble = { x, y, ...SHIELD.hitbox };
     for (const b of this.enemyBullets.active()) {
-      if (firstHit(bubble, [this.enemyBullets.hitbox(b)]) >= 0) this.enemyBullets.release(b);
+      if (firstHit(bubble, [this.enemyBullets.hitbox(b)]) < 0) continue;
+      this.sparks.play(b.sprite.x, b.sprite.y);
+      this.enemyBullets.release(b);
     }
     for (const e of this.enemies.active()) {
       if (firstHit(bubble, [this.enemies.hitbox(e)]) < 0) continue;
@@ -412,7 +420,10 @@ export class GameScene extends Phaser.Scene {
     const { health, result } = takeHit(this.health, PLAYER_HEALTH);
     this.health = health;
     this.lastHit = result;
-    if (shot) this.enemyBullets.release(shot);
+    if (shot) {
+      this.sparks.play(shot.sprite.x, shot.sprite.y);
+      this.enemyBullets.release(shot);
+    }
     if (enemy) {
       this.explosions.play(enemy.sprite.x, enemy.sprite.y);
       this.enemies.destroy(enemy);
@@ -465,6 +476,7 @@ export class GameScene extends Phaser.Scene {
       shots: this.bullets.active().length,
       shotDamage: this.bullets.active().map((b) => b.damage),
       explosions: this.explosions.activeCount(),
+      sparks: this.sparks.playedCount(),
       blast: this.blast.activeCount() > 0,
       enemyShots: this.enemyBullets.active().map((sh) => ({ x: sh.sprite.x, y: sh.sprite.y })),
       health: { ...this.health, gameOver: isGameOver(this.health) },
@@ -549,7 +561,10 @@ export class GameScene extends Phaser.Scene {
     for (const shot of this.bullets.active()) {
       const box = this.bullets.hitbox(shot);
       const enemy = touching(box, this.enemies.active(), (e) => this.enemies.hitbox(e));
+      // The spark shows at the shot's nose, where it struck.
+      const tip = { x: box.x, y: box.y - box.h / 2 };
       if (enemy) {
+        this.sparks.play(tip.x, tip.y);
         this.bullets.release(shot);
         const { x, y } = enemy.sprite;
         if (this.enemies.hit(enemy, shot.damage)) {
@@ -561,6 +576,7 @@ export class GameScene extends Phaser.Scene {
       }
       const rock = touching(box, this.asteroids.active(), (r) => this.asteroids.hitbox(r));
       if (rock) {
+        this.sparks.play(tip.x, tip.y);
         this.bullets.release(shot);
         if (this.asteroids.hit(rock, shot.damage)) {
           this.score += ASTEROIDS[rock.size].points;

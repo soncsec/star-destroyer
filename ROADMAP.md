@@ -120,7 +120,7 @@
 - [x] M3.2 Weapon levels 1–3, shots growing bigger and stronger (owner request): small tracer → double pulse → spread of three charged blasts (double damage); reset to level 1 on death; no time-out. Level 1 is the space-marine tracer (visible 10×4), then pulse ×2, then charged ×3 spread at 2 damage
 - [x] M3.3 Shield: energy-shield effect, blocks all damage for 30 s, timer shown in the HUD. A new pickup resets to 30 s; the bubble (2× art) absorbs enemy shots and destroys rammers; blinks for the last 3 s; HUD shows SHIELD n
 - [x] M3.4 Screen clear: destroys all on-screen enemies with a large explosion; rare; never dropped during boss fights. Also removes every enemy shot (owner); each kill scores; enemies still above the screen and asteroids are spared; its kills drop nothing; 192 px blast behind the ship plus a short white flash
-- [ ] M3.5 Hit-spark effects on impact
+- [x] M3.5 Hit-spark effects on impact: a cyan spark (pack's Warped hits-3, 5 frames, 0.25 s) wherever a player shot hits an enemy or asteroid (also non-lethal hits) and where an enemy shot hits the ship or the shield; pooled
 - [ ] M3.6 Unit tests for every power-up rule, including "lost on death" and "no screen clear during bosses"
 
 **Acceptance criteria:** each power-up is visibly distinct and behaves as specified; rules are unit tested; frame rate holds with max weapon and a full wave.

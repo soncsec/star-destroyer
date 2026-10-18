@@ -18,6 +18,8 @@ export const DEPTH = {
   /** The screen clear's blast stays behind the ship, so the player never loses sight of it. */
   blast: 18,
   player: 20,
+  /** Hit sparks sit over ships and shots, under explosions. */
+  sparks: 28,
   explosions: 30,
   hud: 100,
 } as const;
@@ -311,6 +313,13 @@ export const EXPLOSION = {
   sprite: 'enemy-explosion',
   /** Enough for a screen clear to blow up a full pool of enemies at once. */
   poolSize: 16,
+} as const;
+
+/** Hit sparks (M3.5): a short flash wherever a shot hits something. */
+export const HIT_SPARK = {
+  sprite: 'hit-spark',
+  /** Room for a level-3 spread hitting several targets while others still fade. */
+  poolSize: 24,
 } as const;
 
 /** Screen-clear power-up (M3.4): every enemy on screen and every enemy shot is destroyed. */

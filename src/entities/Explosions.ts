@@ -5,6 +5,7 @@ import { DEPTH, EXPLOSION } from '../config/tuning';
 /** Pool of one-shot explosion animations (the enemy explosion unless told otherwise). */
 export class Explosions {
   private readonly pool: Phaser.GameObjects.Sprite[] = [];
+  private played = 0;
 
   constructor(
     scene: Phaser.Scene,
@@ -23,9 +24,15 @@ export class Explosions {
   play(x: number, y: number): void {
     const s = this.pool.find((e) => !e.active) ?? this.pool[0];
     if (!s) return;
+    this.played++;
     s.setPosition(x, y).setActive(true).setVisible(true).play(animKey(this.sprite), false);
     // Move it to the back of the list so reuse picks the oldest one first.
     this.pool.push(...this.pool.splice(this.pool.indexOf(s), 1));
+  }
+
+  /** How many have been played since the pool was made (tests: effects are too brief to poll). */
+  playedCount(): number {
+    return this.played;
   }
 
   /** How many explosions are playing right now. */
