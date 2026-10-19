@@ -1,6 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
+import { levelBossHp } from '../../src/levels/bosses';
 import { LEVELS } from '../../src/levels';
 import type { GameSnapshot } from '../../src/scenes/GameScene';
+
+async function snapshot(page: Page): Promise<GameSnapshot> {
+  const snap = await page.evaluate(() => window.__starDestroyer?.snapshot() ?? null);
+  if (!snap) throw new Error('game scene is not running');
+  return snap;
+}
 
 async function openGame(page: Page, query: string): Promise<GameSnapshot> {
   await page.goto(`./${query}`);
@@ -36,4 +43,31 @@ test('without the parameter the game starts at level 1 and is not a cheat run', 
   const s = await openGame(page, '?seed=7');
   expect(s.level.number).toBe(1);
   expect(s.cheats.used).toBe(false);
+});
+
+test('after the victory, the new game starts at level 1 as a normal run, not at ?level=n', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const last = LEVELS[LEVELS.length - 1];
+  if (!last) throw new Error('no levels');
+  await openGame(page, `?level=${last.number}`);
+  await page.evaluate(() => {
+    const h = window.__starDestroyer;
+    h?.clearEnemies();
+    h?.skipWaves();
+    h?.setShield(999);
+  });
+  await expect
+    .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 30_000 })
+    .toBe('fighting');
+  await page.evaluate((hp) => window.__starDestroyer?.hurtBoss(hp), levelBossHp(last.boss));
+  await expect
+    .poll(async () => (await snapshot(page)).flow.victory.visible, { timeout: 30_000 })
+    .toBe(true);
+  await page.keyboard.press('Space');
+  await expect.poll(async () => (await snapshot(page)).level.number, { timeout: 20_000 }).toBe(1);
+  const s = await snapshot(page);
+  expect(s.cheats.used).toBe(false);
+  expect(s.score).toBe(0);
 });

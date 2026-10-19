@@ -525,7 +525,8 @@ export class GameScene extends Phaser.Scene {
   private goToNextLevel(): void {
     const next = LEVELS[this.level.number];
     if (!next) {
-      this.scene.restart({});
+      // A new game always starts at level 1, even if ?level=n (M7.9) chose this run's start.
+      this.scene.restart({ level: 1 });
       return;
     }
     const start: GameStart = {
