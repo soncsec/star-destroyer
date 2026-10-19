@@ -14,6 +14,8 @@ export interface TestHook {
   setSpawning(on: boolean): void;
   /** Removes all enemies, asteroids and pickups and, unless `keepShots`, enemy shots. */
   clearEnemies(keepShots?: boolean): void;
+  /** Removes enemy shots in flight, leaving enemies and the boss. */
+  clearEnemyShots(): void;
   /** Sets the seconds of shield left. */
   setShield(seconds: number): void;
   /** Overrides the drop chance (1 = every kill drops); null restores the tuning. */
@@ -81,6 +83,7 @@ export function installTestHook(game: Phaser.Game): void {
     snapshot: () => gameScene()?.snapshot() ?? null,
     setSpawning: (on) => required().setSpawning(on),
     clearEnemies: (keepShots) => required().clearEnemies(keepShots),
+    clearEnemyShots: () => required().clearEnemyShots(),
     spawnAsteroid: (x, y) => required().spawnAsteroid(x, y),
     spawnBoss: (kind) => required().spawnBoss(kind),
     skipWaves: () => required().skipWaves(),

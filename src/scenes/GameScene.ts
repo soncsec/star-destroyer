@@ -805,6 +805,11 @@ export class GameScene extends Phaser.Scene {
     this.spawning = on;
   }
 
+  /** Removes enemy shots in flight, leaving enemies and the boss (tests). */
+  clearEnemyShots(): void {
+    this.enemyBullets.clear();
+  }
+
   /** Removes all enemies and, unless `keepShots`, their shots (tests use this for a clean screen). */
   clearEnemies(keepShots = false): void {
     this.enemies.clear();
