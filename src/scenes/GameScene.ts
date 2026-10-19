@@ -133,8 +133,8 @@ export interface GameSnapshot {
   explosions: number;
   /** How many hit sparks have been shown this game. */
   sparks: number;
-  /** Whether the screen clear's big blast is playing. */
-  blast: boolean;
+  /** How many big blasts (screen clear, boss defeat) have played this game. */
+  blasts: number;
   /** The boss, once it has appeared (null before). */
   boss: ReturnType<Boss['read']>;
   /** Where the level is (waves, boss, complete) and the level-complete panel. */
@@ -236,6 +236,7 @@ export class GameScene extends Phaser.Scene {
         .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, layer.texture)
         .setOrigin(0)
         .setAlpha(layer.alpha)
+        .setTint(layer.tint ?? 0xffffff)
         .setTileScale(layer.scale ?? 1),
       scrollSpeed: layer.scrollSpeed,
     }));
@@ -627,7 +628,7 @@ export class GameScene extends Phaser.Scene {
       shotDamage: this.bullets.active().map((b) => b.damage),
       explosions: this.explosions.activeCount(),
       sparks: this.sparks.playedCount(),
-      blast: this.blast.activeCount() > 0,
+      blasts: this.blast.playedCount(),
       boss: this.boss.read(),
       flow: { stage: this.flow.stage, panel: this.levelPanel.read() },
       enemyShots: this.enemyBullets.active().map((sh) => ({ x: sh.sprite.x, y: sh.sprite.y })),

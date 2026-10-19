@@ -15,6 +15,7 @@ import { LEVEL_2 } from '../../src/levels/level2';
 import { LEVEL_3 } from '../../src/levels/level3';
 import { LEVEL_4 } from '../../src/levels/level4';
 import { LEVEL_5 } from '../../src/levels/level5';
+import { LEVEL_6 } from '../../src/levels/level6';
 import { checkWaves, mostAtOnce } from '../../src/logic/waves';
 
 describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${level.name})` })))(
@@ -35,6 +36,11 @@ describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${le
         expect(asset, layer.texture).toBeDefined();
         expect(layer.alpha).toBeGreaterThan(0);
         expect(layer.alpha).toBeLessThanOrEqual(1);
+        if (layer.tint !== undefined) {
+          expect(Number.isInteger(layer.tint), layer.texture).toBe(true);
+          expect(layer.tint).toBeGreaterThanOrEqual(0);
+          expect(layer.tint).toBeLessThanOrEqual(0xffffff);
+        }
       }
       // The furthest-back layer is opaque, so nothing shows through it.
       expect(level.background[0]?.alpha).toBe(1);
@@ -190,6 +196,37 @@ describe('level 5 (M6.2)', () => {
     expect(bottom).toBeLessThan(tall * 0.6);
     // The hitbox ends at the nose, on screen.
     expect(boss.entry.hoverY + boss.hitbox.offsetY + boss.hitbox.h / 2).toBeLessThanOrEqual(bottom);
+  });
+});
+
+describe('level 6 (M6.3)', () => {
+  it('matches the approved plan: Demon Rift, flying eyes and fire skulls, darker red layers, fire-skull boss', () => {
+    expect(LEVEL_6).toMatchObject({ number: 6, name: 'Demon Rift', boss: 'fire-skull' });
+    expect(LEVEL_6.roster).toEqual(['eye', 'skull']);
+    expect(LEVEL_6.background.map((l) => l.texture)).toContain('bg-red-back');
+    expect(LEVELS[5]).toBe(LEVEL_6);
+  });
+
+  it('darkens the red layers it shares with level 4', () => {
+    const brightness = (tint = 0xffffff): number =>
+      ((tint >> 16) & 0xff) + ((tint >> 8) & 0xff) + (tint & 0xff);
+    for (const layer of LEVEL_6.background) {
+      const four = LEVEL_4.background.find((l) => l.texture === layer.texture);
+      if (four && layer.texture !== 'bg-red-stars')
+        expect(brightness(layer.tint), layer.texture).toBeLessThan(brightness(four.tint));
+    }
+  });
+
+  it('uses every enemy in its roster', () => {
+    expect(new Set(LEVEL_6.waves.map((s) => s.kind))).toEqual(
+      new Set([...LEVEL_6.roster, 'asteroid']),
+    );
+  });
+
+  it("has the flaming fire skull as its boss, while its enemies are the skull's smaller, flameless form", () => {
+    expect(BOSSES['fire-skull'].sprite).toBe('boss-fire-skull');
+    expect(ENEMY_TYPES.skull.sprite).toBe('enemy-fire-skull');
+    expect(BOSSES['fire-skull'].phases.length).toBeGreaterThan(BOSSES['vehicle-3'].phases.length);
   });
 });
 
