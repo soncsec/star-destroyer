@@ -36,6 +36,9 @@ export class PreloadScene extends Phaser.Scene {
     // game so each test starts playing at once, unless it asks for the title
     // (?title); Vite fixes MODE at build time.
     const first = import.meta.env.MODE === 'e2e' && !params.has('title') ? 'Game' : 'Title';
-    this.scene.start(params.get('scene') === 'preview' ? 'AssetPreview' : first);
+    // ?scene=preview opens the asset preview, a developer tool that isn't in the
+    // production build: there this is decided at build time and is just `first`.
+    const preview = import.meta.env.MODE !== 'production' && params.get('scene') === 'preview';
+    this.scene.start(preview ? 'AssetPreview' : first);
   }
 }

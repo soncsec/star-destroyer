@@ -36,3 +36,15 @@ test('Q on the title screen goes straight back to the arcade (one folder up)', a
   expect(new URL(request.url()).pathname).toBe('/');
   expect(new URL(request.url()).search).toBe('');
 });
+
+test('with ?level=n, starting from the title plays that level (the M7.9 play-test skip)', async ({
+  page,
+}) => {
+  await page.goto('./?title&level=3');
+  await expect.poll(() => sceneKey(page), { timeout: 15_000 }).toBe('Title');
+  await page.keyboard.press('Space');
+  await expect.poll(() => sceneKey(page), { timeout: 15_000 }).toBe('Game');
+  const s = await page.evaluate(() => window.__starDestroyer?.snapshot());
+  expect(s?.level.number).toBe(3);
+  expect(s?.cheats.used).toBe(true);
+});

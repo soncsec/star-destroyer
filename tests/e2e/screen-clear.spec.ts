@@ -50,7 +50,7 @@ test('a pink gem destroys every enemy and enemy shot on screen, scoring each kil
   expect(after.enemyShots).toHaveLength(0);
   expect(after.score).toBe(before.score + 2 * ENEMY_TYPES.grunt.points + ENEMY_TYPES.weaver.points);
   expect(after.explosions).toBeGreaterThanOrEqual(3);
-  expect(after.blast).toBe(true);
+  expect(after.blasts).toBe(before.blasts + 1);
 });
 
 test('enemies still above the screen, and asteroids, survive a screen clear', async ({ page }) => {
