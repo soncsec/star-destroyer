@@ -14,6 +14,11 @@ export const LEVEL_3: Level = {
     { texture: 'bg-blue-back', scrollSpeed: 9, alpha: 1 },
     { texture: 'bg-blue-stars', scrollSpeed: 30, alpha: 0.9 },
   ],
+  // M7.4: two small blue planets, the nearer one faster.
+  props: [
+    { texture: 'bg-prop-planet-big', x: 0.25, y: 80, scrollSpeed: 5, gap: 200 },
+    { texture: 'bg-prop-planet-small', x: 0.75, y: -60, scrollSpeed: 8, gap: 240 },
+  ],
   roster: ['weaver', 'diver', 'flyer'],
   waves: script<SpawnKind>(
     line(0, 'weaver', [0.3, 0.5, 0.7]),
