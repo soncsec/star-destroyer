@@ -28,4 +28,9 @@ describe('frame-time summaries (M6.7)', () => {
     expect(FRAME_BUDGET.medianMs).toBeLessThanOrEqual(FRAME_BUDGET.frameMs / 2);
     expect(FRAME_BUDGET.p95Ms).toBeLessThanOrEqual(FRAME_BUDGET.frameMs);
   });
+
+  it('gives Firefox two frames for its slowest 5%, with the same median limit (owner, 2026-10-19)', () => {
+    expect(FRAME_BUDGET.firefox.medianMs).toBe(FRAME_BUDGET.medianMs);
+    expect(FRAME_BUDGET.firefox.p95Ms).toBeCloseTo(2 * FRAME_BUDGET.frameMs, 6);
+  });
 });
