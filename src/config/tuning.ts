@@ -332,14 +332,18 @@ export const WEAPON = {
  * stronger; M7.13: tracer, then one, two and three spark rays). Sprites point right and are turned to face their direction of
  * travel; hitboxes are in screen pixels after that turn (narrower than the glow).
  */
+/** The spark rays' drawing scale (owner 2026-10-19: half size). */
+export const RAY_SCALE = 0.5;
+
 export const WEAPON_LEVELS: readonly (WeaponLevel & {
   sprite: string;
   hitbox: { w: number; h: number };
   /** Seconds between volleys while the fire key is held. */
   fireInterval: number;
   /**
-   * Drawn at this scale. Every level is full size since M7.13 (owner
-   * 2026-10-18); the 45% drawing of the old pulse and charged shots is gone.
+   * Drawn at this scale. The tracer is full size; the spark rays are drawn at
+   * half size (owner 2026-10-19, from play-testing: upgrades made the game too
+   * easy), with hitboxes to match.
    */
   scale: number;
 })[] = [
@@ -361,16 +365,17 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
   // Owner request 2026-10-18 (M7.13): after the tracer, one large spark ray, then
   // two, then a spread of three, all drawn full size. Each step hits harder per
   // volley and fires a little slower than the last (5%, 7.5%, 10% below level 1).
-  // Hitboxes are the ray's solid white core (8×30 once turned to point up),
-  // narrower than its glow and sparkle tail (about 18×58).
+  // Owner 2026-10-19: rays are drawn at half size (visible about 9×29). Hitboxes
+  // are the ray's solid white core (4×15 once turned to point up), narrower than
+  // its glow and sparkle tail.
   // 2: one large spark ray, double damage.
   {
     sprite: 'shot-spark',
     damage: 2,
     speed: 258,
     fireInterval: 0.2 / (0.95 * 0.85),
-    scale: 1,
-    hitbox: { w: 8, h: 30 },
+    scale: RAY_SCALE,
+    hitbox: { w: 4, h: 15 },
     shots: [{ dx: 0, angleDeg: 0 }],
   },
   // 3: two rays side by side.
@@ -379,8 +384,8 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
     damage: 2,
     speed: 244,
     fireInterval: 0.2 / (0.925 * 0.85),
-    scale: 1,
-    hitbox: { w: 8, h: 30 },
+    scale: RAY_SCALE,
+    hitbox: { w: 4, h: 15 },
     shots: [
       { dx: -10, angleDeg: 0 },
       { dx: 10, angleDeg: 0 },
@@ -392,8 +397,8 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
     damage: 2,
     speed: 230,
     fireInterval: 0.2 / (0.9 * 0.85),
-    scale: 1,
-    hitbox: { w: 8, h: 30 },
+    scale: RAY_SCALE,
+    hitbox: { w: 4, h: 15 },
     shots: [
       { dx: -10, angleDeg: -12 },
       { dx: 0, angleDeg: 0 },

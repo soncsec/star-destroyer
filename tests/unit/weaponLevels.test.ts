@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WEAPON_LEVELS } from '../../src/config/tuning';
+import { RAY_SCALE, WEAPON_LEVELS } from '../../src/config/tuning';
 import { levelUp, shotAngle, volley, type WeaponLevel } from '../../src/logic/weaponLevels';
 
 describe('volley', () => {
@@ -97,15 +97,19 @@ describe('the tuned weapon levels (owner requests: small to big and strong; M7.1
     expect(four.speed).toBeLessThan(three.speed);
   });
 
-  it('every shot is drawn full size, its hitbox inside what is drawn (owner, 2026-10-18)', () => {
-    expect(WEAPON_LEVELS.map((l) => l.scale)).toEqual([1, 1, 1, 1]);
+  it('the tracer is drawn full size and the rays at half size, each hitbox inside what is drawn (owner, 2026-10-19)', () => {
+    // Owner 2026-10-19 (play-test: upgrades made the game too easy): rays at
+    // half size, drawing and hitbox together. M7.13 had them full size, 8×30.
+    expect(RAY_SCALE).toBe(0.5);
+    expect(WEAPON_LEVELS.map((l) => l.scale)).toEqual([1, 0.5, 0.5, 0.5]);
     // The tracer: its visible 10×4 art, turned to point up.
     expect(WEAPON_LEVELS[0]?.hitbox).toEqual({ w: 4, h: 10 });
-    // The ray: its solid white core, inside its visible 18×58 (turned to point up).
+    // The ray: its solid white core (8×30 in the art), at half size, inside its
+    // visible 18×58 art at half size (turned to point up).
     for (const l of WEAPON_LEVELS.slice(1)) {
-      expect(l.hitbox).toEqual({ w: 8, h: 30 });
-      expect(l.hitbox.w).toBeLessThanOrEqual(18);
-      expect(l.hitbox.h).toBeLessThanOrEqual(58);
+      expect(l.hitbox).toEqual({ w: 8 * RAY_SCALE, h: 30 * RAY_SCALE });
+      expect(l.hitbox.w).toBeLessThanOrEqual(18 * l.scale);
+      expect(l.hitbox.h).toBeLessThanOrEqual(58 * l.scale);
     }
   });
 
