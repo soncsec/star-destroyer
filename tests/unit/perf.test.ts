@@ -27,6 +27,18 @@ describe('frame-time summaries (M6.7)', () => {
     expect(FRAME_BUDGET.frameMs).toBeCloseTo(1000 / 60, 6);
     expect(FRAME_BUDGET.medianMs).toBeLessThanOrEqual(FRAME_BUDGET.frameMs / 2);
     expect(FRAME_BUDGET.p95Ms).toBeLessThanOrEqual(FRAME_BUDGET.frameMs);
+    // WebKit: the same median, and at most two frames for the slowest 5%.
+    expect(FRAME_BUDGET.webkit.medianMs).toBe(FRAME_BUDGET.medianMs);
+    expect(FRAME_BUDGET.webkit.p95Ms).toBeLessThanOrEqual(2 * FRAME_BUDGET.frameMs);
+  });
+
+  it('holds WebKit on GitHub to the median limit only (owner, 2026-10-19)', () => {
+    expect(FRAME_BUDGET.webkitCi.medianMs).toBe(FRAME_BUDGET.medianMs);
+    const slowTail = summariseFrames([1, 1, 1, 1, 1, 1, 1, 1, 1, 200]);
+    expect(withinBudget(slowTail, FRAME_BUDGET.webkitCi)).toBe(true);
+    expect(withinBudget(slowTail, FRAME_BUDGET.webkit)).toBe(false);
+    const slowMedian = summariseFrames([9, 9, 9, 9, 9]);
+    expect(withinBudget(slowMedian, FRAME_BUDGET.webkitCi)).toBe(false);
   });
 
   it('gives Firefox two frames for its slowest 5%, with the same median limit (owner, 2026-10-19)', () => {

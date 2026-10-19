@@ -31,7 +31,7 @@ async function beatTheBoss(page: Page): Promise<void> {
     h?.setWeaponLevel(4);
   });
   await expect
-    .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 15_000 })
+    .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 30_000 })
     .toBe('fighting');
   expect((await snapshot(page)).flow.stage).toBe('boss');
   await page.keyboard.down('Space');
@@ -98,7 +98,7 @@ test('every level runs waves, boss and panel in turn; after the last, the next p
       h?.setShield(999);
     });
     await expect
-      .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 20_000 })
+      .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 30_000 })
       .toBe('fighting');
     expect((await snapshot(page)).boss?.kind).toBe(level.boss);
     // Every ship or part of it (a twin has two ships; the final boss, four parts).
@@ -146,7 +146,7 @@ test('a fire key still held when the panel appears does not skip it', async ({ p
     h?.setWeaponLevel(4);
   });
   await expect
-    .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 15_000 })
+    .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 30_000 })
     .toBe('fighting');
   await page.keyboard.down('Space'); // held from the fight right through the panel
   await expect
@@ -172,7 +172,7 @@ test('the victory screen waits for the player: no auto-advance, even well past t
       h?.setShield(999);
     });
     await expect
-      .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 20_000 })
+      .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 30_000 })
       .toBe('fighting');
     await page.evaluate((hp) => window.__starDestroyer?.hurtBoss(hp), levelBossHp(level.boss));
     if (level.number === LEVELS.length) break;

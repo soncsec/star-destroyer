@@ -260,6 +260,20 @@ export const FRAME_BUDGET = {
   medianMs: 1000 / 60 / 2,
   p95Ms: 1000 / 60,
   /**
+   * Linux WebKit (Safari's engine in the tests) has slow-frame spikes when
+   * the shared machine is busy, which say little about Safari's own graphics,
+   * so it gets two frames for the 95th percentile; the median limit is the
+   * same (owner, 2026-10-18).
+   */
+  webkit: { medianMs: 1000 / 60 / 2, p95Ms: (2 * 1000) / 60 },
+  /**
+   * On GitHub's runners (no graphics card) WebKit's slowest 5% of frames took
+   * 73–115 ms, so there only its median is held to the limit (owner,
+   * 2026-10-19). Local runs still check both; real Safari is checked on the
+   * owner's iPhone (M7.11).
+   */
+  webkitCi: { medianMs: 1000 / 60 / 2, p95Ms: Number.POSITIVE_INFINITY },
+  /**
    * Firefox's slowest frames spike when other sessions load the shared test
    * machine (it passes on GitHub's runners), so it gets two frames for the 95th
    * percentile; the median limit is the same (owner, 2026-10-19).
