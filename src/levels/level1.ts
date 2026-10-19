@@ -13,6 +13,11 @@ export const LEVEL_1: Level = {
     { texture: 'bg-stage-back', scrollSpeed: 10, alpha: 1 },
     { texture: 'bg-blue-stars', scrollSpeed: 28, alpha: 0.8 },
   ],
+  // M7.4: a blue planet and an eclipse drift past behind the action.
+  props: [
+    { texture: 'bg-planet', x: 0.78, y: 60, scrollSpeed: 5, gap: 200 },
+    { texture: 'bg-eclipse-1', x: 0.2, y: -160, scrollSpeed: 7, gap: 300 },
+  ],
   roster: ['grunt', 'weaver'],
   waves: script<SpawnKind>(
     line(0, 'grunt', [0.3, 0.5, 0.7]),

@@ -15,6 +15,8 @@ export const LEVEL_8: Level = {
     { texture: 'bg-stage-back', scrollSpeed: 12, alpha: 1, tint: 0x4a5a9a },
     { texture: 'bg-blue-stars', scrollSpeed: 32, alpha: 0.9 },
   ],
+  // M7.4: a dark eclipse hangs over the core.
+  props: [{ texture: 'bg-eclipse-2', x: 0.75, y: 40, scrollSpeed: 5, gap: 260 }],
   roster: ['grunt', 'weaver', 'diver', 'flyer', 'eye', 'skull'],
   waves: script<SpawnKind>(
     line(0, 'flyer', [0.35, 0.65]),
