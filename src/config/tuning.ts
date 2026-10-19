@@ -123,6 +123,12 @@ export const VICTORY = {
   fireworksY: { min: 24, max: 120 },
 } as const;
 
+/** The high score (M7.2): the only thing kept in the browser. */
+export const HIGH_SCORE = {
+  storageKey: 'star-destroyer.highScore',
+  newColor: '#ffd23f',
+} as const;
+
 /** The title screen (M7.1). */
 export const TITLE = {
   /** Level 1's nebula, drifting slowly behind the title. */
@@ -133,7 +139,7 @@ export const TITLE = {
   nameColor: '#ffd23f',
   keysColor: '#2de2e6',
   /** Rows, in pixels from the top. */
-  y: { name: 72, ship: 168, prompt: 228, keys: 262 },
+  y: { name: 64, ship: 150, high: 206, prompt: 230, keys: 262 },
   blinkHz: 2,
 } as const;
 

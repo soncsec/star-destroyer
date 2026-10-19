@@ -111,6 +111,13 @@ test('the final boss: its beam costs the ship a hit', async ({ page }) => {
   await expect
     .poll(async () => (await snapshot(page)).boss?.beam, { timeout: 20_000, intervals: [20] })
     .toBe('firing');
-  await page.evaluate(() => window.__starDestroyer?.setShield(0));
+  // Drop the shield, and with it any ordinary shots fired before the beam
+  // charged that are still in flight: on a slow machine one could reach the ship
+  // first, and its hit (plus the short invulnerability after it) would hide the
+  // beam's. The beam itself is untouched.
+  await page.evaluate(() => {
+    window.__starDestroyer?.clearEnemyShots();
+    window.__starDestroyer?.setShield(0);
+  });
   await expect.poll(async () => (await snapshot(page)).lastHitBy, { timeout: 20_000 }).toBe('beam');
 });

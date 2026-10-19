@@ -14,6 +14,8 @@ export interface TestHook {
   setSpawning(on: boolean): void;
   /** Removes all enemies, asteroids and pickups and, unless `keepShots`, enemy shots. */
   clearEnemies(keepShots?: boolean): void;
+  /** Removes enemy shots in flight, leaving enemies and the boss. */
+  clearEnemyShots(): void;
   /** Sets the seconds of shield left. */
   setShield(seconds: number): void;
   /** Overrides the drop chance (1 = every kill drops); null restores the tuning. */
@@ -41,6 +43,8 @@ export interface TestHook {
    * Phaser's frame rate (M6.7). `reset` clears the record first.
    */
   frameTimes(reset?: boolean): { workMs: number[]; fps: number };
+  /** The visible text in the running scenes (for screens without a snapshot, like the title). */
+  sceneTexts(): string[];
 }
 
 /** Frames kept for `frameTimes` (about 30 s at 60 fps). */
@@ -79,6 +83,7 @@ export function installTestHook(game: Phaser.Game): void {
     snapshot: () => gameScene()?.snapshot() ?? null,
     setSpawning: (on) => required().setSpawning(on),
     clearEnemies: (keepShots) => required().clearEnemies(keepShots),
+    clearEnemyShots: () => required().clearEnemyShots(),
     spawnAsteroid: (x, y) => required().spawnAsteroid(x, y),
     spawnBoss: (kind) => required().spawnBoss(kind),
     skipWaves: () => required().skipWaves(),
@@ -90,6 +95,13 @@ export function installTestHook(game: Phaser.Game): void {
     setDropChance: (chance) => required().setDropChance(chance),
     setShield: (seconds) => required().setShield(seconds),
     spawnEnemy: (x, y, firstShot, kind) => required().spawnEnemy(x, y, firstShot, kind),
+    sceneTexts: () =>
+      game.scene
+        .getScenes(true)
+        .flatMap((s) => s.children.list)
+        .filter((o): o is Phaser.GameObjects.Text => o.type === 'Text')
+        .filter((t) => t.visible)
+        .map((t) => t.text),
     frameTimes: (reset) => {
       if (reset) work.length = 0;
       return { workMs: [...work], fps: game.loop.actualFps };

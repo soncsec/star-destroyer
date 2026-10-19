@@ -1,6 +1,17 @@
 import Phaser from 'phaser';
 import { animKey } from '../assets/manifest';
-import { CONTROLS, GAME_HEIGHT, GAME_WIDTH, HUD, PLAYER, TITLE } from '../config/tuning';
+import {
+  CONTROLS,
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  HIGH_SCORE,
+  HUD,
+  PLAYER,
+  TITLE,
+} from '../config/tuning';
+import { loadHighScore } from '../logic/highScore';
+import { formatScore } from '../logic/hud';
+import { browserStore } from '../platform/storage';
 
 /**
  * The title screen (M7.1): the game's name over the drifting nebula, the
@@ -39,6 +50,8 @@ export class TitleScene extends Phaser.Scene {
     const ship = this.add.sprite(cx, TITLE.y.ship, PLAYER.ship, PLAYER.bankFrames[2]).setDepth(1);
     const flame = this.add.sprite(cx, 0, PLAYER.thrust).play(animKey(PLAYER.thrust));
     flame.setY(TITLE.y.ship + ship.height / 2 + flame.height / 2 - PLAYER.thrustOverlap);
+    const best = loadHighScore(browserStore(), HIGH_SCORE.storageKey);
+    if (best > 0) text(TITLE.y.high, HUD.fontSize, HUD.color, `HIGH SCORE ${formatScore(best)}`);
     this.prompt = text(TITLE.y.prompt, HUD.fontSize, HUD.color, 'PRESS SPACE TO START');
     text(TITLE.y.keys, HUD.fontSize, TITLE.keysColor, 'Q  BACK TO ARCADE');
     text(TITLE.y.keys + 14, HUD.fontSize, TITLE.keysColor, 'F  FULL SCREEN');
