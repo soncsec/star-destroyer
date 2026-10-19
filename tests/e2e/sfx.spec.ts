@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { BOSSES, FINAL_BOSS } from '../../src/config/tuning';
+import { BOSSES, FINAL_BOSS, WEAPON_LEVELS } from '../../src/config/tuning';
 import type { GameSnapshot } from '../../src/scenes/GameScene';
 
 async function snapshot(page: Page): Promise<GameSnapshot> {
@@ -95,4 +95,23 @@ test("the final boss's beam sounds as it charges, and again as it fires", async 
   );
   await expect.poll(async () => (await played(page)).beam, { timeout: 30_000 }).toBe(1);
   expect((await played(page)).beamWarn).toBe(1);
+});
+
+test('each weapon level fires its own sound, and two or three rays add a whoosh', async ({
+  page,
+}) => {
+  const errors = await openQuietGame(page);
+  for (const [i, level] of WEAPON_LEVELS.entries()) {
+    const before = await played(page);
+    await page.evaluate((n) => {
+      window.__starDestroyer?.setWeaponLevel(n);
+      window.__starDestroyer?.fireShot();
+    }, i + 1);
+    const after = await played(page);
+    expect(after[level.sound] - before[level.sound], `level ${i + 1}`).toBe(1);
+    const whooshes = (p: typeof after): number => p.whoosh + p.whooshBig;
+    expect(whooshes(after) - whooshes(before), `level ${i + 1}`).toBe(level.whoosh ? 1 : 0);
+    if (level.whoosh) expect(after[level.whoosh] - before[level.whoosh]).toBe(1);
+  }
+  expect(errors).toEqual([]);
 });

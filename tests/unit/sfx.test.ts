@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SFX } from '../../src/config/tuning';
+import { SFX, WEAPON_LEVELS } from '../../src/config/tuning';
 import { checkRecipe, renderSound, type SoundRecipe } from '../../src/logic/sfx';
 
 const RATE = 8000;
@@ -98,6 +98,31 @@ describe('sounds made in code (M7.3)', () => {
       const peak = Math.max(...s.map(Math.abs)) * SFX.volume;
       expect(peak, name).toBeGreaterThanOrEqual(0.1);
     }
+  });
+
+  it('each weapon level sounds deeper than the last; two or three rays add a whoosh (owner 2026-10-19)', () => {
+    const pitch = (name: (typeof WEAPON_LEVELS)[number]['sound']): number =>
+      crossings(renderSound(SFX.sounds[name], RATE)) / SFX.sounds[name].seconds;
+    for (let i = 1; i < WEAPON_LEVELS.length; i++) {
+      const [before, now] = [WEAPON_LEVELS[i - 1], WEAPON_LEVELS[i]];
+      if (!before || !now) throw new Error('missing level');
+      expect(SFX.sounds[now.sound].from, `level ${i + 1}`).toBeLessThan(
+        SFX.sounds[before.sound].from,
+      );
+      expect(SFX.sounds[now.sound].to, `level ${i + 1}`).toBeLessThan(SFX.sounds[before.sound].to);
+      expect(pitch(now.sound), `level ${i + 1}`).toBeLessThan(pitch(before.sound));
+    }
+    expect(WEAPON_LEVELS[0]?.sound).toBe('shot'); // the first weapon keeps its sound
+    for (const level of WEAPON_LEVELS) {
+      expect(level.whoosh !== undefined, `${level.shots.length} shots`).toBe(
+        level.shots.length > 1,
+      );
+      if (level.whoosh) expect(SFX.sounds[level.whoosh].wave).toBe('noise');
+    }
+    const [two, three] = WEAPON_LEVELS.flatMap((l) => (l.whoosh ? [SFX.sounds[l.whoosh]] : []));
+    expect(WEAPON_LEVELS.filter((l) => l.whoosh)).toHaveLength(2);
+    expect(three?.seconds).toBeGreaterThan(two?.seconds ?? Infinity);
+    expect(three?.volume).toBeGreaterThan(two?.volume ?? Infinity);
   });
 
   it('every tuned sound is a valid, short recipe', () => {

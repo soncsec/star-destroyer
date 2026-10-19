@@ -135,6 +135,11 @@ export const VICTORY = {
 /** Every sound the game makes (M7.3). */
 export type SfxName =
   | 'shot'
+  | 'shotRay'
+  | 'shotRay2'
+  | 'shotRay3'
+  | 'whoosh'
+  | 'whooshBig'
   | 'enemyDown'
   | 'bossDown'
   | 'hurt'
@@ -158,6 +163,13 @@ export const SFX: { volume: number; sounds: Readonly<Record<SfxName, SoundRecipe
   sounds: {
     // Owner 2026-10-18: the first version (0.07 s, volume 0.15) was too faint to hear.
     shot: { wave: 'square', seconds: 0.12, from: 1100, to: 330, attack: 0.003, volume: 0.35 },
+    // Owner 2026-10-19: the bigger weapons sound deeper, step by step, and two
+    // or three rays add a whoosh played with the shot.
+    shotRay: { wave: 'square', seconds: 0.14, from: 750, to: 210, attack: 0.003, volume: 0.37 },
+    shotRay2: { wave: 'square', seconds: 0.15, from: 560, to: 150, attack: 0.003, volume: 0.39 },
+    shotRay3: { wave: 'square', seconds: 0.16, from: 420, to: 110, attack: 0.003, volume: 0.41 },
+    whoosh: { wave: 'noise', seconds: 0.22, from: 2200, to: 500, attack: 0.04, volume: 0.24 },
+    whooshBig: { wave: 'noise', seconds: 0.28, from: 1800, to: 350, attack: 0.05, volume: 0.3 },
     enemyDown: { wave: 'noise', seconds: 0.3, from: 3000, to: 400, attack: 0.002, volume: 0.45 },
     bossDown: { wave: 'noise', seconds: 1.2, from: 1500, to: 80, attack: 0.005, volume: 0.7 },
     hurt: { wave: 'sawtooth', seconds: 0.25, from: 300, to: 90, attack: 0.003, volume: 0.4 },
@@ -346,6 +358,9 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
    * easy), with hitboxes to match.
    */
   scale: number;
+  /** Played on each volley; `whoosh`, when set, plays with it (owner 2026-10-19). */
+  sound: SfxName;
+  whoosh?: SfxName;
 })[] = [
   // Owner requests 2026-10-18 (the game was too easy): stronger levels fire a
   // little less often and their shots fly a little slower than level 1, and
@@ -361,6 +376,7 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
     // level still hits a bigger area than the last.
     hitbox: { w: 4, h: 10 },
     shots: [{ dx: 0, angleDeg: 0 }],
+    sound: 'shot',
   },
   // Owner request 2026-10-18 (M7.13): after the tracer, one large spark ray, then
   // two, then a spread of three, all drawn full size. Each step hits harder per
@@ -377,6 +393,7 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
     scale: RAY_SCALE,
     hitbox: { w: 4, h: 15 },
     shots: [{ dx: 0, angleDeg: 0 }],
+    sound: 'shotRay',
   },
   // 3: two rays side by side.
   {
@@ -390,6 +407,8 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
       { dx: -10, angleDeg: 0 },
       { dx: 10, angleDeg: 0 },
     ],
+    sound: 'shotRay2',
+    whoosh: 'whoosh',
   },
   // 4: a spread of three rays.
   {
@@ -404,6 +423,8 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
       { dx: 0, angleDeg: 0 },
       { dx: 10, angleDeg: 12 },
     ],
+    sound: 'shotRay3',
+    whoosh: 'whooshBig',
   },
 ];
 
