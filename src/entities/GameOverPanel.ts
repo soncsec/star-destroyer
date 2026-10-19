@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { DEPTH, GAME_HEIGHT, GAME_OVER, GAME_WIDTH, HIGH_SCORE, HUD } from '../config/tuning';
 import { formatScore } from '../logic/hud';
+import { pressPrompt } from '../platform/touch';
 
 /** The best score so far, and whether this run just set it. */
 export interface HighScoreInfo {
@@ -59,7 +60,8 @@ export class GameOverPanel {
     const score = `SCORE ${formatScore(finalScore)}`;
     this.score.setText(level > 1 ? `${score}  LEVEL ${level}` : score);
     highScoreLine(this.high, high);
-    this.prompt.setText(level > 1 ? 'PRESS SPACE TO CONTINUE' : 'PRESS SPACE TO PLAY AGAIN');
+    // "TAP TO …" on touchscreens (M7.8), "PRESS SPACE TO …" elsewhere.
+    this.prompt.setText(pressPrompt(level > 1 ? 'CONTINUE' : 'PLAY AGAIN'));
     this.prompt.setVisible(Math.floor(t * GAME_OVER.blinkHz * 2) % 2 === 0);
   }
 

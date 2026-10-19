@@ -76,6 +76,14 @@ export const CONTROLS = {
     ['F', 'FULL SCREEN'],
     ['M', 'MUTE'],
   ],
+  /** The legend on touchscreens (owner request 2026-10-18). */
+  touchLegend: [
+    ['DRAG', 'MOVE'],
+    ['HOLD', 'FIRE'],
+    ['II', 'PAUSE'],
+  ],
+  /** Where the pause and quit headings sit on touchscreens, above the buttons. */
+  touchHeadingY: 80,
 } as const;
 
 /**
@@ -204,6 +212,22 @@ export const SFX: { volume: number; sounds: Readonly<Record<SfxName, SoundRecipe
   },
 };
 
+/**
+ * Touchscreens (owner request 2026-10-18): drag anywhere to steer (the ship
+ * fires while a finger is down), a pause button, and a tap menu. Sizes are in
+ * game pixels; on a phone the game fills the screen, so one game pixel is
+ * about two to three screen pixels.
+ */
+export const TOUCH = {
+  /** Smallest button height: about 36 screen pixels even on a narrow phone (1.5× zoom). */
+  minButton: 24,
+  pause: { y: 12, w: 28, h: 24 },
+  menu: { w: 168, h: 28, top: 116, gap: 8 },
+  buttonColor: 0x2b2160,
+  buttonAlpha: 0.9,
+  labelColor: '#ffffff',
+} as const;
+
 /** The high score (M7.2): the only thing kept in the browser. */
 export const HIGH_SCORE = {
   storageKey: 'star-destroyer.highScore',
@@ -221,6 +245,8 @@ export const TITLE = {
   keysColor: '#2de2e6',
   /** Rows, in pixels from the top. */
   y: { name: 64, ship: 150, high: 206, prompt: 230, keys: 262 },
+  /** Spacing of the two bottom lines, which are also their tap height on touchscreens. */
+  touchRow: 24,
   blinkHz: 2,
 } as const;
 

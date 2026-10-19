@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { animKey } from '../assets/manifest';
 import { DEPTH, GAME_HEIGHT, GAME_WIDTH, PLAYER, PLAYER_HEALTH } from '../config/tuning';
 import type { Box } from '../logic/collision';
+import type { Vec } from '../logic/enemyFire';
+import { dragTarget, stepPlayerToward, type Drag } from '../logic/touch';
 import {
   bankFrame,
   screenBounds,
@@ -62,6 +64,13 @@ export class Player {
 
   update(input: Axis, dtSeconds: number): void {
     this.state = stepPlayer(this.state, input, dtSeconds, this.params);
+    this.render();
+  }
+
+  /** Touch steering: flies toward where the drag says it should be. */
+  updateTouch(drag: Drag, finger: Vec, dtSeconds: number): void {
+    const target = dragTarget(drag, finger, this.params.bounds);
+    this.state = stepPlayerToward(this.state, target, dtSeconds, this.params);
     this.render();
   }
 

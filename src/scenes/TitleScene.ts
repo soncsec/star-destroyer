@@ -12,6 +12,7 @@ import {
 import { loadHighScore } from '../logic/highScore';
 import { formatScore } from '../logic/hud';
 import { browserStore } from '../platform/storage';
+import { isTouchDevice, pressPrompt } from '../platform/touch';
 
 /**
  * The title screen (M7.1): the game's name over the drifting nebula, the
@@ -52,16 +53,42 @@ export class TitleScene extends Phaser.Scene {
     flame.setY(TITLE.y.ship + ship.height / 2 + flame.height / 2 - PLAYER.thrustOverlap);
     const best = loadHighScore(browserStore(), HIGH_SCORE.storageKey);
     if (best > 0) text(TITLE.y.high, HUD.fontSize, HUD.color, `HIGH SCORE ${formatScore(best)}`);
-    this.prompt = text(TITLE.y.prompt, HUD.fontSize, HUD.color, 'PRESS SPACE TO START');
-    text(TITLE.y.keys, HUD.fontSize, TITLE.keysColor, 'Q  BACK TO ARCADE');
-    text(TITLE.y.keys + 14, HUD.fontSize, TITLE.keysColor, 'F  FULL SCREEN');
+    this.prompt = text(TITLE.y.prompt, HUD.fontSize, HUD.color, pressPrompt('START'));
+    // On touchscreens these two lines are buttons; elsewhere they name their keys.
+    const touch = isTouchDevice();
+    const arcade = text(
+      TITLE.y.keys,
+      HUD.fontSize,
+      TITLE.keysColor,
+      touch ? 'BACK TO ARCADE' : 'Q  BACK TO ARCADE',
+    );
+    const full = text(
+      TITLE.y.keys + TITLE.touchRow,
+      HUD.fontSize,
+      TITLE.keysColor,
+      touch ? 'FULL SCREEN' : 'F  FULL SCREEN',
+    ).setVisible(this.scale.fullscreen.available); // iPhone Safari has no full screen
+    const toArcade = (): void =>
+      window.location.assign(new URL(CONTROLS.quitUrl, window.location.href).href);
+    const start = (): void => {
+      this.scene.start('Game');
+    };
+    // A tap: on one of the two lines, that; anywhere else, start the game.
+    const onRow = (row: Phaser.GameObjects.Text, y: number): boolean =>
+      Math.abs(y - row.y) <= TITLE.touchRow / 2;
+    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+      if (!p.wasTouch) return;
+      if (onRow(arcade, p.y)) toArcade();
+      else if (onRow(full, p.y) && full.visible) this.scale.toggleFullscreen();
+      else start();
+    });
 
     // The browser's own keydown, once per press (see GameScene).
     const actions: Record<string, () => void> = {
-      Space: () => this.scene.start('Game'),
-      Enter: () => this.scene.start('Game'),
-      NumpadEnter: () => this.scene.start('Game'),
-      KeyQ: () => window.location.assign(new URL(CONTROLS.quitUrl, window.location.href).href),
+      Space: start,
+      Enter: start,
+      NumpadEnter: start,
+      KeyQ: toArcade,
       KeyF: () => this.scale.toggleFullscreen(),
     };
     const onKey = (e: KeyboardEvent): void => {

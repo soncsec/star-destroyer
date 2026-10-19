@@ -11,6 +11,8 @@ body {
   height: 100%;
   background: #05070f;
   overflow: hidden;
+  /* No pull-to-refresh or bounce while dragging the ship. */
+  overscroll-behavior: none;
 }
 
 #game {
@@ -21,6 +23,12 @@ body {
   justify-content: center;
   /* Fills the space around the game in full screen, too. */
   background: #05070f;
+  /* Touch drags steer the ship: no page scrolling, zooming, text selection
+     or long-press menu (owner request 2026-10-18: phones and tablets). */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 canvas {

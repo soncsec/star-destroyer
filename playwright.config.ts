@@ -24,8 +24,10 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /touch\.spec\.ts/ },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testIgnore: /touch\.spec\.ts/ },
+    // A phone (owner request 2026-10-18): touch play, on Chromium's phone emulation.
+    { name: 'phone', use: { ...devices['Pixel 7'] }, testMatch: /touch\.spec\.ts/ },
   ],
   webServer: {
     // The e2e build is the normal build plus the test hook (src/debug/testHook.ts).

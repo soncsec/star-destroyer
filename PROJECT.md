@@ -19,7 +19,7 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 
 ## 3. Users
 
-- **Primary:** casual players on desktop browsers, reaching the site over the public internet.
+- **Primary:** casual players on desktop browsers, phones and tablets (touchscreens added by the owner 2026-10-18), reaching the site over the public internet.
 - **Secondary:** the owner, as play-tester and reviewer.
 
 ## 4. Star Destroyer scope — Version 1.0
@@ -50,7 +50,7 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 ### Out of scope (v1)
 
 - Ship selection
-- Mobile and touch controls, gamepad
+- Gamepad (touch controls moved into scope by the owner, 2026-10-18)
 - Music
 - Online leaderboards, accounts, payments, analytics
 - Any backend or server-side code
@@ -97,7 +97,7 @@ The pack has about 5 distinct top-down space backgrounds and 6 distinct boss des
 | Name | **Soncrant Arcade** |
 | Style | Retro arcade: pixel display type, CRT/neon glow, attractive and gamer-focused |
 | Adding games | Edit one data file (`games.json`) and add a card image; no admin UI |
-| Devices | Desktop first; the card grid also works on phones (the games themselves are desktop only) |
+| Devices | Desktop first; the card grid also works on phones. Star Destroyer is also playable on phones and tablets with touch (owner 2026-10-18) |
 | Data | No analytics, tracking, cookies, or third-party requests |
 
 Out of scope: user accounts, comments, ratings, an admin interface, search.
@@ -108,7 +108,7 @@ Out of scope: user accounts, comments, ratings, an admin interface, search.
 - **No personal data is collected or transmitted.** The only stored data is the local high score, which stays in the player's browser.
 - **No accounts, no payments.**
 - **Art stays as-is:** native pixel-art style, no redraws.
-- **Desktop browsers:** current Chrome, Firefox, Safari, Edge.
+- **Desktop browsers:** current Chrome, Firefox, Safari, Edge. **Phones and tablets** (owner 2026-10-18): drag anywhere to steer, the ship fires while a finger is down, an on-screen pause button and pause menu, tap to start or continue; the game fills the screen.
 - **Production host:** existing Debian 13 server (address kept out of the repo) running Apache on TCP port 80, reachable from the internet. Files live under `/var/www/html/soncrant.com/pub/games/`, one subfolder per game.
 
 ## 7. Non-functional requirements
