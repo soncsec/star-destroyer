@@ -11,11 +11,11 @@
 | M1 Walking skeleton | Done (owner play-tested and approved 2026-10-17) |
 | P1 Portal and production server | Done (2026-10-17) |
 | T1 Game template for parallel instances | Done (2026-10-17) |
-| M2 Core loop (level 1) | In progress |
-| M3 Power-ups | Built; waiting for the owner's play-test |
-| C Controls and cheats (owner request) | Built; waiting for merge and the owner's play-test |
-| M4 Level system and first boss | Built; waiting for the owner's play-test |
-| M5 Levels 2–4 | In progress |
+| M2 Core loop (level 1) | Done |
+| M3 Power-ups | Done; play-test pending |
+| C Controls and cheats (owner request) | Done; play-test pending |
+| M4 Level system and first boss | Done; play-test pending |
+| M5 Levels 2–4 | Done; play-test pending |
 | M6 Levels 5–8 | In progress |
 | M7 Polish and balance | Not started |
 | M8 v1.0 release | Not started |
@@ -173,7 +173,7 @@
 
 - [x] M6.1 Import and slice the extra art for levels 5–8: the Station Run tunnel (built from the Zone 202 corridor by `tools/art/build_tunnel.py`), Warped vehicle 3, the flying-eye demon and the fire skull (with and without flames). Levels 7 and 8 reuse art already in the game; the final boss art came in with M0.7
 - [x] M6.2 Level 5 (Station Run) and its boss: grunts, weavers and divers down the Zone 202 tunnel (no asteroids inside the station); Warped vehicle 3, longer than the screen, hangs down from the top with only its front half showing, and only that half can be hit (boss hitboxes gain an `offsetY`)
-- [ ] M6.3 Level 6 (Demon Rift) and its boss
+- [x] M6.3 Level 6 (Demon Rift) and its boss: flying-eye demons (quick, frail, fast sway) and fire skulls (hover, then ram) over level 4's red layers darkened (background layers gain a `tint`); the flaming fire skull boss sways wide and fast through four phases
 - [ ] M6.4 Level 7 (Deep Dark) and its twin boss
 - [ ] M6.5 Level 8 (The Core) and the final multi-part boss (cannons, helmet, beam with warning, phases)
 - [ ] M6.6 Victory screen after level 8
@@ -193,8 +193,12 @@
 - [ ] M7.6 Cross-browser check: Chrome, Firefox, Safari, Edge
 - [ ] M7.7 Final card screenshot for the portal
 - [x] M7.9 Play-test level skip (owner 2026-10-18, product review): `?level=n` starts at level n on every build and counts as a cheat (no high score). Built first, so the owner can play-test levels 6–8 and the final boss on any device. Only a plain number from 1 to the number of levels is accepted; anything else starts level 1 as a normal run
+- [ ] M7.10 Continues (owner 2026-10-18): on game over, continue from the current level with 3 fresh lives and the score reset to 0; a continued run can still set the high score
+- [ ] M7.11 Real-device check: the owner plays through on Chrome, Firefox and Brave (desktop) and on Safari on an iPhone; the touch pause menu hides its full-screen button where the browser has no full-screen API (iPhone Safari)
 
 **Acceptance criteria:** the owner signs off on game feel and difficulty; no console errors in a full playthrough on all four browsers.
+
+**Releases (owner 2026-10-18):** production is released in two batches, once all of M6 has merged and once all of M7 has, instead of after every merge.
 
 ## M8 — v1.0 release
 

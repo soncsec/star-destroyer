@@ -230,6 +230,7 @@ export class GameScene extends Phaser.Scene {
         .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, layer.texture)
         .setOrigin(0)
         .setAlpha(layer.alpha)
+        .setTint(layer.tint ?? 0xffffff)
         .setTileScale(layer.scale ?? 1),
       scrollSpeed: layer.scrollSpeed,
     }));
