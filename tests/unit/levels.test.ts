@@ -16,6 +16,8 @@ import { LEVEL_3 } from '../../src/levels/level3';
 import { LEVEL_4 } from '../../src/levels/level4';
 import { LEVEL_5 } from '../../src/levels/level5';
 import { LEVEL_6 } from '../../src/levels/level6';
+import { LEVEL_7 } from '../../src/levels/level7';
+import { bossTotalHp } from '../../src/logic/boss';
 import { checkWaves, mostAtOnce } from '../../src/logic/waves';
 
 describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${level.name})` })))(
@@ -111,7 +113,8 @@ describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${le
       const boss = BOSSES[level.boss];
       expect(boss).toBeDefined();
       const before = LEVELS[level.number - 2];
-      if (before) expect(boss.hp).toBeGreaterThan(BOSSES[before.boss].hp);
+      // A twin's two ships count together.
+      if (before) expect(bossTotalHp(boss)).toBeGreaterThan(bossTotalHp(BOSSES[before.boss]));
     });
 
     it('gives the player a breather before the boss', () => {
@@ -227,6 +230,28 @@ describe('level 6 (M6.3)', () => {
     expect(BOSSES['fire-skull'].sprite).toBe('boss-fire-skull');
     expect(ENEMY_TYPES.skull.sprite).toBe('enemy-fire-skull');
     expect(BOSSES['fire-skull'].phases.length).toBeGreaterThan(BOSSES['vehicle-3'].phases.length);
+  });
+});
+
+describe('level 7 (M6.4)', () => {
+  it('matches the approved plan: Deep Dark, a mix of all enemies, stars only, twin vehicle-1 boss', () => {
+    expect(LEVEL_7).toMatchObject({ number: 7, name: 'Deep Dark', boss: 'twin-vehicle-1' });
+    expect(new Set(LEVEL_7.roster)).toEqual(new Set(Object.keys(ENEMY_TYPES)));
+    expect(new Set(LEVEL_7.background.map((l) => l.texture))).toEqual(new Set(['bg-blue-stars']));
+    expect(LEVELS[6]).toBe(LEVEL_7);
+  });
+
+  it('uses every enemy in its roster', () => {
+    expect(new Set(LEVEL_7.waves.map((s) => s.kind))).toEqual(
+      new Set([...LEVEL_7.roster, 'asteroid']),
+    );
+  });
+
+  it("has two of level 2's boss, each tougher than level 2's alone", () => {
+    const twin = BOSSES['twin-vehicle-1'];
+    expect(twin.twin).toBeDefined();
+    expect(twin.sprite).toBe(BOSSES['vehicle-1'].sprite);
+    expect(twin.hp).toBeGreaterThan(BOSSES['vehicle-1'].hp);
   });
 });
 

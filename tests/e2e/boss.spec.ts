@@ -82,3 +82,60 @@ test('shots wear the boss down through its phases to defeat, scoring its points'
   expect(done.score).toBe(start.score + BOSS.points);
   expect(done.blasts).toBe(start.blasts + 1);
 });
+
+test('twin bosses: two mirrored ships, each shot down on its own, and the fight ends with the second', async ({
+  page,
+}) => {
+  await page.goto('./');
+  await expect
+    .poll(() => page.evaluate(() => window.__starDestroyer?.scene() ?? null), { timeout: 15_000 })
+    .toBe('Game');
+  await page.evaluate(() => {
+    const h = window.__starDestroyer;
+    h?.setSpawning(false);
+    h?.clearEnemies();
+    h?.setShield(999);
+    h?.setWeaponLevel(3);
+    h?.spawnBoss('twin-vehicle-1');
+  });
+  const twin = BOSSES['twin-vehicle-1'];
+  const start = await snapshot(page);
+  expect(start.boss?.ships).toHaveLength(2);
+  expect(start.boss?.hp).toBe(2 * twin.hp);
+  await expect
+    .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 20_000 })
+    .toBe('fighting');
+  const [left, right] = (await snapshot(page)).boss?.ships ?? [];
+  expect(left && right && left.x < 128 && right.x > 128).toBe(true);
+  // Mirror images: equally far from their own centers, on opposite sides.
+  const offset = twin.twin?.offsetX ?? 0;
+  expect((left?.x ?? 0) - (128 - offset)).toBeCloseTo(-((right?.x ?? 0) - (128 + offset)), 3);
+
+  // Real shots from the far left hit only the left ship. Get there first:
+  // level 3's angled shots, fired from the middle, could reach either ship.
+  await page.keyboard.down('ArrowLeft');
+  await expect
+    .poll(async () => (await snapshot(page)).player.x, { timeout: 20_000 })
+    .toBeLessThan(30);
+  await page.keyboard.down('Space');
+  await expect
+    .poll(async () => (await snapshot(page)).boss?.ships[0]?.hp, { timeout: 20_000 })
+    .toBeLessThan(twin.hp);
+  await page.keyboard.up('Space');
+  await page.keyboard.up('ArrowLeft');
+  expect((await snapshot(page)).boss?.ships[1]?.hp).toBe(twin.hp);
+
+  // Downing one ship leaves the other fighting; the boss is beaten with the second.
+  const before = (await snapshot(page)).score;
+  await page.evaluate((hp) => window.__starDestroyer?.hurtBoss(hp), twin.hp);
+  const one = await snapshot(page);
+  expect(one.boss?.ships[0]?.mode).toBe('defeated');
+  expect(one.boss?.mode).toBe('fighting');
+  expect(one.boss?.barVisible).toBe(true);
+  expect(one.score).toBe(before + twin.points);
+  await page.evaluate((hp) => window.__starDestroyer?.hurtBoss(hp), twin.hp);
+  const both = await snapshot(page);
+  expect(both.boss?.mode).toBe('defeated');
+  expect(both.boss?.barVisible).toBe(false);
+  expect(both.score).toBe(before + 2 * twin.points);
+});

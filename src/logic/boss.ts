@@ -5,6 +5,11 @@
  * entering), then sways from side to side and attacks. Its health decides its
  * phase: each phase has its own attacks and pace, so it gets harder as it
  * weakens. At 0 health it is defeated.
+ *
+ * A twin boss (M6.4) is two of the same ship side by side, each with its own
+ * health; they sway as mirror images. After either attacks, the other waits
+ * at least half a cooldown, so their volleys never land together and each
+ * fan's gap check still holds.
  */
 import { aimDown, type Vec } from './enemyFire';
 
@@ -36,7 +41,34 @@ export interface BossRules {
   muzzleOffsetY: number;
   shotSpeed: number;
   maxAimAngleDeg: number;
+  /** Two of this ship, centered `offsetX` either side of the screen's center. */
+  twin?: { offsetX: number };
 }
+
+/** Where each ship of a boss starts: its sway center, sway direction and attack delay. */
+export interface BossSlot {
+  centerX: number;
+  /** 1 sways right first, -1 left (the mirror image). */
+  side: 1 | -1;
+  /** Extra seconds before its first attack. */
+  delay: number;
+}
+
+/** The ships that make up a boss: one, or a mirrored, staggered pair. */
+export function bossLineup(rules: BossRules, screenCenterX: number): BossSlot[] {
+  if (!rules.twin) return [{ centerX: screenCenterX, side: 1, delay: 0 }];
+  const { offsetX } = rules.twin;
+  if (offsetX <= 0) throw new RangeError('twin offsetX must be positive');
+  const first = rules.phases[0];
+  if (!first) throw new RangeError('a boss needs at least one phase');
+  return [
+    { centerX: screenCenterX - offsetX, side: 1, delay: 0 },
+    { centerX: screenCenterX + offsetX, side: -1, delay: first.cooldown / 2 },
+  ];
+}
+
+/** Health across every ship of the boss. */
+export const bossTotalHp = (rules: BossRules): number => rules.hp * (rules.twin ? 2 : 1);
 
 export type BossMode = 'entering' | 'fighting' | 'defeated';
 
@@ -48,14 +80,25 @@ export interface BossState {
   phase: number;
   /** Seconds spent fighting (drives the sway). */
   t: number;
+  /** Sway direction: 1, or -1 for the mirror image (a twin). */
+  side: 1 | -1;
   /** Seconds until the next attack. */
   cooldown: number;
   /** Which of the phase's attacks comes next. */
   next: number;
 }
 
-/** A boss appearing above the screen, centered on `centerX`. */
-export function startBoss(rules: BossRules, centerX: number): BossState {
+/**
+ * A boss appearing above the screen, centered on `centerX`, swaying the
+ * `side` way first, with `delay` extra seconds before its first attack.
+ */
+export function startBoss(
+  rules: BossRules,
+  centerX: number,
+  side: 1 | -1 = 1,
+  delay = 0,
+): BossState {
+  if (delay < 0) throw new RangeError('delay must not be negative');
   if (rules.hp <= 0) throw new RangeError('hp must be positive');
   if (rules.phases[0]?.fromHp !== 1)
     throw new RangeError('the first phase must start at full health');
@@ -66,7 +109,8 @@ export function startBoss(rules: BossRules, centerX: number): BossState {
     hp: rules.hp,
     phase: 0,
     t: 0,
-    cooldown: rules.phases[0].cooldown,
+    side,
+    cooldown: rules.phases[0].cooldown + delay,
     next: 0,
   };
 }
@@ -141,7 +185,7 @@ export function stepBoss(
   const phase = rules.phases[s.phase];
   if (!phase) throw new RangeError(`no phase ${s.phase}`);
   const t = s.t + dt;
-  const x = centerX + Math.sin(t * phase.swayHz * 2 * Math.PI) * rules.swayAmplitude;
+  const x = centerX + s.side * Math.sin(t * phase.swayHz * 2 * Math.PI) * rules.swayAmplitude;
   let cooldown = s.cooldown - dt;
   let next = s.next;
   let shots: Vec[] = [];
@@ -156,6 +200,44 @@ export function stepBoss(
     cooldown += phase.cooldown;
   }
   return { state: { ...s, t, x, cooldown, next }, shots };
+}
+
+/** Shots one ship of a boss fires in a step: where from, and their velocities. */
+export interface BossVolley {
+  from: Vec;
+  shots: Vec[];
+}
+
+/**
+ * Advances every ship of a boss by `dt` (one ship, or a twin pair placed by
+ * `bossLineup`). When a ship attacks, the ships after it in this step, and all
+ * of them next time, wait at least half that ship's cooldown before attacking.
+ */
+export function stepBossGroup(
+  parts: readonly BossState[],
+  rules: BossRules,
+  dt: number,
+  target: Vec,
+  slots: readonly BossSlot[],
+): { parts: BossState[]; volleys: BossVolley[] } {
+  if (slots.length !== parts.length) throw new RangeError('one slot per ship');
+  const out = [...parts];
+  const volleys: BossVolley[] = [];
+  out.forEach((part, i) => {
+    const step = stepBoss(part, rules, dt, target, (slots[i] as BossSlot).centerX);
+    out[i] = step.state;
+    if (step.shots.length === 0) return;
+    volleys.push({
+      from: { x: step.state.x, y: step.state.y + rules.muzzleOffsetY },
+      shots: step.shots,
+    });
+    const wait = (rules.phases[step.state.phase] as BossPhase).cooldown / 2;
+    out.forEach((other, j) => {
+      if (j !== i && other.mode === 'fighting' && other.cooldown < wait)
+        out[j] = { ...other, cooldown: wait };
+    });
+  });
+  return { parts: out, volleys };
 }
 
 /**
