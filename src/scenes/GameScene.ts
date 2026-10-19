@@ -21,9 +21,11 @@ import {
   WEAPON,
   WEAPON_LEVELS,
   type LevelBossKind,
+  type SfxName,
   type EnemyKind,
 } from '../config/tuning';
 import { Asteroids, type RockSize, type RockSlot } from '../entities/Asteroids';
+import { Sfx } from '../audio/Sfx';
 import { Boss, type BossFight } from '../entities/Boss';
 import { FinalBoss } from '../entities/FinalBoss';
 import { Bullets } from '../entities/Bullets';
@@ -128,6 +130,8 @@ export interface GameSnapshot {
   /** Pause / quit / legend state and what the overlay shows; mute and full screen. */
   controls: { mode: string; legend: boolean; overlay: ReturnType<ControlsOverlay['read']> };
   muted: boolean;
+  /** Sounds (M7.3): whether they are ready, and how often each has played this level. */
+  sfx: { ready: boolean; played: Record<SfxName, number> };
   /** The best score so far, and whether this run set it (M7.2). */
   highScore: { best: number; isNew: boolean };
   /** Test hook only; the game itself never shows these. */
@@ -212,6 +216,11 @@ export class GameScene extends Phaser.Scene {
   private victoryPanel!: VictoryPanel;
   /** Seconds until the next victory firework. */
   private fireworks = 0;
+  private sfx!: Sfx;
+  /** The beam's last mode, to sound its warning and its firing as they start. */
+  private lastBeam: string | undefined;
+  /** The level-complete jingle has played for this level. */
+  private completeSounded = false;
   /** Drop chance override (tests force drops); null uses the tuning. */
   private dropChance: number | null = null;
   private gameOverPanel!: GameOverPanel;
@@ -307,6 +316,9 @@ export class GameScene extends Phaser.Scene {
     this.gameOverPanel = new GameOverPanel(this);
     this.levelPanel = new LevelCompletePanel(this);
     this.victoryPanel = new VictoryPanel(this);
+    this.sfx = new Sfx(this);
+    this.lastBeam = undefined;
+    this.completeSounded = false;
     this.fireworks = 0;
     this.gameOver = null;
 
@@ -446,6 +458,13 @@ export class GameScene extends Phaser.Scene {
     for (const volley of this.boss.update(dt, this.player.position)) {
       for (const v of volley.shots) this.enemyBullets.fire(volley.from.x, volley.from.y, v);
     }
+    // The final boss's beam sounds as it starts to charge, and again as it fires.
+    const beam = this.boss.read()?.beam;
+    if (beam !== this.lastBeam) {
+      if (beam === 'warning') this.sfx.play('beamWarn');
+      if (beam === 'firing') this.sfx.play('beam');
+      this.lastBeam = beam;
+    }
     this.enemyBullets.update(dt);
     this.resolveShotHits();
 
@@ -492,6 +511,10 @@ export class GameScene extends Phaser.Scene {
     if (step.startBoss) this.spawnBoss(this.level.boss);
     if (flowPanelShown(this.flow, this.flowRules())) {
       const t = this.flow.t - LEVEL_COMPLETE.completeAfter;
+      if (!this.completeSounded) {
+        this.completeSounded = true;
+        this.sfx.play(this.isLastLevel() ? 'victory' : 'levelComplete');
+      }
       if (this.isLastLevel()) this.celebrate(dt, t);
       else this.levelPanel.show(this.levelInfo(), t);
     }
@@ -575,6 +598,7 @@ export class GameScene extends Phaser.Scene {
       if (isGameOver(this.health)) {
         this.gameOver = startGameOver();
         this.recordScore();
+        this.sfx.play('gameOver');
       }
       return;
     }
@@ -670,6 +694,7 @@ export class GameScene extends Phaser.Scene {
     if (!cause) return;
 
     const { health, result } = takeHit(this.health, PLAYER_HEALTH);
+    this.sfx.play('hurt');
     this.health = health;
     this.lastHit = result;
     this.lastHitBy = cause;
@@ -720,6 +745,7 @@ export class GameScene extends Phaser.Scene {
       muted: this.sound.mute,
       cheats: { invincible: this.invincible, used: this.cheated },
       highScore: { ...this.highScore },
+      sfx: { ready: this.sfx.ready, played: this.sfx.counts() },
       fullscreen: this.scale.isFullscreen,
       gameOver: { ...this.gameOverPanel.read(), armed: this.gameOver?.armed ?? false },
       pickups: this.pickups.active().map((p) => ({ kind: p.kind, x: p.sprite.x, y: p.sprite.y })),
@@ -789,9 +815,13 @@ export class GameScene extends Phaser.Scene {
     const level = this.gun();
     const { x, y } = this.player.position;
     let all = true;
+    let any = false;
     for (const shot of volley(level, x, y + WEAPON.muzzleOffsetY)) {
-      all = this.bullets.fire(shot, level.sprite, level.hitbox, level.scale) && all;
+      const fired = this.bullets.fire(shot, level.sprite, level.hitbox, level.scale);
+      any ||= fired;
+      all &&= fired;
     }
+    if (any) this.sfx.play('shot');
     return all;
   }
 
@@ -894,6 +924,7 @@ export class GameScene extends Phaser.Scene {
         const { x, y } = enemy.sprite;
         if (this.enemies.hit(enemy, shot.damage)) {
           this.explosions.play(x, y);
+          this.sfx.play('enemyDown');
           this.score += ENEMY_TYPES[enemy.kind].points;
           this.maybeDrop(x, y, 'shot');
         }
@@ -937,6 +968,9 @@ export class GameScene extends Phaser.Scene {
         shield: SHIELD,
       });
       this.powerUps = got.powerUps;
+      this.sfx.play(
+        p.kind === 'weapon' ? 'weaponUp' : p.kind === 'shield' ? 'shieldUp' : 'screenClear',
+      );
       if (got.clearScreen) this.clearScreen();
     }
   }
@@ -969,6 +1003,7 @@ export class GameScene extends Phaser.Scene {
   /** The boss goes up in a big blast with explosions around it, and scores its points. */
   private bossDefeated(x: number, y: number, points: number): void {
     this.score += points;
+    this.sfx.play('bossDown');
     this.blast.play(x, y);
     for (const [dx, dy] of BOSS_DEFEAT.bursts) this.explosions.play(x + dx, y + dy);
   }
@@ -976,6 +1011,7 @@ export class GameScene extends Phaser.Scene {
   /** A destroyed or crashed rock explodes; a large one splits into small pieces. */
   private shatter(rock: RockSlot): void {
     this.explosions.play(rock.rock.x, rock.rock.y);
+    this.sfx.play('enemyDown');
     if (rock.size === 'large') this.asteroids.split(rock, this.rng);
   }
 
