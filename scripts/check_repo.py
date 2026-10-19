@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Repo hygiene checks run in CI.
 
-- The source art pack (legacy/) and OS junk files are never committed.
+- The source art pack (legacy/), dependencies (node_modules), build output
+  (dist/), .env files and OS junk files are never committed, whether as
+  folders, files or symlinks (CLAUDE.md git workflow).
 - Every image in public/assets/ is a real PNG and is listed in CREDITS.md.
 - Every asset listed in CREDITS.md exists.
 - No committed file is larger than 5 MB.
@@ -16,7 +18,9 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 MAX_BYTES = 5 * 1024 * 1024
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
-FORBIDDEN = re.compile(r"(^|/)(legacy(/|$)|__MACOSX/|\.DS_Store$)")
+FORBIDDEN = re.compile(
+    r"(^|/)(legacy(/|$)|node_modules(/|$)|dist(/|$)|\.env(\.(?!example$)[^/]*)?$|__MACOSX/|\.DS_Store$)"
+)
 PRIVATE_IP = re.compile(
     r"\b(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})\b"
 )

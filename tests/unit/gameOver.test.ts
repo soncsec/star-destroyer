@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { PLAYER_HEALTH } from '../../src/config/tuning';
 import {
+  continueStart,
   panelShown,
   startGameOver,
   stepGameOver,
@@ -57,5 +59,29 @@ describe('game over', () => {
 
   it('rejects negative time', () => {
     expect(() => step(startGameOver(), -1, false)).toThrow(RangeError);
+  });
+});
+
+describe('continueStart (M7.10)', () => {
+  it('continues the same level with fresh lives, score 0 and the basic weapon', () => {
+    expect(continueStart(4, false, { lives: 3 })).toEqual({
+      level: 4,
+      carry: { score: 0, lives: 3, hits: 0, weaponLevel: 1, cheated: false, invincible: false },
+    });
+  });
+
+  it('keeps a cheat flag with the run, and drops invincibility', () => {
+    const s = continueStart(2, true, { lives: 3 });
+    expect(s.carry.cheated).toBe(true);
+    expect(s.carry.invincible).toBe(false);
+  });
+
+  it('uses the configured number of lives', () => {
+    expect(continueStart(1, false, PLAYER_HEALTH).carry.lives).toBe(PLAYER_HEALTH.lives);
+  });
+
+  it('rejects a level that cannot exist', () => {
+    for (const bad of [0, -1, 1.5, NaN])
+      expect(() => continueStart(bad, false, { lives: 3 })).toThrow(RangeError);
   });
 });

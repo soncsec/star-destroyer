@@ -16,8 +16,8 @@ export function highScoreLine(text: Phaser.GameObjects.Text, high: HighScoreInfo
 }
 
 /**
- * "GAME OVER", the final score, the high score and a blinking prompt to play
- * again. Hidden until shown.
+ * "GAME OVER", the final score (and the level, past level 1), the high score,
+ * and a blinking prompt to continue or play again. Hidden until shown.
  */
 export class GameOverPanel {
   private readonly parts: (Phaser.GameObjects.Rectangle | Phaser.GameObjects.Text)[];
@@ -43,18 +43,23 @@ export class GameOverPanel {
     this.title = text(cy - 32, 16, GAME_OVER.titleColor).setText('GAME OVER');
     this.score = text(cy - 6, HUD.fontSize, HUD.color);
     this.high = text(cy + 10, HUD.fontSize, HUD.color);
-    this.prompt = text(cy + 32, HUD.fontSize, HUD.color).setText('PRESS SPACE TO PLAY AGAIN');
+    this.prompt = text(cy + 32, HUD.fontSize, HUD.color);
     this.parts = [backdrop, this.title, this.score, this.high, this.prompt];
-    this.show(false, 0, 0, { best: 0, isNew: false });
+    this.show(false, 0, 1, 0, { best: 0, isNew: false });
   }
 
-  /** Shows or hides the panel; `t` (seconds shown) drives the prompt's blink. */
-  show(visible: boolean, finalScore: number, t: number, high: HighScoreInfo): void {
+  /**
+   * Shows or hides the panel; `t` (seconds shown) drives the prompt's blink.
+   * Past level 1 the panel names the level and offers to continue it (M7.10).
+   */
+  show(visible: boolean, finalScore: number, level: number, t: number, high: HighScoreInfo): void {
     this.visible = visible;
     for (const p of this.parts) p.setVisible(visible);
     if (!visible) return;
-    this.score.setText(`SCORE ${formatScore(finalScore)}`);
+    const score = `SCORE ${formatScore(finalScore)}`;
+    this.score.setText(level > 1 ? `${score}  LEVEL ${level}` : score);
     highScoreLine(this.high, high);
+    this.prompt.setText(level > 1 ? 'PRESS SPACE TO CONTINUE' : 'PRESS SPACE TO PLAY AGAIN');
     this.prompt.setVisible(Math.floor(t * GAME_OVER.blinkHz * 2) % 2 === 0);
   }
 
