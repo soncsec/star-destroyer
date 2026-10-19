@@ -11,11 +11,11 @@
 | M1 Walking skeleton | Done (owner play-tested and approved 2026-10-17) |
 | P1 Portal and production server | Done (2026-10-17) |
 | T1 Game template for parallel instances | Done (2026-10-17) |
-| M2 Core loop (level 1) | In progress |
-| M3 Power-ups | Built; waiting for the owner's play-test |
-| C Controls and cheats (owner request) | Built; waiting for merge and the owner's play-test |
-| M4 Level system and first boss | Built; waiting for the owner's play-test |
-| M5 Levels 2–4 | In progress |
+| M2 Core loop (level 1) | Done |
+| M3 Power-ups | Done; play-test pending |
+| C Controls and cheats (owner request) | Done; play-test pending |
+| M4 Level system and first boss | Done; play-test pending |
+| M5 Levels 2–4 | Done; play-test pending |
 | M6 Levels 5–8 | Built; waiting for the owner's play-test |
 | M7 Polish and balance | Not started |
 | M8 v1.0 release | Not started |
@@ -78,6 +78,7 @@
 - [x] P1.7 DNS `A` record for `games.soncrant.com` and port 80 forwarding (owner). Resolves inside and outside the network
 - [x] P1.8 Release scripts for portal and game (atomic symlink switch, rollback command). Game: star-destroyer #18; portal: games-portal #6 (single `_portal` switch)
 - [x] P1.9 First production release; ZAP scan and smoke test from outside the network. Approved by the owner; released 2026-10-17 (game `20261017T172140Z-5c2b2e72`, portal `20261017T174255Z-6f2e61df`). Outside check by the games-portal `Production check` workflow: smoke tests passed with headers required; ZAP: 0 high (remaining: server version banner, COEP, cache info)
+- [x] P1.10 Leave the asset preview (`?scene=preview`, a developer tool) out of the production build (owner 2026-10-18); the release script refuses a build that contains it
 - [x] P1.11 E2E tests tolerate a busy machine (a release was refused 2026-10-18 when the load average hit 31 on 6 cores): waits for game-time events allow 20 s, default poll wait 15 s, test limit 60 s; the checks themselves are unchanged
 
 **Acceptance criteria:** the portal and game load at the production URL from an outside network; the security headers are present; the ZAP scan has no high-severity findings; a rollback has been rehearsed; the other sites on the server still work.
@@ -125,6 +126,7 @@
 - [x] M3.6 Unit tests for every power-up rule, including "lost on death" and "no screen clear during bosses". Rules that lived in the game scene (what each gem does, lost on death, only shot-down kills drop gems) moved to `src/logic/powerups.ts` with unit tests
 - [x] M3.7 Balance (owner request 2026-10-18, "too easy"): stronger weapon levels fire a little less often and fly a little slower (level 2: 5% down on both, level 3: 10%); player shots drawn 40% smaller with matching hitboxes; shield lasts 10 s instead of 30
 - [x] M3.8 Balance, round 2 (owner 2026-10-18, "still too easy"): every weapon level fires 15% less often and its shots fly 15% slower again (level 1: 4.25 shots/s at 289 px/s; level 3: 3.83 at 230); shots drawn at 45% of the art (was 60%), hitboxes to match
+- [x] M3.9 Level 1 tracer back to full size (owner 2026-10-18: "don't shrink the small weapon, only the larger weapon art"); its hitbox is its visible 4×10, so each level still hits a bigger area than the last
 
 **Acceptance criteria:** each power-up is visibly distinct and behaves as specified; rules are unit tested; frame rate holds with max weapon and a full wave.
 
@@ -190,8 +192,13 @@
 - [ ] M7.5 Difficulty balance pass across all 8 levels from the owner's play-tests
 - [ ] M7.6 Cross-browser check: Chrome, Firefox, Safari, Edge
 - [ ] M7.7 Final card screenshot for the portal
+- [x] M7.9 Play-test level skip (owner 2026-10-18, product review): `?level=n` starts at level n on every build and counts as a cheat (no high score). Built first, so the owner can play-test levels 6–8 and the final boss on any device. Only a plain number from 1 to the number of levels is accepted; anything else starts level 1 as a normal run
+- [x] M7.10 Continues (owner 2026-10-18): on game over, continue from the current level with 3 fresh lives and the score reset to 0; a continued run can still set the high score. Past level 1 the game-over panel names the level and says PRESS SPACE TO CONTINUE; the weapon goes back to level 1 (as after any lost life) and a cheat flag stays with the run
+- [ ] M7.11 Real-device check: the owner plays through on Chrome, Firefox and Brave (desktop) and on Safari on an iPhone; the touch pause menu hides its full-screen button where the browser has no full-screen API (iPhone Safari)
 
 **Acceptance criteria:** the owner signs off on game feel and difficulty; no console errors in a full playthrough on all four browsers.
+
+**Releases (owner 2026-10-18):** production is released in two batches, once all of M6 has merged and once all of M7 has, instead of after every merge.
 
 ## M8 — v1.0 release
 

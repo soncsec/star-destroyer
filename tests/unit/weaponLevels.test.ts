@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WEAPON, WEAPON_LEVELS } from '../../src/config/tuning';
+import { WEAPON_LEVELS } from '../../src/config/tuning';
 import { levelUp, shotAngle, volley, type WeaponLevel } from '../../src/logic/weaponLevels';
 
 describe('volley', () => {
@@ -87,18 +87,20 @@ describe('the tuned weapon levels (owner request: small to big and strong)', () 
     expect(three.speed).toBeLessThan(two.speed);
   });
 
-  it('shots are drawn at 45% of the art, with hitboxes to match (owner, 2026-10-18)', () => {
-    expect(WEAPON.shotScale).toBe(0.45);
+  it('the larger shots are drawn at 45% of the art, the small tracer at full size, with hitboxes to match (owner, 2026-10-18)', () => {
+    expect(WEAPON_LEVELS.map((l) => l.scale)).toEqual([1, 0.45, 0.45]);
     const before = [
       { w: 6, h: 12 },
       { w: 12, h: 28 },
       { w: 18, h: 32 },
     ];
-    WEAPON_LEVELS.forEach((l, i) => {
-      const old = before[i];
+    // The tracer at full size: its hitbox is its visible 10×4 art, turned to point up.
+    expect(WEAPON_LEVELS[0]?.hitbox).toEqual({ w: 4, h: 10 });
+    WEAPON_LEVELS.slice(1).forEach((l, i) => {
+      const old = before[i + 1];
       if (!old) throw new Error('missing level');
-      expect(Math.abs(l.hitbox.w - old.w * WEAPON.shotScale)).toBeLessThanOrEqual(0.5);
-      expect(Math.abs(l.hitbox.h - old.h * WEAPON.shotScale)).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(l.hitbox.w - old.w * l.scale)).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(l.hitbox.h - old.h * l.scale)).toBeLessThanOrEqual(0.5);
     });
   });
 
