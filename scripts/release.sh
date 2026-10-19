@@ -106,6 +106,7 @@ build() {
   npm audit --audit-level=high
   npm run check
   if grep -rq __starDestroyer dist; then die "test hook found in dist/"; fi
+  if grep -rq AssetPreview dist; then die "asset preview (developer tool) found in dist/"; fi
 }
 
 cmd_deploy() {

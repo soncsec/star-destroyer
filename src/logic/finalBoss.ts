@@ -64,6 +64,8 @@ export interface FinalBossState {
   hp: Record<FinalPart, number>;
   /** Seconds of swaying (it stops while the beam charges and fires). */
   t: number;
+  /** How far through its swing, in whole swings, at the current stage's `swayHz`: a new stage changes the speed, never the position. */
+  sway: number;
   cooldown: number;
   /** Which of the stage's attacks comes next. */
   next: number;
@@ -104,6 +106,7 @@ export function startFinalBoss(rules: FinalBossRules, centerX: number): FinalBos
       number
     >,
     t: 0,
+    sway: 0,
     cooldown: rules.stages.cannons.cooldown,
     next: 0,
     turn: 0,
@@ -217,7 +220,8 @@ export function stepFinalBoss(
   }
 
   const t = s.t + dt;
-  const x = centerX + Math.sin(t * st.swayHz * 2 * Math.PI) * rules.swayAmplitude;
+  const sway = s.sway + dt * st.swayHz;
+  const x = centerX + Math.sin(sway * 2 * Math.PI) * rules.swayAmplitude;
   let { cooldown, next, turn } = s;
   cooldown -= dt;
   const volleys: BossVolley[] = [];
@@ -232,7 +236,7 @@ export function stepFinalBoss(
     // Carry the overshoot so attacks keep their rhythm whatever the frame rate.
     cooldown += st.cooldown;
   }
-  return { state: { ...s, t, x, cooldown, next, turn }, volleys };
+  return { state: { ...s, t, sway, x, cooldown, next, turn }, volleys };
 }
 
 /** The beam's cycle: idle for `every` seconds, then `warn`, then `fire`, then idle again. */

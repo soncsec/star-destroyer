@@ -45,21 +45,23 @@ test('the gun starts small: one shot, 1 damage', async ({ page }) => {
   expect(await volley(page)).toEqual([1]);
 });
 
-test('each weapon gem upgrades the gun: two shots, then a spread of three at double damage', async ({
+test('each weapon gem upgrades the gun: one large ray, then two, then a spread of three, at double damage (M7.13)', async ({
   page,
 }) => {
   await openQuietGame(page);
   expect((await collectWeapon(page)).weaponLevel).toBe(2);
-  expect(await volley(page)).toEqual([1, 1]);
+  expect(await volley(page)).toEqual([2]);
   expect((await collectWeapon(page)).weaponLevel).toBe(3);
+  expect(await volley(page)).toEqual([2, 2]);
+  expect((await collectWeapon(page)).weaponLevel).toBe(4);
   expect(await volley(page)).toEqual([2, 2, 2]);
-  // The top level is 3: more gems keep it there.
-  expect((await collectWeapon(page)).weaponLevel).toBe(3);
+  // The top level is 4: more gems keep it there.
+  expect((await collectWeapon(page)).weaponLevel).toBe(4);
 });
 
-test('level 3 destroys a grunt (3 HP) with its first two volleys', async ({ page }) => {
+test('level 4 destroys a grunt (3 HP) with its first two volleys', async ({ page }) => {
   const { player } = await openQuietGame(page);
-  await page.evaluate(() => window.__starDestroyer?.setWeaponLevel(3));
+  await page.evaluate(() => window.__starDestroyer?.setWeaponLevel(4));
   await page.evaluate((x) => window.__starDestroyer?.spawnEnemy(x, 60, 999), player.x);
   await volley(page);
   await expect.poll(async () => (await snapshot(page)).enemies[0]?.hp).toBe(1); // 3 - 2
@@ -71,7 +73,7 @@ test('losing a life drops the gun back to level 1 (power-ups are lost on death)'
   page,
 }) => {
   const { player } = await openQuietGame(page);
-  await page.evaluate(() => window.__starDestroyer?.setWeaponLevel(3));
+  await page.evaluate(() => window.__starDestroyer?.setWeaponLevel(4));
   await page.evaluate(() => window.__starDestroyer?.oneHitLeft(3));
   await page.evaluate(({ x, y }) => window.__starDestroyer?.spawnEnemy(x, y, 999), player);
   await expect.poll(async () => (await snapshot(page)).lastHit).toBe('lifeLost');

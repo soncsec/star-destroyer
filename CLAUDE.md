@@ -23,7 +23,7 @@ Read `PROJECT.md` (scope), `ARCHITECTURE.md` (decisions), and `ROADMAP.md` (curr
 - Changing the architecture or any ADR, or adding a dependency not listed in ARCHITECTURE.md
 - Changing scope (adding or dropping features)
 - Destructive operations: deleting files or branches, force-pushing, rewriting history, deleting repos
-- Any production deployment, or any change on the production server or its Apache configuration. **Standing approval (owner, 2026-10-18):** release Star Destroyer with `scripts/release.sh deploy` after each PR the owner merges to `main`, once that commit's CI checks and staging ZAP scan have passed, and report the result. This covers the game only, not the portal, and no other server changes.
+- Any production deployment, or any change on the production server or its Apache configuration. **Standing approval (owner, 2026-10-18; batched later that day):** release Star Destroyer with `scripts/release.sh deploy` once all of M6 has merged to `main`, and again once all of M7 has, rather than after every merge; each release needs that commit's CI checks and staging ZAP scan to have passed, and its result is reported. This covers the game only, not the portal, and no other server changes.
 - Security decisions: CSP and header policy, HTTP vs HTTPS, SSH keys, secrets handling, permissions, CI tokens
 - Adding new third-party assets (art, audio, fonts)
 
@@ -71,4 +71,4 @@ Read `PROJECT.md` (scope), `ARCHITECTURE.md` (decisions), and `ROADMAP.md` (curr
 ## Assets
 
 - Source pack: `legacy/` (Ansimuz Legacy Collection, CC0). Copy only the files used into `public/assets/` and list them in `CREDITS.md`.
-- Keep native pixel resolution. Render with `pixelArt: true` and integer scaling. Exception (owner, 2026-10-18): the player's shots are drawn at 45% (`WEAPON.shotScale`).
+- Keep native pixel resolution. Render with `pixelArt: true` and integer scaling. The weapon shots' 45% drawing (owner exception, 2026-10-18) ended with M7.13: every shot is now full size.

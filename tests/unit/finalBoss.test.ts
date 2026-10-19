@@ -302,3 +302,28 @@ describe('the tuned final boss (M6.5)', () => {
     for (const f of [...b.rayFrames.warn, ...b.rayFrames.fire]) expect(f).toBeLessThan(frames);
   });
 });
+
+describe('the final boss keeps its place when a new stage starts (owner bug report 2026-10-18)', () => {
+  it('cannons to helmet, and helmet to core, move it no further than a frame of swaying', () => {
+    const rules = FINAL_BOSS;
+    const dt = 1 / 60;
+    const cx = GAME_WIDTH / 2;
+    const target = { x: cx, y: GAME_HEIGHT - 40 };
+    const fastest = Math.max(...Object.values(rules.stages).map((st) => st.swayHz));
+    const maxStep = rules.swayAmplitude * 2 * Math.PI * fastest * dt + 1e-9;
+    for (const fightFor of [3.1, 7.3, 12.7]) {
+      let s = startFinalBoss(rules, cx);
+      while (s.mode !== 'fighting') s = stepFinalBoss(s, rules, dt, target, cx).state;
+      for (let t = 0; t < fightFor; t += dt) s = stepFinalBoss(s, rules, dt, target, cx).state;
+      const parts: FinalPart[][] = [['cannonLeft', 'cannonRight'], ['helmet']];
+      for (const group of parts) {
+        const before = s;
+        for (const part of group) s = damageFinalBoss(s, rules, part, rules.parts[part].hp).state;
+        expect(finalStage(s)).not.toBe(finalStage(before));
+        const after = stepFinalBoss(s, rules, dt, target, cx).state;
+        expect(Math.abs(after.x - before.x), `${fightFor}s`).toBeLessThanOrEqual(maxStep);
+        s = after;
+      }
+    }
+  });
+});
