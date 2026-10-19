@@ -52,8 +52,8 @@ describe('power-ups', () => {
     expect(causes.filter(killCanDrop)).toEqual(['shot']);
   });
 
-  it('the tuned rules: three weapon levels and a 10-second shield (owner, 2026-10-18)', () => {
-    expect(WEAPON_LEVELS).toHaveLength(3);
+  it('the tuned rules: four weapon levels and a 10-second shield (owner, 2026-10-18)', () => {
+    expect(WEAPON_LEVELS).toHaveLength(4);
     expect(SHIELD.duration).toBe(10);
   });
 });

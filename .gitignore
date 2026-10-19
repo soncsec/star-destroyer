@@ -2,7 +2,8 @@
 legacy
 
 # Dependencies and build output
-node_modules/
+# No trailing slash: also ignores a node_modules symlink, not just a folder.
+node_modules
 dist/
 dist-e2e/
 coverage/
