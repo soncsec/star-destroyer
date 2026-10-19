@@ -1,5 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
+import { GAME_WIDTH } from '../../src/config/tuning';
 import type { GameSnapshot } from '../../src/scenes/GameScene';
+
+/** Near the right edge: the ship's centre stops 26 px from it (x = 230). */
+const PARKED_X = GAME_WIDTH - 32;
 
 async function snapshot(page: Page): Promise<GameSnapshot> {
   const snap = await page.evaluate(() => window.__starDestroyer?.snapshot() ?? null);
@@ -63,9 +67,13 @@ test('enemies hold fire until they are fully on screen', async ({ page }) => {
 
 test('missed shots fly off the screen and are removed', async ({ page }) => {
   await openQuietGame(page);
-  // Park the ship on the right, out of reach of a shooter on the far left.
+  // Park the ship against the right edge, out of reach of a shooter on the far
+  // left. Hold the key until it gets there, not for a fixed time: a slow,
+  // loaded browser moves it less per second.
   await page.keyboard.down('ArrowRight');
-  await page.waitForTimeout(1500);
+  await expect
+    .poll(async () => (await snapshot(page)).player.x, { timeout: 20_000 })
+    .toBeGreaterThanOrEqual(PARKED_X);
   await page.keyboard.up('ArrowRight');
   await page.evaluate(() => window.__starDestroyer?.spawnEnemy(24, 40, 0.1));
   await expect.poll(async () => (await snapshot(page)).enemyShots.length).toBeGreaterThan(0);
