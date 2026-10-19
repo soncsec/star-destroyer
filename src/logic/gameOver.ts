@@ -10,6 +10,10 @@
  * Input each step: `held` (a restart key is down now) and `pressed` (a new
  * press happened since the last step). `pressed` catches a quick tap that
  * goes down and up between two frames, which `held` alone would miss.
+ *
+ * A restart is a *continue* (M7.10, owner decision 2026-10-18): the same
+ * level again with fresh lives, the score back to 0 and the basic weapon. A
+ * continued run can still set the high score. A cheat flag stays with the run.
  */
 
 export interface RestartInput {
@@ -30,6 +34,32 @@ export interface GameOverState {
 }
 
 export const startGameOver = (): GameOverState => ({ t: 0, armed: false });
+
+/** What a continue starts the scene with: the level, and what carries into it. */
+export interface ContinueStart {
+  level: number;
+  carry: {
+    score: number;
+    lives: number;
+    hits: number;
+    weaponLevel: number;
+    cheated: boolean;
+    invincible: boolean;
+  };
+}
+
+/** Continue on `level` with `rules.lives` fresh lives, score 0, the basic weapon, and no invincibility. */
+export function continueStart(
+  level: number,
+  cheated: boolean,
+  rules: { lives: number },
+): ContinueStart {
+  if (!Number.isInteger(level) || level < 1) throw new RangeError(`no level ${level}`);
+  return {
+    level,
+    carry: { score: 0, lives: rules.lives, hits: 0, weaponLevel: 1, cheated, invincible: false },
+  };
+}
 
 /** Whether the game-over panel is showing. */
 export const panelShown = (s: GameOverState, rules: GameOverRules): boolean =>

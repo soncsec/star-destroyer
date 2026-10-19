@@ -32,10 +32,11 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 | Player | One ship (from the 4 available), banking animation, engine thrust |
 | Controls | Keyboard: arrows or WASD to move, Space to fire, P to pause |
 | Survival | 3 lives, **5 hits per life** (health bar). Brief invulnerability after losing a life. Game over screen with restart |
+| Continues | On game over, the player can continue from the current level with 3 fresh lives; the score resets to 0 (owner decision 2026-10-18). A continued run can still set the high score with its new score |
 | Enemies | Several enemy types with distinct movement and firing patterns, varying by level |
 | Difficulty | Enemy fire gets gradually more frequent from level 1 to 8. **Level 8 must be hard but beatable** (limits in section 4a) |
 | Obstacles | Destructible asteroids; **large asteroids split into small ones** |
-| Weapons | Weapon power-up drops raise the weapon level (3 levels, using the Warped shooting effects). Weapon upgrades **never time out**, but **losing a life drops you back to the basic weapon** (owner decisions 2026-10-17) |
+| Weapons | Weapon power-up drops raise the weapon level (4 levels since M7.13, using the Warped shooting effects). Weapon upgrades **never time out**, but **losing a life drops you back to the basic weapon** (owner decisions 2026-10-17) |
 | Shield | Power-up: a shield that blocks all damage for **10 seconds** (owner change 2026-10-18; was 30) |
 | Screen clear | **Rare** power-up that destroys every enemy on screen. **Never appears during a boss fight** |
 | Bosses | One boss per level, each with its own attack patterns. The multi-part top-down boss (body, cannons, helmet, beam) is the final boss |
@@ -60,7 +61,7 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 
 | Power-up | Effect | How often | Notes |
 |---|---|---|---|
-| Weapon | Raises the weapon one level (max 3). Shots start small and grow bigger and stronger: 1 single small orange tracer (visible 10×4; the art pack's smallest player shot), 2 double ringed bolt (pulse), 3 spread of three big plasma blasts (charged, double damage) | Common | Never times out; lost on death (back to level 1). Owner changes 2026-10-18: shots drawn at 45% of the art's size; every level fires 15% less often and its shots fly 15% slower than first tuned, and stronger levels are a little slower again (level 2: 5%, level 3: 10% below level 1) |
+| Weapon | Raises the weapon one level (max 4). Shots start small and grow bigger and stronger: 1 single small orange tracer (visible 10×4; the art pack's smallest player shot), 2 one large spark ray, 3 two rays side by side, 4 a spread of three rays; the rays do double damage (owner request 2026-10-18, M7.13; replaced the double pulse and triple charged blast) | Common | Never times out; lost on death (back to level 1). Every shot is drawn full size (the earlier 45% drawing ended with M7.13). Owner changes 2026-10-18: every level fires 15% less often and its shots fly 15% slower than first tuned, and stronger levels are a little slower again (level 2: 5%, level 3: 7.5%, level 4: 10% below level 1) |
 | Shield | Blocks all damage for 10 seconds (owner change 2026-10-18; was 30) | Uncommon | Picking up another resets the timer to 10 s |
 | Screen clear | Destroys every enemy on screen, plus enemy shots | Rare | Never dropped during a boss fight |
 
@@ -122,7 +123,7 @@ Out of scope: user accounts, comments, ratings, an admin interface, search.
 
 1. A stranger opens `games.soncrant.com`, picks Star Destroyer, and plays the full stage to victory or game over with no setup.
 2. 60 fps holds on the owner's machine.
-3. The owner signs off that the game feels fair and fun, and that the portal looks good.
+3. The owner signs off that the game feels fair and fun, and that the portal looks good, after playing it on Chrome, Firefox and Brave on desktop and on Safari on an iPhone (the owner's play-test devices, 2026-10-18).
 4. All CI checks and pre-release security scans pass.
 
 ## 9. Art assets
@@ -158,6 +159,8 @@ Source: `legacy/` (Ansimuz Legacy Collection). **License: CC0**, so commercial u
 - The words live in the code (the repo is public), not in the game's text or legend.
 - A run that used a cheat is not eligible for the high score (M7.2).
 
+**Play-test level skip** (owner decision 2026-10-18): opening the game with `?level=n` (1–8) starts at that level, on every build, so the owner can play-test the late levels and the final boss on any device, phones included. It counts as a cheat, so that run can't set the high score. Nothing is stored.
+
 ## 10. Decisions confirmed by the owner (2026-10-17)
 
 - Single player, browser only, no data collected, no accounts or payments, art unchanged, desktop browsers.
@@ -168,6 +171,7 @@ Source: `legacy/` (Ansimuz Legacy Collection). **License: CC0**, so commercial u
 - HTTP only (port 80): the server uses self-signed certificates and the site holds no sensitive data. The owner configures Apache to map `games.soncrant.com` to the games folder.
 - Parallel Claude instances for other games, using the plan in ARCHITECTURE.md ADR-011.
 - GitHub account `soncsec`; Claude may create repositories and install needed packages.
+- Product review decisions (2026-10-18): continues with the score reset (still high-score eligible); a `?level=n` play-test skip that counts as a cheat; production releases in two batches (once all of M6 has merged, and once all of M7 has) instead of after every merge; the owner play-tests on Chrome, Firefox, Brave and iPhone Safari.
 
 ## 11. Open items
 

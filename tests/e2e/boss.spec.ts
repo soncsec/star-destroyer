@@ -61,7 +61,7 @@ test('shots wear the boss down through its phases to defeat, scoring its points'
   await expect
     .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 20_000 })
     .toBe('fighting');
-  await page.evaluate(() => window.__starDestroyer?.setWeaponLevel(3));
+  await page.evaluate(() => window.__starDestroyer?.setWeaponLevel(4));
   await page.keyboard.down('Space');
 
   // Health falls and the bar follows it; the phase moves on as it weakens.
@@ -80,7 +80,7 @@ test('shots wear the boss down through its phases to defeat, scoring its points'
   expect(done.boss?.hp).toBe(0);
   expect(done.boss?.barVisible).toBe(false);
   expect(done.score).toBe(start.score + BOSS.points);
-  expect(done.blast).toBe(true);
+  expect(done.blasts).toBe(start.blasts + 1);
 });
 
 test('twin bosses: two mirrored ships, each shot down on its own, and the fight ends with the second', async ({
@@ -95,7 +95,7 @@ test('twin bosses: two mirrored ships, each shot down on its own, and the fight 
     h?.setSpawning(false);
     h?.clearEnemies();
     h?.setShield(999);
-    h?.setWeaponLevel(3);
+    h?.setWeaponLevel(4);
     h?.spawnBoss('twin-vehicle-1');
   });
   const twin = BOSSES['twin-vehicle-1'];
@@ -112,7 +112,7 @@ test('twin bosses: two mirrored ships, each shot down on its own, and the fight 
   expect((left?.x ?? 0) - (128 - offset)).toBeCloseTo(-((right?.x ?? 0) - (128 + offset)), 3);
 
   // Real shots from the far left hit only the left ship. Get there first:
-  // level 3's angled shots, fired from the middle, could reach either ship.
+  // level 4's angled shots, fired from the middle, could reach either ship.
   await page.keyboard.down('ArrowLeft');
   await expect
     .poll(async () => (await snapshot(page)).player.x, { timeout: 20_000 })

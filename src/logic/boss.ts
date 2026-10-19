@@ -78,8 +78,15 @@ export interface BossState {
   y: number;
   hp: number;
   phase: number;
-  /** Seconds spent fighting (drives the sway). */
+  /** Seconds spent fighting. */
   t: number;
+  /**
+   * How far through its side-to-side swing, in whole swings. It advances at
+   * the current phase's `swayHz`, so a new phase changes how fast the boss
+   * sways but never where it is (owner bug report 2026-10-18: the level 1 boss
+   * jumped across the screen when its phase changed).
+   */
+  sway: number;
   /** Sway direction: 1, or -1 for the mirror image (a twin). */
   side: 1 | -1;
   /** Seconds until the next attack. */
@@ -109,6 +116,7 @@ export function startBoss(
     hp: rules.hp,
     phase: 0,
     t: 0,
+    sway: 0,
     side,
     cooldown: rules.phases[0].cooldown + delay,
     next: 0,
@@ -185,7 +193,8 @@ export function stepBoss(
   const phase = rules.phases[s.phase];
   if (!phase) throw new RangeError(`no phase ${s.phase}`);
   const t = s.t + dt;
-  const x = centerX + s.side * Math.sin(t * phase.swayHz * 2 * Math.PI) * rules.swayAmplitude;
+  const sway = s.sway + dt * phase.swayHz;
+  const x = centerX + s.side * Math.sin(sway * 2 * Math.PI) * rules.swayAmplitude;
   let cooldown = s.cooldown - dt;
   let next = s.next;
   let shots: Vec[] = [];
@@ -199,7 +208,7 @@ export function stepBoss(
     // Carry the overshoot so attacks keep their rhythm whatever the frame rate.
     cooldown += phase.cooldown;
   }
-  return { state: { ...s, t, x, cooldown, next }, shots };
+  return { state: { ...s, t, sway, x, cooldown, next }, shots };
 }
 
 /** Shots one ship of a boss fires in a step: where from, and their velocities. */
