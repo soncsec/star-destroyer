@@ -27,7 +27,7 @@ test('the final boss fight keeps every frame within the 60 fps budget (M6.7)', a
     h?.setSpawning(false);
     h?.clearEnemies();
     h?.setShield(999);
-    h?.setWeaponLevel(3);
+    h?.setWeaponLevel(4);
     h?.spawnBoss('final-boss');
   });
   await expect
@@ -51,7 +51,7 @@ test('the final boss fight keeps every frame within the 60 fps budget (M6.7)', a
     },
     [...kinds, ...kinds],
   );
-  // Fire non-stop with the level-3 spread.
+  // Fire non-stop with the top weapon, the level-4 spread of three rays.
   await page.keyboard.down('Space');
   await page.evaluate(() => window.__starDestroyer?.frameTimes(true));
   const beams = new Set<string>();
