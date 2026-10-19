@@ -62,8 +62,9 @@ test('on a phone the game fills the screen, and a tap on the title starts it', a
   const finger = await open(page, '?title');
   await expect.poll(() => sceneKey(page), { timeout: 15_000 }).toBe('Title');
   const texts = () => page.evaluate(() => window.__starDestroyer?.sceneTexts() ?? []);
-  // The prompt blinks, so wait for it to show rather than looking just once.
-  await expect.poll(texts).toContain('TAP TO START');
+  // The prompt blinks twice a second. Poll often: Playwright's default polls
+  // settle at once a second, which can land on the "off" half every time.
+  await expect.poll(texts, { intervals: [50] }).toContain('TAP TO START');
   expect(await texts()).toContain('BACK TO ARCADE');
   // Fills the width or the height (whichever runs out first), not a small whole-number zoom.
   const box = await page.locator('canvas').boundingBox();
