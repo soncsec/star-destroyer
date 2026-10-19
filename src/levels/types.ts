@@ -24,6 +24,11 @@ export interface BackgroundLayer {
    * Default 1.
    */
   scale?: 1 | 2;
+  /**
+   * Multiplies the art's colours, 0xRRGGBB (default 0xffffff, unchanged). It
+   * can only darken, e.g. 0x808080 draws the layer at half brightness.
+   */
+  tint?: number;
 }
 
 /** A single image (a planet, say) drifting down behind the action and coming round again. */
