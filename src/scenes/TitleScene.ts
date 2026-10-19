@@ -67,7 +67,7 @@ export class TitleScene extends Phaser.Scene {
       HUD.fontSize,
       TITLE.keysColor,
       touch ? 'FULL SCREEN' : 'F  FULL SCREEN',
-    );
+    ).setVisible(this.scale.fullscreen.available); // iPhone Safari has no full screen
     const toArcade = (): void =>
       window.location.assign(new URL(CONTROLS.quitUrl, window.location.href).href);
     const start = (): void => {
@@ -79,7 +79,7 @@ export class TitleScene extends Phaser.Scene {
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (!p.wasTouch) return;
       if (onRow(arcade, p.y)) toArcade();
-      else if (onRow(full, p.y)) this.scale.toggleFullscreen();
+      else if (onRow(full, p.y) && full.visible) this.scale.toggleFullscreen();
       else start();
     });
 

@@ -46,7 +46,13 @@ export const game = new Phaser.Game({
     default: 'arcade',
     arcade: { debug: false },
   },
-  scene: [PreloadScene, TitleScene, GameScene, AssetPreviewScene],
+  // The asset preview (?scene=preview) is a developer tool: it is left out of
+  // the production build (owner decision 2026-10-18). Vite replaces MODE at
+  // build time, so in production the preview code is dropped from the bundle.
+  scene:
+    import.meta.env.MODE === 'production'
+      ? [PreloadScene, TitleScene, GameScene]
+      : [PreloadScene, TitleScene, GameScene, AssetPreviewScene],
 });
 
 // FIT mode follows the window by itself; whole-number zoom is redone here.

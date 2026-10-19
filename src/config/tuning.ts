@@ -308,22 +308,15 @@ export const PLAYER = {
 
 /** Shared weapon settings. */
 export const WEAPON = {
-  /**
-   * Shots are drawn at this scale (owner requests 2026-10-18: first 40% smaller,
-   * then smaller again; now 45% of the art's size).
-   * Not a whole number, an owner-approved exception to whole-pixel scaling;
-   * the hitboxes below are already at this size.
-   */
-  shotScale: 0.45,
   /** Where shots appear, relative to the ship's center (negative = above). */
   muzzleOffsetY: -24,
-  /** Most shots on screen at once (level 3 fires three per volley). */
+  /** Most shots on screen at once (level 4 fires three per volley). */
   poolSize: 48,
 } as const;
 
 /**
- * Weapon levels 1–3 (owner request: shots start small and grow bigger and
- * stronger). Sprites point right and are turned to face their direction of
+ * Weapon levels 1–4 (owner requests: shots start small and grow bigger and
+ * stronger; M7.13: tracer, then one, two and three spark rays). Sprites point right and are turned to face their direction of
  * travel; hitboxes are in screen pixels after that turn (narrower than the glow).
  */
 export const WEAPON_LEVELS: readonly (WeaponLevel & {
@@ -331,43 +324,67 @@ export const WEAPON_LEVELS: readonly (WeaponLevel & {
   hitbox: { w: number; h: number };
   /** Seconds between volleys while the fire key is held. */
   fireInterval: number;
+  /**
+   * Drawn at this scale. Every level is full size since M7.13 (owner
+   * 2026-10-18); the 45% drawing of the old pulse and charged shots is gone.
+   */
+  scale: number;
 })[] = [
   // Owner requests 2026-10-18 (the game was too easy): stronger levels fire a
-  // little less often and their shots fly a little slower (level 2: 5% below
-  // level 1, level 3: 10%), and then every level 15% slower again on both.
-  // Hitboxes match the shots' drawn size (45% of the art).
+  // little less often and their shots fly a little slower than level 1, and
+  // every level is 15% slower on both than first tuned.
   // 1: a single small orange tracer (space-marine bullet, visible 10×4).
   {
     sprite: 'shot-tracer',
     damage: 1,
     speed: 289,
     fireInterval: 0.2 / 0.85,
-    hitbox: { w: 3, h: 5 },
+    scale: 1,
+    // Exactly the tracer's visible size (10×4, turned to point up), so each
+    // level still hits a bigger area than the last.
+    hitbox: { w: 4, h: 10 },
     shots: [{ dx: 0, angleDeg: 0 }],
   },
-  // 2: two ringed blue pulses side by side (visible about 50×25 each).
+  // Owner request 2026-10-18 (M7.13): after the tracer, one large spark ray, then
+  // two, then a spread of three, all drawn full size. Each step hits harder per
+  // volley and fires a little slower than the last (5%, 7.5%, 10% below level 1).
+  // Hitboxes are the ray's solid white core (8×30 once turned to point up),
+  // narrower than its glow and sparkle tail (about 18×58).
+  // 2: one large spark ray, double damage.
   {
-    sprite: 'shot-pulse',
-    damage: 1,
+    sprite: 'shot-spark',
+    damage: 2,
     speed: 258,
     fireInterval: 0.2 / (0.95 * 0.85),
-    hitbox: { w: 5, h: 13 },
+    scale: 1,
+    hitbox: { w: 8, h: 30 },
+    shots: [{ dx: 0, angleDeg: 0 }],
+  },
+  // 3: two rays side by side.
+  {
+    sprite: 'shot-spark',
+    damage: 2,
+    speed: 244,
+    fireInterval: 0.2 / (0.925 * 0.85),
+    scale: 1,
+    hitbox: { w: 8, h: 30 },
     shots: [
-      { dx: -7, angleDeg: 0 },
-      { dx: 7, angleDeg: 0 },
+      { dx: -10, angleDeg: 0 },
+      { dx: 10, angleDeg: 0 },
     ],
   },
-  // 3: a spread of three big charged blasts, double damage (visible about 55×30 each).
+  // 4: a spread of three rays.
   {
-    sprite: 'shot-charged',
+    sprite: 'shot-spark',
     damage: 2,
     speed: 230,
     fireInterval: 0.2 / (0.9 * 0.85),
-    hitbox: { w: 8, h: 14 },
+    scale: 1,
+    hitbox: { w: 8, h: 30 },
     shots: [
-      { dx: -6, angleDeg: -12 },
+      { dx: -10, angleDeg: -12 },
       { dx: 0, angleDeg: 0 },
-      { dx: 6, angleDeg: 12 },
+      { dx: 10, angleDeg: 12 },
     ],
   },
 ];

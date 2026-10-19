@@ -21,14 +21,14 @@ async function openGame(page: Page): Promise<void> {
     .toBe('Game');
 }
 
-/** Skips the waves, waits for the boss, and shoots it down with the level-3 gun. */
+/** Skips the waves, waits for the boss, and shoots it down with the top (level-4) gun. */
 async function beatTheBoss(page: Page): Promise<void> {
   await page.evaluate(() => {
     const h = window.__starDestroyer;
     h?.clearEnemies();
     h?.skipWaves();
     h?.setShield(999); // the ship must survive; the flow is what's under test
-    h?.setWeaponLevel(3);
+    h?.setWeaponLevel(4);
   });
   await expect
     .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 30_000 })
@@ -75,7 +75,7 @@ test('the waves end, the boss comes in, and beating it completes level 1 and rea
   expect(two.score).toBe(done.score);
   expect(two.health.lives).toBe(done.health.lives);
   expect(two.health.hits).toBe(done.health.hits);
-  expect(two.weaponLevel).toBe(3);
+  expect(two.weaponLevel).toBe(4);
   expect(two.shield.timeLeft).toBe(0);
   // Level 2 plays its own waves with its own (harder) numbers.
   expect(two.difficulty.fire.interval).toBeLessThan(first.difficulty.fire.interval);
@@ -143,7 +143,7 @@ test('a fire key still held when the panel appears does not skip it', async ({ p
     h?.clearEnemies();
     h?.skipWaves();
     h?.setShield(999);
-    h?.setWeaponLevel(3);
+    h?.setWeaponLevel(4);
   });
   await expect
     .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 30_000 })

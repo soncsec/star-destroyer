@@ -45,6 +45,7 @@ import { Pickups } from '../entities/Pickups';
 import { ShieldBubble } from '../entities/ShieldBubble';
 import { Player } from '../entities/Player';
 import { typeLetter, type Cheat } from '../logic/cheats';
+import { requestedLevel } from '../logic/levelSkip';
 import { firstHit, type Box } from '../logic/collision';
 import {
   pressKey,
@@ -55,7 +56,13 @@ import {
   type ControlState,
 } from '../logic/controls';
 import { rollDrop, type PowerUpKind } from '../logic/drops';
-import { panelShown, startGameOver, stepGameOver, type GameOverState } from '../logic/gameOver';
+import {
+  continueStart,
+  panelShown,
+  startGameOver,
+  stepGameOver,
+  type GameOverState,
+} from '../logic/gameOver';
 import { LEVELS } from '../levels';
 import { levelDifficulty } from '../levels/difficulty';
 import type { BackgroundProp, Level } from '../levels/types';
@@ -148,8 +155,8 @@ export interface GameSnapshot {
   explosions: number;
   /** How many hit sparks have been shown this game. */
   sparks: number;
-  /** Whether the screen clear's big blast is playing. */
-  blast: boolean;
+  /** How many big blasts (screen clear, boss defeat) have played this game. */
+  blasts: number;
   /** The boss, once it has appeared (null before). */
   boss: ReturnType<Boss['read']>;
   /** Where the level is (waves, boss, complete) and the level-complete panel. */
@@ -262,6 +269,12 @@ export class GameScene extends Phaser.Scene {
   /** Which level to play, and what carries over from the last one (M4.4). */
   init(data: GameStart): void {
     this.start = data;
+    // ?level=n (M7.9): the play-test skip, whenever nothing else chose the level.
+    // A restart after game over passes no level, so it comes back to the same one.
+    if (data.level === undefined) {
+      const level = requestedLevel(window.location.search, LEVELS.length);
+      if (level !== null) this.start = { ...data, level, skipped: true };
+    }
   }
 
   create(): void {
@@ -383,7 +396,7 @@ export class GameScene extends Phaser.Scene {
     // Hidden cheats: secret words typed during play.
     this.cheatBuffer = '';
     this.invincible = carry?.invincible ?? false;
-    this.cheated = carry?.cheated ?? false;
+    this.cheated = (carry?.cheated ?? false) || (this.start.skipped ?? false);
     this.highScore = { best: loadHighScore(browserStore(), HIGH_SCORE.storageKey), isNew: false };
     this.scoreRecorded = false;
     // The browser's own keydown, not Phaser's general key event: Phaser's can
@@ -632,7 +645,8 @@ export class GameScene extends Phaser.Scene {
   private goToNextLevel(): void {
     const next = LEVELS[this.level.number];
     if (!next) {
-      this.scene.restart({});
+      // A new game always starts at level 1, even if ?level=n (M7.9) chose this run's start.
+      this.scene.restart({ level: 1 });
       return;
     }
     const start: GameStart = {
@@ -662,13 +676,16 @@ export class GameScene extends Phaser.Scene {
     const step = stepGameOver(this.gameOver, dt, { held, pressed }, GAME_OVER);
     this.gameOver = step.state;
     const shown = panelShown(this.gameOver, GAME_OVER);
+    const level = this.level.number;
     this.gameOverPanel.show(
       shown,
       this.score,
+      level,
       this.gameOver.t - GAME_OVER.showAfter,
       this.highScore,
     );
-    if (step.restart) this.scene.restart({});
+    // A continue (M7.10): this level again, fresh lives, score 0.
+    if (step.restart) this.scene.restart(continueStart(level, this.cheated, PLAYER_HEALTH));
   }
 
   /** Each enemy on screen shoots on its own timer, aimed (within limits) at the ship. */
@@ -816,7 +833,7 @@ export class GameScene extends Phaser.Scene {
       shotDamage: this.bullets.active().map((b) => b.damage),
       explosions: this.explosions.activeCount(),
       sparks: this.sparks.playedCount(),
-      blast: this.blast.activeCount() > 0,
+      blasts: this.blast.playedCount(),
       boss: this.boss.read(),
       flow: {
         stage: this.flow.stage,
@@ -875,7 +892,7 @@ export class GameScene extends Phaser.Scene {
     let all = true;
     let any = false;
     for (const shot of volley(level, x, y + WEAPON.muzzleOffsetY)) {
-      const fired = this.bullets.fire(shot, level.sprite, level.hitbox);
+      const fired = this.bullets.fire(shot, level.sprite, level.hitbox, level.scale);
       any ||= fired;
       all &&= fired;
     }
@@ -891,6 +908,11 @@ export class GameScene extends Phaser.Scene {
   /** Turns the wave script on or off (tests use this to control the screen). */
   setSpawning(on: boolean): void {
     this.spawning = on;
+  }
+
+  /** Removes enemy shots in flight, leaving enemies and the boss (tests). */
+  clearEnemyShots(): void {
+    this.enemyBullets.clear();
   }
 
   /** Removes all enemies and, unless `keepShots`, their shots (tests use this for a clean screen). */
@@ -1091,6 +1113,8 @@ function seedFromUrl(): number {
 /** What the scene starts with: a level (default 1) and, after level 1, what carried over. */
 export interface GameStart {
   level?: number;
+  /** True when `?level=n` chose the level (M7.9): the run counts as cheated. */
+  skipped?: boolean;
   carry?: {
     score: number;
     lives: number;

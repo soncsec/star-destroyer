@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { DEPTH, GAME_HEIGHT, GAME_WIDTH, HUD, TOUCH } from '../config/tuning';
 import type { Mode } from '../logic/controls';
 import type { Vec } from '../logic/enemyFire';
-import { buttonAt, touchButtons, type TouchButton } from '../logic/touchMenu';
+import { buttonAt, touchButtons, type TouchButton, type TouchContext } from '../logic/touchMenu';
 
 /** Most buttons on screen at once (the pause menu). */
 const MAX_BUTTONS = 4;
@@ -17,7 +17,7 @@ export class TouchMenu {
   private readonly labels: Phaser.GameObjects.Text[] = [];
   private buttons: TouchButton[] = [];
 
-  constructor(scene: Phaser.Scene) {
+  constructor(private readonly scene: Phaser.Scene) {
     for (let i = 0; i < MAX_BUTTONS; i++) {
       this.boxes.push(
         scene.add
@@ -41,9 +41,10 @@ export class TouchMenu {
   }
 
   /** Shows the buttons for this state; hidden entirely unless `enabled` (the screen has been touched). */
-  show(enabled: boolean, mode: Mode, ctx: { gameOver: boolean; muted: boolean }): void {
+  show(enabled: boolean, mode: Mode, ctx: Omit<TouchContext, 'fullscreen'>): void {
+    const full = { ...ctx, fullscreen: this.scene.scale.fullscreen.available };
     this.buttons = enabled
-      ? touchButtons(mode, ctx, { screen: { w: GAME_WIDTH, h: GAME_HEIGHT }, ...TOUCH })
+      ? touchButtons(mode, full, { screen: { w: GAME_WIDTH, h: GAME_HEIGHT }, ...TOUCH })
       : [];
     this.boxes.forEach((box, i) => {
       const b = this.buttons[i];
