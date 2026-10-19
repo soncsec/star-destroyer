@@ -333,3 +333,40 @@ describe.each(Object.entries(BOSSES).map(([kind, boss]) => ({ kind, boss })))(
     });
   },
 );
+
+describe('a phase change never moves the boss (owner bug report 2026-10-18)', () => {
+  // The level 1 boss sometimes jumped from mid-screen to the far left: its
+  // sway was worked out from total time × the phase's sway speed, so a faster
+  // phase moved it to a different point of its swing at once.
+  const dt = 1 / 60;
+  const target = { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 40 };
+  it.each(Object.entries(BOSSES))(
+    '%s keeps its place when each new phase starts',
+    (_kind, rules) => {
+      const fastest = Math.max(...rules.phases.map((p) => p.swayHz));
+      // The furthest a smooth sway can carry it in one frame.
+      const maxStep = rules.swayAmplitude * 2 * Math.PI * fastest * dt + 1e-9;
+      for (const fightFor of [3.1, 7.3, 12.7]) {
+        let s = startBoss(rules, GAME_WIDTH / 2);
+        while (s.mode !== 'fighting') s = stepBoss(s, rules, dt, target, GAME_WIDTH / 2).state;
+        for (let t = 0; t < fightFor; t += dt)
+          s = stepBoss(s, rules, dt, target, GAME_WIDTH / 2).state;
+        for (const phase of rules.phases.slice(1)) {
+          const before = stepBoss(s, rules, dt, target, GAME_WIDTH / 2).state;
+          const hurt = damageBoss(
+            before,
+            rules,
+            before.hp - Math.floor(phase.fromHp * rules.hp),
+          ).state;
+          expect(hurt.phase).toBe(rules.phases.indexOf(phase));
+          const after = stepBoss(hurt, rules, dt, target, GAME_WIDTH / 2).state;
+          expect(
+            Math.abs(after.x - before.x),
+            `${fightFor}s, phase from ${phase.fromHp}`,
+          ).toBeLessThanOrEqual(maxStep);
+          s = after;
+        }
+      }
+    },
+  );
+});
