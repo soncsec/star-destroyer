@@ -27,6 +27,8 @@ export interface SheetAsset {
   frameRate: number;
   /** Whether the default animation loops. */
   loop: boolean;
+  /** Frames the default animation leaves out (see `animFrames`). */
+  skipFrames?: readonly number[];
 }
 
 export interface ImageAsset {
@@ -164,10 +166,21 @@ export const ASSETS: readonly Asset[] = [
   sheet('explosions', 'explosion-b', 'explosion-b.png', 64, 64, 8, 16, false),
   sheet('explosions', 'explosion-c', 'explosion-c.png', 128, 80, 10, 16, false),
   sheet('explosions', 'explosion-d', 'explosion-d.png', 128, 128, 12, 16, false),
-  sheet('explosions', 'explosion-e', 'explosion-e.png', 192, 192, 22, 20, false),
+  // The big blast (screen clear, boss defeat). Frames 14-18 of the art are a
+  // flash that fills the whole 192x192 frame; on our 256-wide screen it shows as
+  // an orange square (owner report 2026-10-18), so the animation skips them. The
+  // screen clear's camera flash stands in for it.
+  {
+    ...sheet('explosions', 'explosion-e', 'explosion-e.png', 192, 192, 22, 20, false),
+    skipFrames: [14, 15, 16, 17, 18],
+  },
   sheet('explosions', 'explosion-f', 'explosion-f.png', 48, 48, 8, 16, false),
   sheet('explosions', 'explosion-g', 'explosion-g.png', 48, 48, 7, 16, false),
 ];
+
+/** The frames a sheet's default animation plays, in order: all of them except `skipFrames`. */
+export const animFrames = (asset: SheetAsset): number[] =>
+  Array.from({ length: asset.frames }, (_, i) => i).filter((i) => !asset.skipFrames?.includes(i));
 
 /** Animation key for a sheet's default animation. */
 export const animKey = (key: string): string => `${key}:play`;

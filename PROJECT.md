@@ -36,7 +36,7 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 | Enemies | Several enemy types with distinct movement and firing patterns, varying by level |
 | Difficulty | Enemy fire gets gradually more frequent from level 1 to 8. **Level 8 must be hard but beatable** (limits in section 4a) |
 | Obstacles | Destructible asteroids; **large asteroids split into small ones** |
-| Weapons | Weapon power-up drops raise the weapon level (3 levels, using the Warped shooting effects). Weapon upgrades **never time out**, but **losing a life drops you back to the basic weapon** (owner decisions 2026-10-17) |
+| Weapons | Weapon power-up drops raise the weapon level (4 levels since M7.13, using the Warped shooting effects). Weapon upgrades **never time out**, but **losing a life drops you back to the basic weapon** (owner decisions 2026-10-17) |
 | Shield | Power-up: a shield that blocks all damage for **10 seconds** (owner change 2026-10-18; was 30) |
 | Screen clear | **Rare** power-up that destroys every enemy on screen. **Never appears during a boss fight** |
 | Bosses | One boss per level, each with its own attack patterns. The multi-part top-down boss (body, cannons, helmet, beam) is the final boss |
@@ -61,7 +61,7 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 
 | Power-up | Effect | How often | Notes |
 |---|---|---|---|
-| Weapon | Raises the weapon one level (max 3). Shots start small and grow bigger and stronger: 1 single small orange tracer (visible 10×4; the art pack's smallest player shot), 2 double ringed bolt (pulse), 3 spread of three big plasma blasts (charged, double damage) | Common | Never times out; lost on death (back to level 1). Owner changes 2026-10-18: level 2 and 3 shots drawn at 45% of the art's size, the level 1 tracer at full size so it stays visible; every level fires 15% less often and its shots fly 15% slower than first tuned, and stronger levels are a little slower again (level 2: 5%, level 3: 10% below level 1) |
+| Weapon | Raises the weapon one level (max 4). Shots start small and grow bigger and stronger: 1 single small orange tracer (visible 10×4; the art pack's smallest player shot), 2 one large spark ray, 3 two rays side by side, 4 a spread of three rays; the rays do double damage (owner request 2026-10-18, M7.13; replaced the double pulse and triple charged blast) | Common | Never times out; lost on death (back to level 1). Every shot is drawn full size (the earlier 45% drawing ended with M7.13). Owner changes 2026-10-18: every level fires 15% less often and its shots fly 15% slower than first tuned, and stronger levels are a little slower again (level 2: 5%, level 3: 7.5%, level 4: 10% below level 1) |
 | Shield | Blocks all damage for 10 seconds (owner change 2026-10-18; was 30) | Uncommon | Picking up another resets the timer to 10 s |
 | Screen clear | Destroys every enemy on screen, plus enemy shots | Rare | Never dropped during a boss fight |
 

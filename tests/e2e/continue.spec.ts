@@ -17,7 +17,7 @@ async function dieOnLevel(page: Page, level: number): Promise<GameSnapshot> {
   await page.evaluate(() => {
     window.__starDestroyer?.setSpawning(false);
     window.__starDestroyer?.clearEnemies();
-    window.__starDestroyer?.setWeaponLevel(3);
+    window.__starDestroyer?.setWeaponLevel(4);
     window.__starDestroyer?.oneHitLeft();
   });
   const { player } = await snapshot(page);

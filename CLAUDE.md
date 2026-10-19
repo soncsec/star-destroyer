@@ -71,4 +71,4 @@ Read `PROJECT.md` (scope), `ARCHITECTURE.md` (decisions), and `ROADMAP.md` (curr
 ## Assets
 
 - Source pack: `legacy/` (Ansimuz Legacy Collection, CC0). Copy only the files used into `public/assets/` and list them in `CREDITS.md`.
-- Keep native pixel resolution. Render with `pixelArt: true` and integer scaling. Exception (owner, 2026-10-18): the weapon level 2 and 3 shots are drawn at 45% (`scale` in `WEAPON_LEVELS`); the level 1 tracer stays full size.
+- Keep native pixel resolution. Render with `pixelArt: true` and integer scaling. The weapon shots' 45% drawing (owner exception, 2026-10-18) ended with M7.13: every shot is now full size.
