@@ -193,7 +193,7 @@
 - [ ] M7.6 Cross-browser check: Chrome, Firefox, Safari, Edge
 - [ ] M7.7 Final card screenshot for the portal
 - [x] M7.9 Play-test level skip (owner 2026-10-18, product review): `?level=n` starts at level n on every build and counts as a cheat (no high score). Built first, so the owner can play-test levels 6–8 and the final boss on any device. Only a plain number from 1 to the number of levels is accepted; anything else starts level 1 as a normal run
-- [ ] M7.10 Continues (owner 2026-10-18): on game over, continue from the current level with 3 fresh lives and the score reset to 0; a continued run can still set the high score
+- [x] M7.10 Continues (owner 2026-10-18): on game over, continue from the current level with 3 fresh lives and the score reset to 0; a continued run can still set the high score. Past level 1 the game-over panel names the level and says PRESS SPACE TO CONTINUE; the weapon goes back to level 1 (as after any lost life) and a cheat flag stays with the run
 - [ ] M7.11 Real-device check: the owner plays through on Chrome, Firefox and Brave (desktop) and on Safari on an iPhone; the touch pause menu hides its full-screen button where the browser has no full-screen API (iPhone Safari)
 
 **Acceptance criteria:** the owner signs off on game feel and difficulty; no console errors in a full playthrough on all four browsers.

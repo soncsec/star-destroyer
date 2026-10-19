@@ -46,7 +46,13 @@ import {
   type ControlState,
 } from '../logic/controls';
 import { rollDrop, type PowerUpKind } from '../logic/drops';
-import { panelShown, startGameOver, stepGameOver, type GameOverState } from '../logic/gameOver';
+import {
+  continueStart,
+  panelShown,
+  startGameOver,
+  stepGameOver,
+  type GameOverState,
+} from '../logic/gameOver';
 import { LEVELS } from '../levels';
 import { levelDifficulty } from '../levels/difficulty';
 import type { BackgroundProp, Level } from '../levels/types';
@@ -493,8 +499,10 @@ export class GameScene extends Phaser.Scene {
     const step = stepGameOver(this.gameOver, dt, { held, pressed }, GAME_OVER);
     this.gameOver = step.state;
     const shown = panelShown(this.gameOver, GAME_OVER);
-    this.gameOverPanel.show(shown, this.score, this.gameOver.t - GAME_OVER.showAfter);
-    if (step.restart) this.scene.restart({});
+    const level = this.level.number;
+    this.gameOverPanel.show(shown, this.score, level, this.gameOver.t - GAME_OVER.showAfter);
+    // A continue (M7.10): this level again, fresh lives, score 0.
+    if (step.restart) this.scene.restart(continueStart(level, this.cheated, PLAYER_HEALTH));
   }
 
   /** Each enemy on screen shoots on its own timer, aimed (within limits) at the ship. */
