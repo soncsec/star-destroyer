@@ -266,6 +266,12 @@ export const FRAME_BUDGET = {
    * same (owner, 2026-10-18).
    */
   webkit: { medianMs: 1000 / 60 / 2, p95Ms: (2 * 1000) / 60 },
+  /**
+   * Firefox's slowest frames spike when other sessions load the shared test
+   * machine (it passes on GitHub's runners), so it gets two frames for the 95th
+   * percentile; the median limit is the same (owner, 2026-10-19).
+   */
+  firefox: { medianMs: 1000 / 60 / 2, p95Ms: (2 * 1000) / 60 },
 } as const;
 
 /** Score, health pips and lives across the top of the screen (M2.6). */
