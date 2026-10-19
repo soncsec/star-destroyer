@@ -110,6 +110,19 @@ export const LEVEL_COMPLETE = {
   titleColor: '#2de2e6',
 } as const;
 
+/**
+ * The victory screen after the last level (M6.6). It stays until the player
+ * presses Space or Enter (no auto-advance), with fireworks behind it.
+ */
+export const VICTORY = {
+  titleColor: '#ffd23f',
+  line: 'THE CORE IS DESTROYED',
+  /** Seconds between fireworks (small explosions at random spots in the sky). */
+  fireworksEvery: 0.45,
+  /** Fireworks go off within this band of the screen (y, pixels). */
+  fireworksY: { min: 24, max: 120 },
+} as const;
+
 /** Score, health pips and lives across the top of the screen (M2.6). */
 export const HUD = {
   /** CSS font family; Press Start 2P is drawn at 8 px, its native size. */

@@ -87,6 +87,19 @@ describe('level flow', () => {
     expect(run(r.state, 0.5, input()).next).toBe(1);
   });
 
+  it('with no auto-advance (the victory screen, M6.6) it waits for a fresh press', () => {
+    const forever = { ...rules, autoNext: Infinity };
+    let s: FlowState = { stage: 'complete', t: 0, armed: false };
+    for (let i = 0; i < 1000; i++) {
+      const step = stepFlow(s, 0.1, input(), forever);
+      expect(step.next).toBe(false);
+      s = step.state;
+    }
+    expect(s.t).toBeCloseTo(100, 6);
+    const press = stepFlow(s, 0.1, input({ key: { held: true, pressed: true } }), forever);
+    expect(press.next).toBe(true);
+  });
+
   it('rejects negative time', () => {
     expect(() => stepFlow(startFlow(), -1, input(), rules)).toThrow(RangeError);
   });

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { BOSSES } from '../../src/config/tuning';
+import { BOSSES, LEVEL_COMPLETE } from '../../src/config/tuning';
 import { levelBossHp } from '../../src/levels/bosses';
 import { LEVELS } from '../../src/levels';
 import { LEVEL_2 } from '../../src/levels/level2';
@@ -103,14 +103,29 @@ test('every level runs waves, boss and panel in turn; after the last, the next p
     expect((await snapshot(page)).boss?.kind).toBe(level.boss);
     // Every ship or part of it (a twin has two ships; the final boss, four parts).
     await page.evaluate((hp) => window.__starDestroyer?.hurtBoss(hp), levelBossHp(level.boss));
-    await expect
-      .poll(async () => (await snapshot(page)).flow.panel.visible, { timeout: 20_000 })
-      .toBe(true);
     const last = level.number === LEVELS.length;
-    expect((await snapshot(page)).flow.panel).toMatchObject({
-      title: `LEVEL ${level.number} COMPLETE`,
-      next: last ? 'ALL LEVELS COMPLETE' : `NEXT: LEVEL ${level.number + 1}`,
-    });
+    if (last) {
+      // After the last level: the victory screen (M6.6), not a level panel.
+      await expect
+        .poll(async () => (await snapshot(page)).flow.victory.visible, { timeout: 20_000 })
+        .toBe(true);
+      const s = await snapshot(page);
+      expect(s.flow.panel.visible).toBe(false);
+      expect(s.flow.victory).toMatchObject({
+        title: 'VICTORY',
+        line: 'THE CORE IS DESTROYED',
+        score: `FINAL ${s.hud.score}`,
+        lives: `LIVES LEFT ${s.health.lives}`,
+      });
+    } else {
+      await expect
+        .poll(async () => (await snapshot(page)).flow.panel.visible, { timeout: 20_000 })
+        .toBe(true);
+      expect((await snapshot(page)).flow.panel).toMatchObject({
+        title: `LEVEL ${level.number} COMPLETE`,
+        next: `NEXT: LEVEL ${level.number + 1}`,
+      });
+    }
     await page.keyboard.press('Space');
     await expect
       .poll(async () => (await snapshot(page)).level.number, { timeout: 20_000 })
@@ -142,4 +157,43 @@ test('a fire key still held when the panel appears does not skip it', async ({ p
   expect(s.level.number).toBe(1);
   expect(s.flow.panel.visible).toBe(true);
   await page.keyboard.up('Space');
+});
+
+test('the victory screen waits for the player: no auto-advance, even well past the usual wait', async ({
+  page,
+}) => {
+  await openGame(page);
+  // Play through to the end, beating each boss at once.
+  for (const level of LEVELS) {
+    await page.evaluate(() => {
+      const h = window.__starDestroyer;
+      h?.clearEnemies();
+      h?.skipWaves();
+      h?.setShield(999);
+    });
+    await expect
+      .poll(async () => (await snapshot(page)).boss?.mode, { timeout: 20_000 })
+      .toBe('fighting');
+    await page.evaluate((hp) => window.__starDestroyer?.hurtBoss(hp), levelBossHp(level.boss));
+    if (level.number === LEVELS.length) break;
+    await expect
+      .poll(async () => (await snapshot(page)).flow.panel.visible, { timeout: 20_000 })
+      .toBe(true);
+    await page.keyboard.press('Space');
+    await expect
+      .poll(async () => (await snapshot(page)).level.number, { timeout: 20_000 })
+      .toBe(level.number + 1);
+  }
+  // Wait in game time (not wall-clock) until well past the level panel's auto-advance.
+  const pastAuto = LEVEL_COMPLETE.completeAfter + LEVEL_COMPLETE.autoNext + 1;
+  await expect
+    .poll(async () => (await snapshot(page)).flow.t, { timeout: 60_000 })
+    .toBeGreaterThan(pastAuto);
+  const s = await snapshot(page);
+  expect(s.level.number).toBe(LEVELS.length);
+  expect(s.flow.victory.visible).toBe(true);
+  // Fireworks keep going off behind it (the boss's own explosions ended long ago).
+  await expect
+    .poll(async () => (await snapshot(page)).explosions, { timeout: 20_000 })
+    .toBeGreaterThan(0);
 });
