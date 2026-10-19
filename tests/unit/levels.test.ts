@@ -17,7 +17,8 @@ import { LEVEL_4 } from '../../src/levels/level4';
 import { LEVEL_5 } from '../../src/levels/level5';
 import { LEVEL_6 } from '../../src/levels/level6';
 import { LEVEL_7 } from '../../src/levels/level7';
-import { bossTotalHp } from '../../src/logic/boss';
+import { LEVEL_8 } from '../../src/levels/level8';
+import { levelBossHp } from '../../src/levels/bosses';
 import { checkWaves, mostAtOnce } from '../../src/logic/waves';
 
 describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${level.name})` })))(
@@ -110,11 +111,10 @@ describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${le
     });
 
     it('has a boss that exists and gets tougher level by level', () => {
-      const boss = BOSSES[level.boss];
-      expect(boss).toBeDefined();
+      if (level.boss !== 'final-boss') expect(BOSSES[level.boss]).toBeDefined();
       const before = LEVELS[level.number - 2];
-      // A twin's two ships count together.
-      if (before) expect(bossTotalHp(boss)).toBeGreaterThan(bossTotalHp(BOSSES[before.boss]));
+      // Every ship (a twin) or part (the final boss) counts together.
+      if (before) expect(levelBossHp(level.boss)).toBeGreaterThan(levelBossHp(before.boss));
     });
 
     it('gives the player a breather before the boss', () => {
@@ -252,6 +252,30 @@ describe('level 7 (M6.4)', () => {
     expect(twin.twin).toBeDefined();
     expect(twin.sprite).toBe(BOSSES['vehicle-1'].sprite);
     expect(twin.hp).toBeGreaterThan(BOSSES['vehicle-1'].hp);
+  });
+});
+
+describe('level 8 (M6.5)', () => {
+  it('matches the approved plan: The Core, a mix of all enemies, the nebula at night, the final boss', () => {
+    expect(LEVEL_8).toMatchObject({ number: 8, name: 'The Core', boss: 'final-boss' });
+    expect(new Set(LEVEL_8.roster)).toEqual(new Set(Object.keys(ENEMY_TYPES)));
+    expect(LEVEL_8.background[0]).toMatchObject({ texture: 'bg-stage-back' });
+    expect(LEVEL_8.background[0]?.tint).toBeLessThan(0xffffff);
+    expect(LEVELS[7]).toBe(LEVEL_8);
+    expect(LEVELS).toHaveLength(DIFFICULTY.lastLevel);
+  });
+
+  it('uses every enemy in its roster', () => {
+    expect(new Set(LEVEL_8.waves.map((s) => s.kind))).toEqual(
+      new Set([...LEVEL_8.roster, 'asteroid']),
+    );
+  });
+
+  it('is the hardest level PROJECT.md 4a allows, and no harder', () => {
+    const one = levelDifficulty(1);
+    const eight = levelDifficulty(8);
+    expect(one.fire.interval / eight.fire.interval).toBeCloseTo(DIFFICULTY.fireRateAtLast, 6);
+    expect(eight.shotSpeed / one.shotSpeed).toBeCloseTo(DIFFICULTY.shotSpeedAtLast, 6);
   });
 });
 

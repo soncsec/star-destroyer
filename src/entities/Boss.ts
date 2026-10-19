@@ -1,6 +1,13 @@
 import Phaser from 'phaser';
 import { animKey } from '../assets/manifest';
-import { BOSSES, DEPTH, GAME_WIDTH, HUD, type BossKind } from '../config/tuning';
+import {
+  BOSSES,
+  DEPTH,
+  GAME_WIDTH,
+  HUD,
+  type BossKind,
+  type LevelBossKind,
+} from '../config/tuning';
 import {
   bossLineup,
   bossTotalHp,
@@ -13,6 +20,52 @@ import {
 } from '../logic/boss';
 import { firstHit, type Box } from '../logic/collision';
 import type { Vec } from '../logic/enemyFire';
+
+/** One ship (or part) of a boss, for the e2e test hook. */
+export interface BossShipView {
+  mode: BossState['mode'];
+  hp: number;
+  phase: number;
+  x: number;
+  y: number;
+}
+
+/**
+ * The boss on screen, for the e2e test hook: the boss as a whole (health
+ * summed; mode 'defeated' once it is beaten), plus each ship or part.
+ */
+export interface BossView {
+  kind: LevelBossKind;
+  mode: BossState['mode'];
+  hp: number;
+  phase: number;
+  x: number;
+  y: number;
+  bar: number;
+  barVisible: boolean;
+  ships: BossShipView[];
+  /** The final boss only: its stage and its beam. */
+  stage?: string;
+  beam?: string;
+}
+
+/** What the game scene needs from a boss: a normal one or twin (`Boss`), or the final boss. */
+export interface BossFight {
+  readonly active: boolean;
+  /** Moves it and returns the shots it fires this step. */
+  update(dt: number, target: Vec): BossVolley[];
+  /** Which ship or part `box` touches (one that blocks or takes shots now), or -1. */
+  touching(box: Box): number;
+  /** Index of the first ship or part that can be hurt now, or -1. */
+  firstFighting(): number;
+  /** Damages ship or part `index`; the points and where it was if that destroyed it. */
+  hit(index: number, amount: number): { points: number; at: Vec } | null;
+  hpOf(index: number): number;
+  /** A beam that hurts the ship, while one fires. */
+  beam(): Box | null;
+  clear(): void;
+  read(): BossView | null;
+}
 
 /** Most ships one boss can have (a twin). */
 const MAX_SHIPS = 2;
@@ -28,7 +81,7 @@ interface Ship {
  * health bar, which shows the health of all its ships together. The rules are
  * in logic/boss.ts; this draws them.
  */
-export class Boss {
+export class Boss implements BossFight {
   private readonly sprites: Phaser.GameObjects.Sprite[];
   private readonly barBack: Phaser.GameObjects.Rectangle;
   private readonly barFill: Phaser.GameObjects.Rectangle;
@@ -145,6 +198,11 @@ export class Boss {
     return this.ships[index]?.state.hp ?? 0;
   }
 
+  /** Normal bosses have no beam. */
+  beam(): Box | null {
+    return null;
+  }
+
   /** Removes it without a fight (a new game, or tests). */
   clear(): void {
     this.kind = null;
@@ -154,21 +212,8 @@ export class Boss {
     this.hideBar();
   }
 
-  /**
-   * What is on screen, for the e2e test hook: the boss as a whole (health
-   * summed; mode 'defeated' once every ship is), plus each ship.
-   */
-  read(): {
-    kind: BossKind;
-    mode: BossState['mode'];
-    hp: number;
-    phase: number;
-    x: number;
-    y: number;
-    bar: number;
-    barVisible: boolean;
-    ships: { mode: BossState['mode']; hp: number; phase: number; x: number; y: number }[];
-  } | null {
+  /** What is on screen, for the e2e test hook (mode 'defeated' once every ship is). */
+  read(): BossView | null {
     const first = this.ships[0];
     if (!this.kind || !first) return null;
     const ships = this.ships.map(({ state: s }) => ({

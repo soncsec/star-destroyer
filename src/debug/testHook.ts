@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import type { BossKind, EnemyKind } from '../config/tuning';
+import type { EnemyKind, LevelBossKind } from '../config/tuning';
 import type { PowerUpKind } from '../logic/drops';
 import type { GameScene, GameSnapshot } from '../scenes/GameScene';
 
@@ -31,7 +31,7 @@ export interface TestHook {
   /** Ends the level's waves at once, so its boss comes after the usual pause. */
   skipWaves(): void;
   /** Brings in a boss: `kind`, or the level's own boss. */
-  spawnBoss(kind?: BossKind): void;
+  spawnBoss(kind?: LevelBossKind): void;
   /** Spawns a large asteroid at x (top of the screen) or (x, y). */
   spawnAsteroid(x: number, y?: number): boolean;
   /** Spawns an enemy (default grunt) at x (top of the screen) or (x, y); optionally set its first shot. */

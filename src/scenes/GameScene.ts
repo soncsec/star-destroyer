@@ -18,11 +18,12 @@ import {
   SHIELD,
   WEAPON,
   WEAPON_LEVELS,
-  type BossKind,
+  type LevelBossKind,
   type EnemyKind,
 } from '../config/tuning';
 import { Asteroids, type RockSize, type RockSlot } from '../entities/Asteroids';
-import { Boss } from '../entities/Boss';
+import { Boss, type BossFight } from '../entities/Boss';
+import { FinalBoss } from '../entities/FinalBoss';
 import { Bullets } from '../entities/Bullets';
 import { ControlsOverlay } from '../entities/ControlsOverlay';
 import { EnemyBullets } from '../entities/EnemyBullets';
@@ -91,6 +92,9 @@ import { stepFire, type FireState } from '../logic/weapon';
 import { volley } from '../logic/weaponLevels';
 
 /** Read-only view of the game state, used by the e2e test hook. */
+/** What can cost the ship a hit. */
+export type HitCause = 'shot' | 'enemy' | 'rock' | 'boss' | 'beam';
+
 export interface GameSnapshot {
   score: number;
   player: { x: number; y: number };
@@ -144,6 +148,8 @@ export interface GameSnapshot {
   health: Health & { gameOver: boolean };
   /** The result of the most recent hit, for tests and (later) the HUD. */
   lastHit: HitResult | null;
+  /** What caused the last hit on the ship. */
+  lastHitBy: HitCause | null;
 }
 
 type Keys = Record<
@@ -180,7 +186,10 @@ export class GameScene extends Phaser.Scene {
   /** Power-ups collected this game, by kind (their effects arrive in M3.2–M3.4). */
   private collected: Record<PowerUpKind, number> = { weapon: 0, shield: 0, clear: 0 };
   /** The level's boss, once it has appeared (M4.3). */
-  private boss!: Boss;
+  /** The boss being fought: `normalBoss` (one ship or a twin) or `finalBoss`. */
+  private boss!: BossFight;
+  private normalBoss!: Boss;
+  private finalBoss!: FinalBoss;
   /** Which level to play and what carried over (set by `init`). */
   private start: GameStart = {};
   /** Waves, boss, level complete (M4.4). */
@@ -208,6 +217,7 @@ export class GameScene extends Phaser.Scene {
   private spawning = true;
   private health: Health = newHealth(PLAYER_HEALTH);
   private lastHit: HitResult | null = null;
+  private lastHitBy: HitCause | null = null;
   private keys!: Keys;
 
   constructor() {
@@ -254,6 +264,7 @@ export class GameScene extends Phaser.Scene {
       ? { ...newHealth(PLAYER_HEALTH), hits: carry.hits, lives: carry.lives }
       : newHealth(PLAYER_HEALTH);
     this.lastHit = null;
+    this.lastHitBy = null;
     this.asteroids = new Asteroids(this);
     this.enemies = new Enemies(this);
     this.enemyBullets = new EnemyBullets(this);
@@ -268,7 +279,9 @@ export class GameScene extends Phaser.Scene {
     // The weapon carries into the next level; a shield doesn't.
     this.powerUps = { ...startPowerUps(), weaponLevel: carry?.weaponLevel ?? 1 };
     this.shieldBubble = new ShieldBubble(this);
-    this.boss = new Boss(this);
+    this.normalBoss = new Boss(this);
+    this.finalBoss = new FinalBoss(this);
+    this.boss = this.normalBoss;
     this.dropChance = null;
     this.gameOverPanel = new GameOverPanel(this);
     this.levelPanel = new LevelCompletePanel(this);
@@ -451,7 +464,7 @@ export class GameScene extends Phaser.Scene {
       { ...LEVEL_COMPLETE, bossAfter: this.level.bossAfter },
     );
     this.flow = step.state;
-    if (step.startBoss) this.boss.spawn(this.level.boss);
+    if (step.startBoss) this.spawnBoss(this.level.boss);
     if (flowPanelShown(this.flow, { ...LEVEL_COMPLETE, bossAfter: this.level.bossAfter })) {
       this.levelPanel.show(this.levelInfo(), this.flow.t - LEVEL_COMPLETE.completeAfter);
     }
@@ -563,13 +576,27 @@ export class GameScene extends Phaser.Scene {
     const shot = touching(ship, this.enemyBullets.active(), (b) => this.enemyBullets.hitbox(b));
     const enemy = touching(ship, this.enemies.active(), (e) => this.enemies.hitbox(e));
     const rock = touching(ship, this.asteroids.active(), (r) => this.asteroids.hitbox(r));
-    // Flying into the boss costs a hit; the boss itself is unharmed.
+    // Flying into the boss, or its beam, costs a hit; the boss itself is unharmed.
+    const beam = this.boss.beam();
+    const inBeam = beam !== null && firstHit(ship, [beam]) >= 0;
     const rammedBoss = this.boss.touching(ship) >= 0;
-    if (!shot && !enemy && !rock && !rammedBoss) return;
+    const cause: HitCause | null = shot
+      ? 'shot'
+      : enemy
+        ? 'enemy'
+        : rock
+          ? 'rock'
+          : inBeam
+            ? 'beam'
+            : rammedBoss
+              ? 'boss'
+              : null;
+    if (!cause) return;
 
     const { health, result } = takeHit(this.health, PLAYER_HEALTH);
     this.health = health;
     this.lastHit = result;
+    this.lastHitBy = cause;
     if (shot) {
       this.sparks.play(shot.sprite.x, shot.sprite.y);
       this.enemyBullets.release(shot);
@@ -634,6 +661,7 @@ export class GameScene extends Phaser.Scene {
       enemyShots: this.enemyBullets.active().map((sh) => ({ x: sh.sprite.x, y: sh.sprite.y })),
       health: { ...this.health, gameOver: isGameOver(this.health) },
       lastHit: this.lastHit,
+      lastHitBy: this.lastHitBy,
     };
   }
 
@@ -698,7 +726,8 @@ export class GameScene extends Phaser.Scene {
   /** Removes all enemies and, unless `keepShots`, their shots (tests use this for a clean screen). */
   clearEnemies(keepShots = false): void {
     this.enemies.clear();
-    this.boss.clear();
+    this.normalBoss.clear();
+    this.finalBoss.clear();
     this.asteroids.clear();
     this.pickups.clear();
     if (!keepShots) this.enemyBullets.clear();
@@ -729,8 +758,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   /** Brings in a boss: `kind`, or the level's own boss (tests, until M4.4 does it at the level's end). */
-  spawnBoss(kind: BossKind = this.level.boss): void {
-    this.boss.spawn(kind);
+  spawnBoss(kind: LevelBossKind = this.level.boss): void {
+    this.normalBoss.clear();
+    this.finalBoss.clear();
+    if (kind === 'final-boss') {
+      this.finalBoss.spawn();
+      this.boss = this.finalBoss;
+    } else {
+      this.normalBoss.spawn(kind);
+      this.boss = this.normalBoss;
+    }
   }
 
   /**

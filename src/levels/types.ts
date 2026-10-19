@@ -4,7 +4,7 @@
  * come from `difficulty(level)` (M4.2), not from here, so their limits are
  * checked in one place.
  */
-import type { BossKind, EnemyKind, SpawnKind } from '../config/tuning';
+import type { EnemyKind, LevelBossKind, SpawnKind } from '../config/tuning';
 import type { WaveSpawn } from '../logic/waves';
 
 /** One scrolling background layer, drawn in list order (first = furthest back). */
@@ -57,7 +57,7 @@ export interface Level {
   roster: readonly EnemyKind[];
   /** Enemies and asteroids, in time order (seconds from the level start). */
   waves: readonly WaveSpawn<SpawnKind>[];
-  boss: BossKind;
+  boss: LevelBossKind;
   /** Seconds of quiet after the last wave before the boss comes in. */
   bossAfter: number;
 }
