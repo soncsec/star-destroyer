@@ -16,7 +16,7 @@
 | C Controls and cheats (owner request) | Done; play-test pending |
 | M4 Level system and first boss | Done; play-test pending |
 | M5 Levels 2–4 | Done; play-test pending |
-| M6 Levels 5–8 | In progress |
+| M6 Levels 5–8 | Built; waiting for the owner's play-test |
 | M7 Polish and balance | Not started |
 | M8 v1.0 release | Not started |
 
@@ -177,7 +177,7 @@
 - [x] M6.4 Level 7 (Deep Dark) and its twin boss: every enemy type over stars only; two Warped vehicle 1s, each with its own health, swaying as mirror images. After one attacks, the other waits at least half a cooldown, so their volleys never land together and each fan's gap check still holds. Level 7 ends when both are down
 - [x] M6.5 Level 8 (The Core) and the final multi-part boss (cannons, helmet, beam with warning, phases): every enemy type over the nebula at night. The boss is fought in three stages: its two cannons take turns firing; then the helmet fires fans; then the exposed core fires aimed shots and a beam that always charges first (1.2 s warning), with the boss holding still. Armour and hull block shots until each part's stage comes; part positions were measured pixel-exact against the art
 - [x] M6.6 Victory screen after level 8: "VICTORY / THE CORE IS DESTROYED", the final score and lives left, with fireworks behind it; it waits for Space or Enter (no auto-advance), then a new game starts
-- [ ] M6.7 Automated frame-rate check during the final boss fight
+- [x] M6.7 Automated frame-rate check during the final boss fight: an e2e test stages the busiest moment (the core and its beam, a dozen enemies, asteroids, level-3 fire) and times each frame's work (update and render) for about 5 s. The median must fit in half a 60 fps frame (8.3 ms) and 95% of frames in a whole one (16.7 ms); first runs: Chromium 0.5 / 4.1 ms, Firefox 3 / 11 ms. It times work rather than counting frames, because headless browsers on a busy shared machine can't hold a steady 60 fps whatever the game does
 
 **Acceptance criteria:** the owner beats level 8 (hard but beatable); 60 fps holds during the final boss fight.
 

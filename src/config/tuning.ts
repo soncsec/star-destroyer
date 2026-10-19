@@ -123,6 +123,17 @@ export const VICTORY = {
   fireworksY: { min: 24, max: 120 },
 } as const;
 
+/**
+ * The automated frame-rate check (M6.7): the work for one frame (update and
+ * render) must fit in a 60 fps frame. The median gets half the frame, leaving
+ * room for the browser, and 95% of frames must fit in a whole one.
+ */
+export const FRAME_BUDGET = {
+  frameMs: 1000 / 60,
+  medianMs: 1000 / 60 / 2,
+  p95Ms: 1000 / 60,
+} as const;
+
 /** Score, health pips and lives across the top of the screen (M2.6). */
 export const HUD = {
   /** CSS font family; Press Start 2P is drawn at 8 px, its native size. */
