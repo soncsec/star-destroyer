@@ -896,7 +896,10 @@ export class GameScene extends Phaser.Scene {
       any ||= fired;
       all &&= fired;
     }
-    if (any) this.sfx.play('shot');
+    if (any) {
+      this.sfx.play(level.sound);
+      if (level.whoosh) this.sfx.play(level.whoosh);
+    }
     return all;
   }
 
