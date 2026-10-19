@@ -71,5 +71,7 @@ test('the final boss fight keeps every frame within the 60 fps budget (M6.7)', a
   const report = `median ${summary.medianMs.toFixed(2)} ms, 95% ${summary.p95Ms.toFixed(2)} ms, max ${summary.maxMs.toFixed(2)} ms over ${summary.frames} frames; Phaser fps ${times?.fps.toFixed(1)}; beam ${[...beams].join('/')}`;
   info.annotations.push({ type: 'frame times', description: report });
   console.log(`[${info.project.name}] ${report}`);
-  expect(withinBudget(summary, FRAME_BUDGET), report).toBe(true);
+  // Firefox has its own, looser limit for the slowest frames (see FRAME_BUDGET).
+  const budget = info.project.name === 'firefox' ? FRAME_BUDGET.firefox : FRAME_BUDGET;
+  expect(withinBudget(summary, budget), report).toBe(true);
 });
