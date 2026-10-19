@@ -4,4 +4,7 @@ declare module 'node:fs' {
   export function readFileSync(path: string): Uint8Array;
   export function readdirSync(path: string, options: { recursive: true }): string[];
 }
+declare module 'node:zlib' {
+  export function inflateSync(data: Uint8Array): Uint8Array;
+}
 declare const process: { cwd(): string; env: Record<string, string | undefined> };
