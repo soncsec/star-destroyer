@@ -123,6 +123,20 @@ export const VICTORY = {
   fireworksY: { min: 24, max: 120 },
 } as const;
 
+/** The title screen (M7.1). */
+export const TITLE = {
+  /** Level 1's nebula, drifting slowly behind the title. */
+  backdrop: [
+    { texture: 'bg-stage-back', scrollSpeed: 6, alpha: 1 },
+    { texture: 'bg-blue-stars', scrollSpeed: 18, alpha: 0.8 },
+  ],
+  nameColor: '#ffd23f',
+  keysColor: '#2de2e6',
+  /** Rows, in pixels from the top. */
+  y: { name: 72, ship: 168, prompt: 228, keys: 262 },
+  blinkHz: 2,
+} as const;
+
 /**
  * The automated frame-rate check (M6.7): the work for one frame (update and
  * render) must fit in a 60 fps frame. The median gets half the frame, leaving

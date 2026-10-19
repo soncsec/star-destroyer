@@ -5,6 +5,7 @@ import { integerZoom } from './logic/scaling';
 import { AssetPreviewScene } from './scenes/AssetPreviewScene';
 import { GameScene } from './scenes/GameScene';
 import { PreloadScene } from './scenes/PreloadScene';
+import { TitleScene } from './scenes/TitleScene';
 
 const zoomForWindow = (): number =>
   integerZoom(window.innerWidth, window.innerHeight, GAME_WIDTH, GAME_HEIGHT);
@@ -35,12 +36,11 @@ export const game = new Phaser.Game({
   },
   // The asset preview (?scene=preview) is a developer tool: it is left out of
   // the production build (owner decision 2026-10-18). Vite replaces MODE at
-  // build time, so in production this is just [PreloadScene, GameScene] and the
-  // preview code is dropped from the bundle.
+  // build time, so in production the preview code is dropped from the bundle.
   scene:
     import.meta.env.MODE === 'production'
-      ? [PreloadScene, GameScene]
-      : [PreloadScene, GameScene, AssetPreviewScene],
+      ? [PreloadScene, TitleScene, GameScene]
+      : [PreloadScene, TitleScene, GameScene, AssetPreviewScene],
 });
 
 window.addEventListener('resize', () => {
