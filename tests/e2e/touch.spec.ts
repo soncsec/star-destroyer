@@ -61,9 +61,10 @@ async function quietGame(page: Page): Promise<Finger> {
 test('on a phone the game fills the screen, and a tap on the title starts it', async ({ page }) => {
   const finger = await open(page, '?title');
   await expect.poll(() => sceneKey(page), { timeout: 15_000 }).toBe('Title');
-  const texts = await page.evaluate(() => window.__starDestroyer?.sceneTexts() ?? []);
-  expect(texts).toContain('TAP TO START');
-  expect(texts).toContain('BACK TO ARCADE');
+  const texts = () => page.evaluate(() => window.__starDestroyer?.sceneTexts() ?? []);
+  // The prompt blinks, so wait for it to show rather than looking just once.
+  await expect.poll(texts).toContain('TAP TO START');
+  expect(await texts()).toContain('BACK TO ARCADE');
   // Fills the width or the height (whichever runs out first), not a small whole-number zoom.
   const box = await page.locator('canvas').boundingBox();
   const view = page.viewportSize();
