@@ -405,8 +405,9 @@ export class GameScene extends Phaser.Scene {
     this.asteroids.update(dt);
     this.pickups.update(dt);
     this.enemiesFire(dt);
-    const boss = this.boss.update(dt, this.player.position);
-    for (const v of boss.shots) this.enemyBullets.fire(boss.from.x, boss.from.y, v);
+    for (const volley of this.boss.update(dt, this.player.position)) {
+      for (const v of volley.shots) this.enemyBullets.fire(volley.from.x, volley.from.y, v);
+    }
     this.enemyBullets.update(dt);
     this.resolveShotHits();
 
@@ -562,9 +563,8 @@ export class GameScene extends Phaser.Scene {
     const shot = touching(ship, this.enemyBullets.active(), (b) => this.enemyBullets.hitbox(b));
     const enemy = touching(ship, this.enemies.active(), (e) => this.enemies.hitbox(e));
     const rock = touching(ship, this.asteroids.active(), (r) => this.asteroids.hitbox(r));
-    const bossBox = this.boss.hitbox();
     // Flying into the boss costs a hit; the boss itself is unharmed.
-    const rammedBoss = bossBox !== null && firstHit(ship, [bossBox]) >= 0;
+    const rammedBoss = this.boss.touching(ship) >= 0;
     if (!shot && !enemy && !rock && !rammedBoss) return;
 
     const { health, result } = takeHit(this.health, PLAYER_HEALTH);
@@ -704,11 +704,23 @@ export class GameScene extends Phaser.Scene {
     if (!keepShots) this.enemyBullets.clear();
   }
 
-  /** Damages the boss (player shots, and tests); defeats it at 0 health. */
+  /**
+   * Damages the boss by `amount` (tests): its first ship that can be hit, and
+   * any damage left over goes on to the next (a twin).
+   */
   hurtBoss(amount: number): void {
-    const { x, y } = this.boss.position;
-    const points = this.boss.hit(amount);
-    if (points > 0) this.bossDefeated(x, y, points);
+    let left = amount;
+    for (let i = this.boss.firstFighting(); i >= 0 && left > 0; i = this.boss.firstFighting()) {
+      const hp = this.boss.hpOf(i);
+      this.hurtBossShip(i, Math.min(left, hp));
+      left -= hp;
+    }
+  }
+
+  /** Damages one ship of the boss; each ship explodes and scores when defeated. */
+  private hurtBossShip(index: number, amount: number): void {
+    const defeated = this.boss.hit(index, amount);
+    if (defeated) this.bossDefeated(defeated.at.x, defeated.at.y, defeated.points);
   }
 
   /** Ends the level's waves at once, so the boss comes after the usual pause (tests). */
@@ -744,11 +756,11 @@ export class GameScene extends Phaser.Scene {
       const box = this.bullets.hitbox(shot);
       // The spark shows at the shot's nose, where it struck.
       const tip = { x: box.x, y: box.y - box.h / 2 };
-      const bossBox = this.boss.hitbox();
-      if (bossBox && firstHit(box, [bossBox]) >= 0) {
+      const bossShip = this.boss.touching(box);
+      if (bossShip >= 0) {
         this.sparks.play(tip.x, tip.y);
         this.bullets.release(shot);
-        this.hurtBoss(shot.damage);
+        this.hurtBossShip(bossShip, shot.damage);
         continue;
       }
       const enemy = touching(box, this.enemies.active(), (e) => this.enemies.hitbox(e));

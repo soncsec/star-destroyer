@@ -382,7 +382,13 @@ export const BOSS_DEFEAT = {
 
 /** Bosses, by the art they use (PROJECT.md 4a level plan). More arrive with each level. */
 export type BossKind =
-  'spaceship-unit' | 'vehicle-1' | 'vehicle-2' | 'spaceship-unit-mk2' | 'vehicle-3' | 'fire-skull';
+  | 'spaceship-unit'
+  | 'vehicle-1'
+  | 'vehicle-2'
+  | 'spaceship-unit-mk2'
+  | 'vehicle-3'
+  | 'fire-skull'
+  | 'twin-vehicle-1';
 
 /**
  * Bosses (M4.3). Each fights in phases: as its health falls it switches to
@@ -683,6 +689,53 @@ export const BOSSES: Record<
         ],
         cooldown: 0.68,
         swayHz: 0.38,
+      },
+    ],
+  },
+  // Level 7: twin Warped vehicle 1s (level 2's boss), one either side, each
+  // with its own health. They sway as mirror images, and one waits at least
+  // half a cooldown after the other attacks (logic/boss.ts), so each attacks
+  // about half as often as a single boss would. Together: 560 HP.
+  'twin-vehicle-1': {
+    sprite: 'boss-vehicle-1',
+    angleDeg: 90,
+    hitbox: { w: 64, h: 150, offsetY: 0 },
+    twin: { offsetX: 64 },
+    hp: 280,
+    points: 10000,
+    entry: { startY: -90, hoverY: 80, speed: 40 },
+    swayAmplitude: 30,
+    muzzleOffsetY: 80,
+    shotSpeed: 140,
+    maxAimAngleDeg: 30,
+    phases: [
+      {
+        fromHp: 1,
+        attacks: [{ kind: 'fan', shots: 4, spreadDeg: 60 }, { kind: 'aimed' }, { kind: 'aimed' }],
+        cooldown: 1.6,
+        swayHz: 0.12,
+      },
+      {
+        fromHp: 0.6,
+        attacks: [
+          { kind: 'fan', shots: 5, spreadDeg: 80 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 3, spreadDeg: 40 },
+          { kind: 'aimed' },
+        ],
+        cooldown: 1.35,
+        swayHz: 0.16,
+      },
+      {
+        fromHp: 0.3,
+        attacks: [
+          { kind: 'fan', shots: 6, spreadDeg: 90 },
+          { kind: 'aimed' },
+          { kind: 'fan', shots: 5, spreadDeg: 70 },
+          { kind: 'aimed' },
+        ],
+        cooldown: 1.1,
+        swayHz: 0.2,
       },
     ],
   },

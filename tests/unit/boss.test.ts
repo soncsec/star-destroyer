@@ -11,11 +11,14 @@ import {
 import {
   attackShots,
   bossHealth,
+  bossLineup,
+  bossTotalHp,
   damageBoss,
   fanGap,
   phaseFor,
   startBoss,
   stepBoss,
+  stepBossGroup,
   type BossRules,
   type BossState,
 } from '../../src/logic/boss';
@@ -169,6 +172,105 @@ describe('boss', () => {
   });
 });
 
+describe('twin bosses (M6.4)', () => {
+  const twin: BossRules = { ...rules, twin: { offsetX: 60 } };
+
+  /** Starts every ship of `r` and steps them all until they're fighting. */
+  function startGroup(r: BossRules): { parts: BossState[]; slots: ReturnType<typeof bossLineup> } {
+    const slots = bossLineup(r, CX);
+    let parts = slots.map((s) => startBoss(r, s.centerX, s.side, s.delay));
+    for (let i = 0; i < 100 && parts.some((p) => p.mode === 'entering'); i++)
+      parts = stepBossGroup(parts, r, 0.1, ship, slots).parts;
+    return { parts, slots };
+  }
+
+  it('a normal boss is one ship at the center', () => {
+    expect(bossLineup(rules, CX)).toEqual([{ centerX: CX, side: 1, delay: 0 }]);
+    expect(bossTotalHp(rules)).toBe(100);
+  });
+
+  it('a twin is two ships either side of the center, mirrored, the second attacking half a cooldown later', () => {
+    expect(bossLineup(twin, CX)).toEqual([
+      { centerX: CX - 60, side: 1, delay: 0 },
+      { centerX: CX + 60, side: -1, delay: 0.5 },
+    ]);
+    expect(bossTotalHp(twin)).toBe(200);
+    expect(startBoss(twin, CX + 60, -1, 0.5)).toMatchObject({ side: -1, cooldown: 1.5 });
+  });
+
+  it('twins sway as mirror images', () => {
+    const start = startGroup(twin);
+    let { parts } = start;
+    const { slots } = start;
+    for (let i = 0; i < 30; i++) {
+      parts = stepBossGroup(parts, twin, 0.1, ship, slots).parts;
+      const [a, b] = parts as [BossState, BossState];
+      expect(a.x - (CX - 60)).toBeCloseTo(-(b.x - (CX + 60)), 6);
+    }
+  });
+
+  it('one ship steps exactly as a single boss does', () => {
+    const start = startGroup(rules);
+    const { slots } = start;
+    let { parts } = start;
+    let single = arrived();
+    for (let i = 0; i < 50; i++) {
+      const group = stepBossGroup(parts, rules, 0.1, ship, slots);
+      const one = stepBoss(single, rules, 0.1, ship, CX);
+      parts = group.parts;
+      single = one.state;
+      expect(parts[0]).toEqual(single);
+      expect(group.volleys.flatMap((v) => v.shots)).toEqual(one.shots);
+      for (const v of group.volleys) expect(v.from).toEqual({ x: single.x, y: single.y + 30 });
+    }
+  });
+
+  it('after one twin attacks, the other waits at least half a cooldown, so volleys never land together', () => {
+    const start = startGroup(twin);
+    const { slots } = start;
+    let { parts } = start;
+    const fired: { t: number; ship: number }[] = [];
+    const dt = 0.05;
+    for (let i = 0; i < 400; i++) {
+      const step = stepBossGroup(parts, twin, dt, ship, slots);
+      for (const v of step.volleys) fired.push({ t: i * dt, ship: v.from.x < CX ? 0 : 1 });
+      parts = step.parts;
+      if (i === 200) parts = parts.map((p) => damageBoss(p, twin, 60).state); // into phase 2
+    }
+    expect(new Set(fired.map((f) => f.ship))).toEqual(new Set([0, 1]));
+    for (let i = 1; i < fired.length; i++) {
+      const a = fired[i - 1] as { t: number; ship: number };
+      const b = fired[i] as { t: number; ship: number };
+      // The faster phase's cooldown is 0.5 s, so at least 0.25 s apart.
+      expect(b.t - a.t).toBeGreaterThanOrEqual(0.25 - dt - 1e-9);
+    }
+  });
+
+  it('a twin fights on alone once the other is defeated', () => {
+    const start = startGroup(twin);
+    const { slots } = start;
+    let { parts } = start;
+    parts = [damageBoss(parts[0] as BossState, twin, 999).state, parts[1] as BossState];
+    let shots = 0;
+    for (let i = 0; i < 40; i++) {
+      const step = stepBossGroup(parts, twin, 0.1, ship, slots);
+      parts = step.parts;
+      shots += step.volleys.length;
+    }
+    expect(parts[0]?.mode).toBe('defeated');
+    expect(parts[1]?.mode).toBe('fighting');
+    expect(shots).toBeGreaterThan(0);
+  });
+
+  it('rejects bad twins and inputs', () => {
+    expect(() => bossLineup({ ...rules, twin: { offsetX: 0 } }, CX)).toThrow(RangeError);
+    expect(() => bossLineup({ ...twin, phases: [] }, CX)).toThrow(RangeError);
+    expect(() => startBoss(rules, CX, 1, -1)).toThrow(RangeError);
+    const { parts } = startGroup(twin);
+    expect(() => stepBossGroup(parts, twin, 0.1, ship, [])).toThrow(RangeError);
+  });
+});
+
 describe.each(Object.entries(BOSSES).map(([kind, boss]) => ({ kind, boss })))(
   'boss $kind (tuned)',
   ({ boss }) => {
@@ -194,10 +296,19 @@ describe.each(Object.entries(BOSSES).map(([kind, boss]) => ({ kind, boss })))(
     });
 
     it('stays on screen while swaying', () => {
-      expect(GAME_WIDTH / 2 - boss.swayAmplitude - boss.hitbox.w / 2).toBeGreaterThanOrEqual(0);
-      expect(GAME_WIDTH / 2 + boss.swayAmplitude + boss.hitbox.w / 2).toBeLessThanOrEqual(
-        GAME_WIDTH,
-      );
+      for (const slot of bossLineup(boss, GAME_WIDTH / 2)) {
+        expect(slot.centerX - boss.swayAmplitude - boss.hitbox.w / 2).toBeGreaterThanOrEqual(0);
+        expect(slot.centerX + boss.swayAmplitude + boss.hitbox.w / 2).toBeLessThanOrEqual(
+          GAME_WIDTH,
+        );
+      }
+    });
+
+    it('twins never overlap, even swaying toward each other', () => {
+      const [a, b] = bossLineup(boss, GAME_WIDTH / 2);
+      if (!a || !b) return;
+      const closest = b.centerX - a.centerX - 2 * boss.swayAmplitude;
+      expect(closest).toBeGreaterThanOrEqual(boss.hitbox.w);
     });
 
     it('gets harder phase by phase: lower thresholds, shorter cooldowns, faster sway', () => {
