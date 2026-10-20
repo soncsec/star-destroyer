@@ -43,6 +43,21 @@ describe('power-ups', () => {
     expect(r.powerUps).not.toBe(p);
   });
 
+  it('a health gem asks for the health to be refilled and leaves the gun and shield alone (M7.18)', () => {
+    const p = { weaponLevel: 2, shield: 5 };
+    const r = collectPowerUp(p, 'health', rules);
+    expect(r).toEqual({ powerUps: p, clearScreen: false, restoreHealth: true });
+    expect(r.powerUps).not.toBe(p);
+  });
+
+  it('only the health gem refills health, and only the screen clear clears', () => {
+    for (const kind of ['weapon', 'shield', 'clear', 'health'] as const) {
+      const r = collectPowerUp(startPowerUps(), kind, rules);
+      expect(r.restoreHealth, kind).toBe(kind === 'health');
+      expect(r.clearScreen, kind).toBe(kind === 'clear');
+    }
+  });
+
   it('every power-up is lost on death', () => {
     expect(loseLife()).toEqual(startPowerUps());
   });

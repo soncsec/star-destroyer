@@ -31,7 +31,35 @@ test('a pickup drifts down and the ship collects it by touching it', async ({ pa
     .toBe(1);
   const after = await snapshot(page);
   expect(after.pickups).toEqual([]);
-  expect(after.collected).toEqual({ weapon: 0, shield: 1, clear: 0 });
+  expect(after.collected).toEqual({ weapon: 0, shield: 1, clear: 0, health: 0 });
+});
+
+test('a green gem refills every health pip, keeping lives, gun and shield (M7.18)', async ({
+  page,
+}) => {
+  const { player } = await openQuietGame(page);
+  await page.evaluate(() => {
+    window.__starDestroyer?.setWeaponLevel(2);
+    window.__starDestroyer?.oneHitLeft(3); // 4 hits taken: one pip left, 3 lives
+  });
+  await expect
+    .poll(async () => (await snapshot(page)).hud.pips)
+    .toEqual([true, false, false, false, false]);
+  const before = await snapshot(page);
+  await page.evaluate(
+    ({ x, y }) => window.__starDestroyer?.spawnPickup('health', x, y - 30),
+    player,
+  );
+  expect((await snapshot(page)).pickups.map((p) => p.kind)).toEqual(['health']);
+  await expect
+    .poll(async () => (await snapshot(page)).collected.health, { timeout: 20_000 })
+    .toBe(1);
+  const after = await snapshot(page);
+  expect(after.hud.pips).toEqual([true, true, true, true, true]);
+  expect(after.hud.lives).toBe(before.hud.lives);
+  expect(after.weaponLevel).toBe(2);
+  expect(after.sfx.played.healthUp).toBe(1);
+  expect(after.collected).toEqual({ weapon: 0, shield: 0, clear: 0, health: 1 });
 });
 
 test('a pickup the ship misses falls off the screen uncollected', async ({ page }) => {

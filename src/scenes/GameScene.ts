@@ -16,6 +16,7 @@ import {
   GAME_HEIGHT,
   GAME_WIDTH,
   PLAYER_HEALTH,
+  POWERUPS,
   SCREEN_CLEAR,
   SHIELD,
   WEAPON,
@@ -72,6 +73,7 @@ import { aimDown, firstShotDelay, nextShotDelay, stepEnemyFire } from '../logic/
 import {
   isGameOver,
   newHealth,
+  restoreHealth,
   shipVisible,
   takeHit,
   tickHealth,
@@ -208,7 +210,7 @@ export class GameScene extends Phaser.Scene {
   private hud!: Hud;
   private pickups!: Pickups;
   /** Power-ups collected this game, by kind (their effects arrive in M3.2–M3.4). */
-  private collected: Record<PowerUpKind, number> = { weapon: 0, shield: 0, clear: 0 };
+  private collected: Record<PowerUpKind, number> = { weapon: 0, shield: 0, clear: 0, health: 0 };
   /** The level's boss, once it has appeared (M4.3). */
   /** The boss being fought: `normalBoss` (one ship or a twin) or `finalBoss`. */
   private boss!: BossFight;
@@ -317,7 +319,7 @@ export class GameScene extends Phaser.Scene {
     this.blast = new Explosions(this, SCREEN_CLEAR.blast, 1, DEPTH.blast);
     this.hud = new Hud(this, PLAYER_HEALTH.hitsPerLife);
     this.pickups = new Pickups(this);
-    this.collected = { weapon: 0, shield: 0, clear: 0 };
+    this.collected = { weapon: 0, shield: 0, clear: 0, health: 0 };
     // The weapon carries into the next level; a shield doesn't.
     this.powerUps = { ...startPowerUps(), weaponLevel: carry?.weaponLevel ?? 1 };
     this.shieldBubble = new ShieldBubble(this);
@@ -1046,9 +1048,8 @@ export class GameScene extends Phaser.Scene {
         shield: SHIELD,
       });
       this.powerUps = got.powerUps;
-      this.sfx.play(
-        p.kind === 'weapon' ? 'weaponUp' : p.kind === 'shield' ? 'shieldUp' : 'screenClear',
-      );
+      this.sfx.play(POWERUPS.sounds[p.kind]);
+      if (got.restoreHealth) this.health = restoreHealth(this.health);
       if (got.clearScreen) this.clearScreen();
     }
   }

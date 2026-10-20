@@ -134,3 +134,18 @@ describe('sounds made in code (M7.3)', () => {
     expect(SFX.volume).toBeLessThanOrEqual(1);
   });
 });
+
+describe('the health gem sound (M7.18)', () => {
+  const chime = SFX.sounds.healthUp;
+
+  it('is a soft rising chime of four notes, unlike the other pickups', () => {
+    expect(chime.wave).toBe('sine');
+    expect(chime.steps).toEqual([1, 1.26, 1.5, 2]);
+    const s = renderSound(chime, RATE);
+    const quarter = (n: number): number => crossings(s, n * 0.25 + 0.03, (n + 1) * 0.25 - 0.03);
+    expect(quarter(3)).toBeGreaterThan(quarter(0) * 1.6);
+    for (const other of ['weaponUp', 'shieldUp', 'screenClear'] as const) {
+      expect(SFX.sounds[other]).not.toEqual(chime);
+    }
+  });
+});

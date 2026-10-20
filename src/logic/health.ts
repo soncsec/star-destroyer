@@ -52,6 +52,14 @@ export function takeHit(h: Health, rules: HealthRules): { health: Health; result
   };
 }
 
+/**
+ * The health gem (M7.18): the current life is back to full health. Lives and
+ * invulnerability are unchanged, and after game over it does nothing.
+ */
+export function restoreHealth(h: Health): Health {
+  return isGameOver(h) ? h : { ...h, hits: 0 };
+}
+
 /** Counts invulnerability down by `dt` seconds. */
 export function tickHealth(h: Health, dt: number): Health {
   if (dt < 0) throw new RangeError('dt must not be negative');

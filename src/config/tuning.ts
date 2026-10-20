@@ -29,13 +29,31 @@ export const DEPTH = {
 
 /** Power-up drops and pickups (M3.1). */
 export const POWERUPS = {
-  /** Owner decisions: weapon common, shield uncommon, screen clear rare (never in boss fights). */
-  drops: { chance: 0.12, weights: { weapon: 6, shield: 3, clear: 1 } } satisfies DropRules,
+  /**
+   * Owner decisions: weapon common, shield uncommon, screen clear rare (never in
+   * boss fights). The health gem (owner 2026-10-19, M7.18) is uncommon, between
+   * shield and screen clear, and never in boss fights either. Adding it raised
+   * the chance from 12% (0.12 × 12/10) so the other gems drop exactly as often
+   * per kill as before.
+   */
+  drops: {
+    chance: 0.144,
+    weights: { weapon: 6, shield: 3, clear: 1, health: 2 },
+  } satisfies DropRules,
   /** Gem sprite for each kind. */
-  sprites: { weapon: 'gem-yellow', shield: 'gem-blue', clear: 'gem-pink' } satisfies Record<
-    PowerUpKind,
-    string
-  >,
+  sprites: {
+    weapon: 'gem-yellow',
+    shield: 'gem-blue',
+    clear: 'gem-pink',
+    health: 'gem-green',
+  } satisfies Record<PowerUpKind, string>,
+  /** The sound each kind plays when collected. */
+  sounds: {
+    weapon: 'weaponUp',
+    shield: 'shieldUp',
+    clear: 'screenClear',
+    health: 'healthUp',
+  } satisfies Record<PowerUpKind, SfxName>,
   /** Pixels per second, downward. */
   fallSpeed: 40,
   /** A little larger than the 12×12 gem, so pickups are easy to grab. */
@@ -145,6 +163,7 @@ export type SfxName =
   | 'hurt'
   | 'weaponUp'
   | 'shieldUp'
+  | 'healthUp'
   | 'screenClear'
   | 'beamWarn'
   | 'beam'
@@ -190,6 +209,16 @@ export const SFX: { volume: number; sounds: Readonly<Record<SfxName, SoundRecipe
       attack: 0.01,
       volume: 0.4,
       steps: [1, 1.5],
+    },
+    // M7.18: a soft rising chime, unlike the other pickups' sounds.
+    healthUp: {
+      wave: 'sine',
+      seconds: 0.36,
+      from: 587,
+      to: 587,
+      attack: 0.005,
+      volume: 0.4,
+      steps: [1, 1.26, 1.5, 2],
     },
     screenClear: { wave: 'noise', seconds: 0.7, from: 200, to: 2500, attack: 0.05, volume: 0.5 },
     beamWarn: { wave: 'sine', seconds: 1.2, from: 200, to: 900, attack: 0.2, volume: 0.3 },

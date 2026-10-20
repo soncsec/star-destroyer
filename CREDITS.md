@@ -44,6 +44,7 @@ Files are copied unchanged from the pack and renamed for consistency, except the
 | `assets/pickups/gem-yellow.png` | 84×12 | `Misc/gems/spritesheets/gems-spritesheet.png`: the 7 yellow loose-gem frames (12×12 at x = 450 + 16n, y = 34), placed side by side, pixels unchanged |
 | `assets/pickups/gem-pink.png` | 84×12 | same sheet, the 7 pink frames (x = 578 + 16n, y = 34) |
 | `assets/pickups/gem-blue.png` | 84×12 | same sheet, the 7 blue frames (x = 706 + 16n, y = 34) |
+| `assets/pickups/gem-green.png` | 84×12 | same sheet, the 7 green frames (x = 66 + 16n, y = 34); the health gem (M7.18) |
 | `assets/boss/boss-thrust.png` | 256×48 | `Warped/Characters/top-down-boss/PNG/spritesheets/boss-thrust.png` |
 | `assets/boss/boss.png` | 960×144 | `Warped/Characters/top-down-boss/PNG/spritesheets/boss.png` |
 | `assets/boss/cannon-left.png` | 48×48 | `Warped/Characters/top-down-boss/PNG/spritesheets/cannon-left.png` |
