@@ -18,7 +18,7 @@
 | M5 Levels 2–4 | Done; play-test pending |
 | M6 Levels 5–8 | Built; waiting for the owner's play-test |
 | M7 Polish and balance | Done (owner signed off on difficulty 2026-10-20) |
-| M8 v1.0 release | Not started |
+| M8 v1.0 release | Done: v1.0 live and tagged 2026-10-20 |
 
 ## Risks driving this order
 
@@ -213,7 +213,7 @@
 **Demonstrable result:** Star Destroyer v1.0 is live on `games.soncrant.com`.
 
 - [x] M8.1 Final security review: dependencies, CodeQL, secret scan, ZAP scan of staging. Reviewed 2026-10-20 on main 5f01668 (the live release), nothing to fix: `npm audit` 0 vulnerabilities (all and production-only); every dependency pinned exactly, the newest published 2026-10-02 (over two weeks), all 171 lockfile entries from registry.npmjs.org with integrity hashes; no open Dependabot or secret-scanning alerts; CodeQL 0 results (126 rules), no open alerts (3 earlier ones fixed); gitleaks found no leaks in 109 commits; staging ZAP 0 failures, 13 warnings, all about headers GitHub Pages can't set (production sets them: CSP, X-Frame-Options DENY, nosniff, no-referrer, Permissions-Policy, CORP) or harmless caching notes; production ZAP 0 failures. The player build has no test hook and no source maps, makes no requests to other hosts (the only URLs are Phaser's credit line and XML namespaces), and stores only `star-destroyer.highScore`. Nothing forbidden is tracked (`legacy/`, `node_modules/`, `dist/`, `.env`, `deploy/server.env`); CI jobs have read-only permissions except Pages deploy and CodeQL upload, every action is pinned by commit SHA, and no workflow uses secrets or `pull_request_target`
-- [ ] M8.2 Release through the release script — *needs approval*
-- [ ] M8.3 ZAP scan of production; smoke test from outside the network; tag `v1.0`
+- [x] M8.2 Release through the release script (owner approved 2026-10-20): main 7356418 released as 20261020T144956Z-73564180 after CI and the staging ZAP scan passed (0 failures). The release script's own run passed every test (292 end-to-end in Chromium, Firefox, WebKit and phone), then its smoke test on the server. The game is the same as the M7.18 release; only the docs changed
+- [x] M8.3 ZAP scan of production; smoke test from outside the network; tag `v1.0`. games-portal Production check run 39442828444: smoke test from outside passed for the portal and all six games, ZAP baseline of production 0 failures (3–4 warnings per page, as in every release). Tag `v1.0` (annotated) is on 7356418, the released commit
 
 **Acceptance criteria:** the production URL serves v1.0 with the security headers in place; the post-deploy scan is clean; the owner approves.
