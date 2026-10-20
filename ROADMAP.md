@@ -212,7 +212,7 @@
 
 **Demonstrable result:** Star Destroyer v1.0 is live on `games.soncrant.com`.
 
-- [ ] M8.1 Final security review: dependencies, CodeQL, secret scan, ZAP scan of staging
+- [x] M8.1 Final security review: dependencies, CodeQL, secret scan, ZAP scan of staging. Reviewed 2026-10-20 on main 5f01668 (the live release), nothing to fix: `npm audit` 0 vulnerabilities (all and production-only); every dependency pinned exactly, the newest published 2026-10-02 (over two weeks), all 171 lockfile entries from registry.npmjs.org with integrity hashes; no open Dependabot or secret-scanning alerts; CodeQL 0 results (126 rules), no open alerts (3 earlier ones fixed); gitleaks found no leaks in 109 commits; staging ZAP 0 failures, 13 warnings, all about headers GitHub Pages can't set (production sets them: CSP, X-Frame-Options DENY, nosniff, no-referrer, Permissions-Policy, CORP) or harmless caching notes; production ZAP 0 failures. The player build has no test hook and no source maps, makes no requests to other hosts (the only URLs are Phaser's credit line and XML namespaces), and stores only `star-destroyer.highScore`. Nothing forbidden is tracked (`legacy/`, `node_modules/`, `dist/`, `.env`, `deploy/server.env`); CI jobs have read-only permissions except Pages deploy and CodeQL upload, every action is pinned by commit SHA, and no workflow uses secrets or `pull_request_target`
 - [ ] M8.2 Release through the release script — *needs approval*
 - [ ] M8.3 ZAP scan of production; smoke test from outside the network; tag `v1.0`
 
