@@ -12,11 +12,11 @@
 | P1 Portal and production server | Done (2026-10-17) |
 | T1 Game template for parallel instances | Done (2026-10-17) |
 | M2 Core loop (level 1) | Done |
-| M3 Power-ups | Done; play-test pending |
-| C Controls and cheats (owner request) | Done; play-test pending |
-| M4 Level system and first boss | Done; play-test pending |
-| M5 Levels 2–4 | Done; play-test pending |
-| M6 Levels 5–8 | Built; waiting for the owner's play-test |
+| M3 Power-ups | Done (owner play-tested 2026-10-19) |
+| C Controls and cheats (owner request) | Done (owner play-tested 2026-10-19 and 2026-10-20) |
+| M4 Level system and first boss | Done (owner play-tested 2026-10-19) |
+| M5 Levels 2–4 | Done (owner play-tested 2026-10-19) |
+| M6 Levels 5–8 | Built and play-tested; the owner has not yet beaten level 8. Owner 2026-10-20: the final boss is "super hard but he should be"; difficulty stays as it is |
 | M7 Polish and balance | Done (owner signed off on difficulty 2026-10-20) |
 | M8 v1.0 release | Done: v1.0 live and tagged 2026-10-20 |
 
