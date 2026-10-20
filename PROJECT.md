@@ -87,6 +87,7 @@ The pack has about 5 distinct top-down space backgrounds and 6 distinct boss des
 - Enemy fire rate rises gradually: level 8 fires at most **2.5×** as often as level 1 (about +14% per level).
 - Enemy shot speed rises at most 30% by level 8.
 - Every enemy attack pattern leaves a gap the player's ship can fit through.
+- Each level's boss has more health than the one before, through level 7. The final boss has less than level 7's twins since its 40% cut (owner 2026-10-20): its three stages and beam make it the hardest fight.
 - Shield and weapon drops become slightly more common in later levels; the screen clear and health gems do not.
 - Verified by the owner beating level 8, plus automated checks that the per-level numbers stay within these limits.
 

@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { ASSETS } from '../../src/assets/manifest';
-import { BOSSES, DIFFICULTY, ENEMY_TYPES, GAME_HEIGHT, GAME_WIDTH } from '../../src/config/tuning';
+import {
+  BOSSES,
+  DIFFICULTY,
+  ENEMY_TYPES,
+  FINAL_BOSS,
+  GAME_HEIGHT,
+  GAME_WIDTH,
+} from '../../src/config/tuning';
 import { levelDifficulty } from '../../src/levels/difficulty';
 import { LEVELS } from '../../src/levels';
 import {
@@ -113,8 +120,10 @@ describe.each(LEVELS.map((level) => ({ level, name: `level ${level.number} (${le
     it('has a boss that exists and gets tougher level by level', () => {
       if (level.boss !== 'final-boss') expect(BOSSES[level.boss]).toBeDefined();
       const before = LEVELS[level.number - 2];
-      // Every ship (a twin) or part (the final boss) counts together.
-      if (before) expect(levelBossHp(level.boss)).toBeGreaterThan(levelBossHp(before.boss));
+      // Every ship (a twin) counts together. Owner 2026-10-20 (M6.8): the final
+      // boss is exempt from this health rule; it is checked below instead.
+      if (before && level.boss !== 'final-boss')
+        expect(levelBossHp(level.boss)).toBeGreaterThan(levelBossHp(before.boss));
     });
 
     it('gives the player a breather before the boss', () => {
@@ -345,5 +354,25 @@ describe('wave limits', () => {
     expect(
       screenTime({ kind: 'dive', enterSpeed: 70, hoverY: 70, hoverTime: 0.9, diveSpeed: 170 }),
     ).toBeCloseTo(94 / 70 + 0.9 + 368 / 170);
+  });
+});
+
+describe('the final boss after its 40% health cut (owner 2026-10-20, M6.8)', () => {
+  it('has 60% of its first health in every part: cannons 84, helmet 132, core 192', () => {
+    const first = { cannonLeft: 140, cannonRight: 140, helmet: 220, core: 320 };
+    for (const [part, hp] of Object.entries(first)) {
+      expect(FINAL_BOSS.parts[part as keyof typeof first].hp, part).toBe(hp * 0.6);
+    }
+    expect(levelBossHp('final-boss')).toBe(492);
+  });
+
+  it('is the only boss in the last level, and still outlasts every single-ship boss', () => {
+    expect(LEVELS.filter((l) => l.boss === 'final-boss').map((l) => l.number)).toEqual([
+      LEVELS.length,
+    ]);
+    for (const level of LEVELS.slice(0, -1)) {
+      const boss = BOSSES[level.boss as keyof typeof BOSSES];
+      if (!boss.twin) expect(levelBossHp('final-boss')).toBeGreaterThan(levelBossHp(level.boss));
+    }
   });
 });

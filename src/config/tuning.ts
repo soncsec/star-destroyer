@@ -994,6 +994,11 @@ export type LevelBossKind = BossKind | FinalBossKind;
  * Part offsets were measured against the art: the cannon and helmet images
  * match the whole-boss frame exactly at these positions, so they are drawn
  * over the bare body (frame 2).
+ *
+ * Owner 2026-10-20 (M6.8): every part's health cut by 40% (cannons 140 → 84,
+ * helmet 220 → 132, core 320 → 192; 820 → 492 in all). It now has less
+ * health than level 7's twins (560); its three stages and beam still make it
+ * the hardest fight.
  */
 export const FINAL_BOSS: FinalBossRules & {
   body: string;
@@ -1030,27 +1035,27 @@ export const FINAL_BOSS: FinalBossRules & {
   maxAimAngleDeg: 35,
   parts: {
     cannonLeft: {
-      hp: 140,
+      hp: 84,
       points: 5000,
       offset: { x: -56, y: 32 },
       hitbox: { w: 30, h: 36 },
       muzzleY: 54,
     },
     cannonRight: {
-      hp: 140,
+      hp: 84,
       points: 5000,
       offset: { x: 56, y: 32 },
       hitbox: { w: 30, h: 36 },
       muzzleY: 54,
     },
     helmet: {
-      hp: 220,
+      hp: 132,
       points: 10000,
       offset: { x: 0, y: 4 },
       hitbox: { w: 50, h: 46 },
       muzzleY: 32,
     },
-    core: { hp: 320, points: 25000, offset: { x: 0, y: 8 }, hitbox: { w: 28, h: 34 }, muzzleY: 30 },
+    core: { hp: 192, points: 25000, offset: { x: 0, y: 8 }, hitbox: { w: 28, h: 34 }, muzzleY: 30 },
   },
   hull: { w: 150, h: 90, offsetY: 0 },
   stages: {
