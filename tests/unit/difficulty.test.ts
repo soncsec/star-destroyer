@@ -2,19 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { DIFFICULTY, ENEMY_FIRE, POWERUPS } from '../../src/config/tuning';
 import { levelDifficulty } from '../../src/levels/difficulty';
 import { difficulty } from '../../src/logic/difficulty';
-import type { DropRules } from '../../src/logic/drops';
+import type { DropRules, PowerUpKind } from '../../src/logic/drops';
 
 const base = {
   fire: { interval: 2, jitter: 0.4, firstShotMin: 0.6 },
   shotSpeed: 100,
-  drops: { chance: 0.1, weights: { weapon: 6, shield: 3, clear: 1 } },
+  drops: { chance: 0.1, weights: { weapon: 6, shield: 3, clear: 1, health: 2 } },
 };
 const curve = { lastLevel: 8, fireRateAtLast: 2.5, shotSpeedAtLast: 1.3, helpfulDropsAtLast: 1.25 };
 const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 /** Chance per kill of dropping one kind. */
-const share = (d: DropRules, kind: 'weapon' | 'shield' | 'clear'): number =>
-  (d.chance * d.weights[kind]) / (d.weights.weapon + d.weights.shield + d.weights.clear);
+const share = (d: DropRules, kind: PowerUpKind): number =>
+  (d.chance * d.weights[kind]) / Object.values(d.weights).reduce((a, b) => a + b, 0);
 /** Shots per second for one enemy. */
 const fireRate = (level: number): number => 1 / difficulty(level, base, curve).fire.interval;
 
@@ -46,6 +46,16 @@ describe('difficulty', () => {
     expect(share(last, 'weapon') / share(first, 'weapon')).toBeCloseTo(1.25);
     expect(share(last, 'shield') / share(first, 'shield')).toBeCloseTo(1.25);
     expect(share(last, 'clear')).toBeCloseTo(share(first, 'clear'), 12);
+  });
+
+  it('the health gem stays exactly as rare at every level (M7.18)', () => {
+    const first = difficulty(1, base, curve).drops;
+    for (const level of LEVELS) {
+      expect(share(difficulty(level, base, curve).drops, 'health')).toBeCloseTo(
+        share(first, 'health'),
+        12,
+      );
+    }
   });
 
   it('accepts only whole levels from 1 to the last', () => {
@@ -93,6 +103,7 @@ describe('the tuned difficulty respects the limits in PROJECT.md 4a', () => {
       expect(share(now, 'weapon')).toBeGreaterThan(share(before, 'weapon'));
       expect(share(now, 'shield')).toBeGreaterThan(share(before, 'shield'));
       expect(share(now, 'clear')).toBeLessThanOrEqual(share(before, 'clear') + 1e-12);
+      expect(share(now, 'health')).toBeLessThanOrEqual(share(before, 'health') + 1e-12);
     }
     const last = all[7]?.drops;
     if (!last) throw new Error('missing level 8');

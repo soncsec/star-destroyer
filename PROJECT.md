@@ -39,6 +39,7 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 | Weapons | Weapon power-up drops raise the weapon level (4 levels since M7.13, using the Warped shooting effects). Weapon upgrades **never time out**, but **losing a life drops you back to the basic weapon** (owner decisions 2026-10-17) |
 | Shield | Power-up: a shield that blocks all damage for **10 seconds** (owner change 2026-10-18; was 30) |
 | Screen clear | **Rare** power-up that destroys every enemy on screen. **Never appears during a boss fight** |
+| Health | **Uncommon** power-up that refills the current life's health (owner request 2026-10-19). **Never appears during a boss fight** |
 | Bosses | One boss per level, each with its own attack patterns. The multi-part top-down boss (body, cannons, helmet, beam) is the final boss |
 | Scoring | Score display; high score saved in the browser (localStorage) |
 | Screens | Title, game, pause, game over, victory |
@@ -64,6 +65,7 @@ It is the first game on **games.soncrant.com**, a retro-arcade style portal that
 | Weapon | Raises the weapon one level (max 4). Shots start small and grow bigger and stronger: 1 single small orange tracer (visible 10×4; the art pack's smallest player shot), 2 one large spark ray, 3 two rays side by side, 4 a spread of three rays; the rays do double damage (owner request 2026-10-18, M7.13; replaced the double pulse and triple charged blast) | Common | Never times out; lost on death (back to level 1). The tracer is drawn full size; the spark rays at half size, hitboxes to match (owner 2026-10-19, after play-testing: upgrades made the game too easy). Owner changes 2026-10-18: every level fires 15% less often and its shots fly 15% slower than first tuned, and stronger levels are a little slower again (level 2: 5%, level 3: 7.5%, level 4: 10% below level 1) |
 | Shield | Blocks all damage for 10 seconds (owner change 2026-10-18; was 30) | Uncommon | Picking up another resets the timer to 10 s |
 | Screen clear | Destroys every enemy on screen, plus enemy shots | Rare | Never dropped during a boss fight |
+| Health (green gem) | Refills all 5 health pips of the current life; lost lives are not given back (owner request 2026-10-19, M7.18) | Uncommon: rarer than the shield, more common than the screen clear (weapon 6 : shield 3 : health 2 : clear 1) | Never dropped during a boss fight; as rare in level 8 as in level 1. Adding it left the other gems exactly as likely per kill as before |
 
 ### Level plan (approved by owner 2026-10-17)
 
@@ -85,7 +87,7 @@ The pack has about 5 distinct top-down space backgrounds and 6 distinct boss des
 - Enemy fire rate rises gradually: level 8 fires at most **2.5×** as often as level 1 (about +14% per level).
 - Enemy shot speed rises at most 30% by level 8.
 - Every enemy attack pattern leaves a gap the player's ship can fit through.
-- Shield and weapon drops become slightly more common in later levels.
+- Shield and weapon drops become slightly more common in later levels; the screen clear and health gems do not.
 - Verified by the owner beating level 8, plus automated checks that the per-level numbers stay within these limits.
 
 ## 5. Games portal scope — Version 1.0

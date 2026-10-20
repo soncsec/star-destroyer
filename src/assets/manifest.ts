@@ -157,6 +157,7 @@ export const ASSETS: readonly Asset[] = [
   sheet('pickups', 'gem-yellow', 'gem-yellow.png', 12, 12, 7, 10, true),
   sheet('pickups', 'gem-blue', 'gem-blue.png', 12, 12, 7, 10, true),
   sheet('pickups', 'gem-pink', 'gem-pink.png', 12, 12, 7, 10, true),
+  sheet('pickups', 'gem-green', 'gem-green.png', 12, 12, 7, 10, true),
   // Shield bubble (M3.3): frames 0-3 form it, 4-7 break it.
   sheet('effects', 'energy-shield', 'energy-shield.png', 51, 47, 8, 12, false),
   // Hit spark (M3.5): a cyan starburst that breaks into sparkles.

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   isGameOver,
   newHealth,
+  restoreHealth,
   shipVisible,
   takeHit,
   tickHealth,
@@ -66,6 +67,34 @@ describe('takeHit', () => {
     const over = hitTimes(newHealth(rules), 15);
     expect(isGameOver(over)).toBe(true);
     expect(takeHit(over, rules)).toEqual({ health: over, result: 'ignored' });
+  });
+});
+
+describe('restoreHealth (the health gem, M7.18)', () => {
+  it('refills the current life, keeping lives and invulnerability', () => {
+    const hurt = hitTimes(newHealth(rules), 4);
+    expect(hurt).toEqual({ hits: 4, lives: 3, invulnerable: 0.5 });
+    expect(restoreHealth(hurt)).toEqual({ hits: 0, lives: 3, invulnerable: 0.5 });
+  });
+
+  it('gives back no lost life', () => {
+    const second = hitTimes(newHealth(rules), 7);
+    expect(second).toMatchObject({ hits: 2, lives: 2 });
+    expect(restoreHealth(second)).toMatchObject({ hits: 0, lives: 2 });
+  });
+
+  it('after a full refill the life again takes 5 hits', () => {
+    const h = restoreHealth(hitTimes(newHealth(rules), 4));
+    expect(hitTimes(h, 4)).toMatchObject({ lives: 3 });
+    expect(hitTimes(h, 5)).toMatchObject({ hits: 0, lives: 2 });
+  });
+
+  it('does nothing at full health or after game over', () => {
+    const full = newHealth(rules);
+    expect(restoreHealth(full)).toEqual(full);
+    const over = hitTimes(full, 15);
+    expect(isGameOver(over)).toBe(true);
+    expect(restoreHealth(over)).toBe(over);
   });
 });
 

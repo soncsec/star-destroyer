@@ -7,7 +7,7 @@
  *   reaching at most 2.5× the level-1 rate at the last level;
  * - enemy shots get faster, at most 30% faster by the last level;
  * - weapon and shield gems drop slightly more often later, while the screen
- *   clear stays exactly as rare as in level 1.
+ *   clear and the health gem stay exactly as rare as in level 1.
  */
 import type { DropRules } from './drops';
 import type { EnemyFireRules } from './enemyFire';
@@ -61,12 +61,12 @@ export function difficulty(
   const shotSpeed = base.shotSpeed * (1 + (curve.shotSpeedAtLast - 1) * p);
 
   // Weapon and shield weights grow; the overall chance grows with them so the
-  // screen clear's own chance per kill stays the same.
+  // screen clear's and health gem's own chances per kill stay the same.
   const boost = 1 + (curve.helpfulDropsAtLast - 1) * p;
   const w = base.drops.weights;
-  const weights = { weapon: w.weapon * boost, shield: w.shield * boost, clear: w.clear };
-  const total = (r: typeof w): number => r.weapon + r.shield + r.clear;
-  const drops = { chance: (base.drops.chance * total(weights)) / total(w), weights };
+  const weights = { ...w, weapon: w.weapon * boost, shield: w.shield * boost };
+  const total = (r: typeof w): number => r.weapon + r.shield + r.clear + r.health;
+  const drops = { chance: base.drops.chance * (total(weights) / total(w)), weights };
 
   return { fire, shotSpeed, drops };
 }

@@ -3,7 +3,7 @@
  *
  * Owner decisions: a weapon gem raises the gun one level (up to the top), a
  * shield gem sets the shield to its full time, a screen-clear gem clears the
- * screen. Every power-up is lost on death. Only enemies and asteroids shot
+ * screen, and a health gem (M7.18) refills the current life's health. Every power-up is lost on death. Only enemies and asteroids shot
  * down can drop a gem: not crashes, shield rams or screen-clear kills (so one
  * clear can't set off another).
  */
@@ -26,25 +26,30 @@ export interface PowerUpRules {
 /** What a new game or a new life starts with: the small gun and no shield. */
 export const startPowerUps = (): PowerUps => ({ weaponLevel: 1, shield: 0 });
 
-/** Collecting a gem. `clearScreen` says whether the screen must be cleared now. */
-export function collectPowerUp(
-  p: PowerUps,
-  kind: PowerUpKind,
-  rules: PowerUpRules,
-): { powerUps: PowerUps; clearScreen: boolean } {
+/** What collecting a gem did. */
+export interface Collected {
+  powerUps: PowerUps;
+  /** The screen must be cleared now. */
+  clearScreen: boolean;
+  /** The ship's health must be refilled now. */
+  restoreHealth: boolean;
+}
+
+/** Collecting a gem. */
+export function collectPowerUp(p: PowerUps, kind: PowerUpKind, rules: PowerUpRules): Collected {
+  const none = { clearScreen: false, restoreHealth: false };
   switch (kind) {
     case 'weapon':
       return {
+        ...none,
         powerUps: { ...p, weaponLevel: levelUp(p.weaponLevel, rules.maxWeaponLevel) },
-        clearScreen: false,
       };
     case 'shield':
-      return {
-        powerUps: { ...p, shield: collectShield(p.shield, rules.shield) },
-        clearScreen: false,
-      };
+      return { ...none, powerUps: { ...p, shield: collectShield(p.shield, rules.shield) } };
     case 'clear':
-      return { powerUps: { ...p }, clearScreen: true };
+      return { ...none, powerUps: { ...p }, clearScreen: true };
+    case 'health':
+      return { ...none, powerUps: { ...p }, restoreHealth: true };
   }
 }
 
